@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+
+<html class="scroll-smooth" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><title>EyeKart — Luxury Optical &amp; Eye Care</title><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&amp;family=Plus+Jakarta+Sans:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+          "surface-container": "#e5eeff",
+          "primary-fixed-dim": "#c5c6cc",
+          "on-secondary-container": "#00647d",
+          "background": "#f8f9ff",
+          "on-primary": "#ffffff",
+          "outline-variant": "#c5c6cb",
+          "on-primary-fixed-variant": "#44474c",
+          "secondary-fixed": "#b9eaff",
+          "surface-subtle": "#EAE8E3",
+          "surface-container-low": "#eff4ff",
+          "on-error": "#ffffff",
+          "on-tertiary-fixed": "#2f1500",
+          "surface-container-highest": "#d3e4fe",
+          "inverse-surface": "#213145",
+          "on-surface-variant": "#45474a",
+          "primary-fixed": "#e1e2e8",
+          "optical-white": "#FFFFFF",
+          "outline": "#75777b",
+          "surface-bright": "#f8f9ff",
+          "tertiary": "#000000",
+          "on-primary-container": "#818489",
+          "surface-tint": "#5c5e63",
+          "secondary-container": "#8fdfff",
+          "secondary-fixed-dim": "#81d1f0",
+          "tertiary-fixed-dim": "#ffb77d",
+          "on-secondary": "#ffffff",
+          "error-container": "#ffdad6",
+          "on-tertiary-container": "#c76c00",
+          "primary": "#000000",
+          "cyan-accent": "#06B6D4",
+          "tertiary-container": "#2f1500",
+          "on-secondary-fixed-variant": "#004d62",
+          "on-background": "#0b1c30",
+          "surface-container-high": "#dce9ff",
+          "surface": "#f8f9ff",
+          "on-tertiary": "#ffffff",
+          "surface-container-lowest": "#ffffff",
+          "graphite": "#2A2E35",
+          "surface-cream": "#F4F3F0",
+          "border-hairline": "#E2E8F0",
+          "surface-ivory": "#FBFBFA",
+          "alert-clinical": "#DC2626",
+          "tertiary-fixed": "#ffdcc3",
+          "mpesa-green": "#00A859",
+          "on-surface": "#0b1c30",
+          "on-primary-fixed": "#191c20",
+          "on-secondary-fixed": "#001f29",
+          "error": "#ba1a1a",
+          "on-tertiary-fixed-variant": "#6e3900",
+          "inverse-primary": "#c5c6cc",
+          "surface-variant": "#d3e4fe",
+          "on-error-container": "#93000a",
+          "inverse-on-surface": "#eaf1ff",
+          "secondary": "#006781",
+          "primary-container": "#191c20",
+          "surface-dim": "#cbdbf5"
+        },
+        "borderRadius": {
+          "DEFAULT": "0.125rem",
+          "lg": "0.25rem",
+          "xl": "0.5rem",
+          "full": "0.75rem"
+        },
+        "spacing": {
+          "space-xl": "2.5rem",
+          "gutter": "1.5rem",
+          "space-md": "1rem",
+          "margin-mobile": "1.25rem",
+          "margin": "3rem",
+          "gutter-mobile": "1rem",
+          "space-lg": "1.5rem",
+          "space-sm": "0.5rem",
+          "space-xs": "0.25rem"
+        },
+        "fontFamily": {
+          "headline-sm": ["Plus Jakarta Sans"],
+          "headline-lg-mobile": ["Playfair Display"],
+          "display-lg-mobile": ["Playfair Display"],
+          "body-lg": ["Plus Jakarta Sans"],
+          "data-metric": ["Plus Jakarta Sans"],
+          "headline-md": ["Playfair Display"],
+          "title-md": ["Plus Jakarta Sans"],
+          "label-md": ["Plus Jakarta Sans"],
+          "headline-lg": ["Playfair Display"],
+          "body-md": ["Plus Jakarta Sans"],
+          "body-sm": ["Plus Jakarta Sans"],
+          "label-sm": ["Plus Jakarta Sans"],
+          "label-lg": ["Plus Jakarta Sans"],
+          "display-lg": ["Playfair Display"]
+        },
+        "fontSize": {
+          "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+          "headline-lg-mobile": ["26px", {"lineHeight": "34px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+          "display-lg-mobile": ["34px", {"lineHeight": "42px", "letterSpacing": "-0.015em", "fontWeight": "600"}],
+          "body-lg": ["16px", {"lineHeight": "26px", "fontWeight": "400"}],
+          "data-metric": ["18px", {"lineHeight": "24px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+          "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "500"}],
+          "title-md": ["16px", {"lineHeight": "24px", "fontWeight": "600"}],
+          "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.04em", "fontWeight": "600"}],
+          "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+          "body-md": ["14px", {"lineHeight": "22px", "fontWeight": "400"}],
+          "body-sm": ["12px", {"lineHeight": "18px", "fontWeight": "400"}],
+          "label-sm": ["11px", {"lineHeight": "14px", "letterSpacing": "0.06em", "fontWeight": "700"}],
+          "label-lg": ["14px", {"lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "600"}],
+          "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "600"}]
+        }
+      },
+    },
+  };</script></head><body class="bg-surface font-body-md text-on-surface antialiased selection:bg-cyan-accent selection:text-surface-container-lowest"><header class="fixed top-0 left-0 w-full z-50 bg-optical-white/95 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="bg-graphite text-on-primary py-1.5 px-gutter"><div class="max-w-7xl mx-auto flex items-center justify-between font-label-sm text-label-sm"><div class="flex items-center gap-2 overflow-hidden truncate"><span class="inline-block w-1.5 h-1.5 rounded-full bg-mpesa-green animate-pulse"></span><span>Free Nairobi Express Delivery &amp; In-Home Optical Try-On • 2-Year Precision Frame Warranty • Pay via M-PESA &amp; All Major Cards</span></div><div class="hidden md:flex items-center gap-4 shrink-0"><span class="flex items-center gap-1 text-optical-white/80"><span class="material-symbols-outlined text-[14px]">support_agent</span>Call Optometrist: <a class="hover:text-optical-white font-label-sm text-label-sm underline" href="tel:+254700393527">+254 700 393 527</a></span><span class="text-optical-white/40">|</span><span class="flex items-center gap-1 text-optical-white/80"><span class="material-symbols-outlined text-[14px]">verified</span>Certified MOH / Optometry Council of Kenya</span></div></div></div><div class="h-20 max-w-7xl mx-auto px-gutter flex items-center justify-between gap-6"><div class="flex items-center gap-4"><a class="flex items-center gap-3 shrink-0 focus:outline-none" data-path="home" href="#"><img alt="EyeKart Brand Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1XFZlvgnz4SWLipOPqSIZA6RtCW2NZLqkeaxjHzXzq-AuFJsshCyySq1oMAHXLZ8ZKM16208tIChajcM2uOzO_U0Q43tULN75HulC8QmoFiz88aRjPJtaf6bDUP9s7YqVpxhYencqZ5aMMwdXo3qWk8zd8uGbV2re-bH6-vcloddnOnujhjZNiIdYZPLJqbGyCqr6UShZpx8TuTL2ufTBbwLpSflMBigbo40mlbMdu9nho9D8Ka33IoYzjA"/><span class="flex flex-col"><span class="font-headline-sm text-headline-sm font-bold tracking-tight text-primary leading-none">EYEKART</span><span class="font-label-sm text-label-sm uppercase tracking-widest text-secondary font-bold text-[9px]">Nairobi Atelier</span></span></a><div class="hidden xl:flex items-center gap-2 pl-4 text-on-surface-variant"><span class="material-symbols-outlined text-secondary text-[18px]">location_on</span><div class="flex flex-col text-left"><span class="font-label-sm text-label-sm text-on-surface-variant/70">Physical Clinics</span><button class="font-label-md text-label-md text-primary flex items-center gap-1 hover:text-secondary" type="button">Westlands / Junction Mall<span class="material-symbols-outlined text-[14px]">expand_more</span></button></div></div></div><div class="hidden lg:flex flex-1 max-w-xl mx-4"><div class="relative w-full flex items-center"><span class="material-symbols-outlined absolute left-3.5 text-outline text-[20px] pointer-events-none">search</span><input class="w-full pl-10 pr-24 py-2.5 bg-surface rounded-full text-on-surface font-body-sm text-body-sm placeholder:text-outline focus:outline-none focus:bg-optical-white shadow-[0_1px_4px_rgba(0,0,0,0.04)] focus:shadow-[0_4px_16px_rgba(0,0,0,0.08)] transition-all" placeholder="Search 120+ designer frames, shapes, or optical power..." type="text"/><button class="absolute right-1.5 px-3 py-1 bg-graphite hover:bg-primary text-on-primary rounded-full font-label-sm text-label-sm transition-colors" type="button">KSh Finder</button></div></div><div class="flex items-center gap-4 shrink-0"><div class="hidden sm:flex items-center px-2.5 py-1 rounded bg-surface-subtle/70 text-on-surface font-label-sm text-label-sm font-bold tracking-wide"><span>KES (KSh)</span></div><a aria-label="Saved Frames" class="relative p-2 text-on-surface-variant hover:text-primary transition-colors focus:outline-none" data-path="wishlist" href="#"><span class="material-symbols-outlined text-[24px]">favorite</span><span class="absolute top-1 right-1 w-4 h-4 bg-graphite text-on-primary font-label-sm text-[9px] flex items-center justify-center rounded-full">3</span></a><a aria-label="Optical Bag" class="relative p-2 text-on-surface-variant hover:text-primary transition-colors focus:outline-none" data-path="cart" href="#"><span class="material-symbols-outlined text-[24px]">shopping_bag</span><span class="absolute top-1 right-1 w-4 h-4 bg-mpesa-green text-on-primary font-label-sm text-[9px] flex items-center justify-center rounded-full font-bold">1</span></a><div class="flex items-center pl-2"><a class="flex items-center gap-2 group focus:outline-none" data-path="user-profile" href="#"><img alt="Profile" class="w-8 h-8 rounded-full object-cover shadow-[0_2px_6px_rgba(0,0,0,0.1)] group-hover:scale-105 transition-transform" src="https://lh3.googleusercontent.com/aida-public/AB6AXuALqcc-RXzOmLDEqTC-II86Kx1jCKzRYxbbyuR_UvjtPVAdgc2tJi7XJvd_uqAERJbbvjA4H7TkXaw6VFvA99f7lHeg268qGi7sHl8eJ4JjT1QHLoRVuTbKAzB-Dxi7hvgnKD-VvX7GfJqg6ad8G4A9-nQijEn6-slUaSfMX7MnMpmR5pG9PpYTbl6J2yraugIherzoLDN4A_v58Gy0k70ZKKQtWqJB0jqD2Y2KFb0BWs39ucd1mPZwHA"/><span class="hidden xl:block font-label-md text-label-md text-on-surface group-hover:text-primary">My Portal</span></a></div></div></div><div class="bg-optical-white/80 shadow-[0_1px_4px_rgba(0,0,0,0.02)]"><div class="max-w-7xl mx-auto px-gutter flex items-center justify-between overflow-x-auto"><nav class="flex items-center gap-6 py-2.5 shrink-0" data-active-classes="text-primary font-bold"><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="home" href="#">Home</a><div class="relative group py-1"><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors flex items-center gap-1" data-path="eyeglasses-collection" href="#">Eyeglasses</a><div class="hidden group-hover:block fixed left-0 top-full w-full bg-optical-white/95 backdrop-blur-2xl shadow-[0_20px_40px_rgba(0,0,0,0.08)] py-8 px-margin z-50"><div class="max-w-7xl mx-auto grid grid-cols-4 gap-8"><div class="space-y-3"><h4 class="font-label-sm text-label-sm uppercase tracking-wider text-secondary font-bold">Shop by Gender</h4><div class="flex flex-col space-y-2"><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="eyeglasses-collection" href="#">Men's Optical</a><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="eyeglasses-collection" href="#">Women's Collection</a><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="eyeglasses-collection" href="#">Unisex Frames</a><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="kids-teens-optics" href="#">Kids &amp; Teens Frames</a></div></div><div class="space-y-3"><h4 class="font-label-sm text-label-sm uppercase tracking-wider text-secondary font-bold">Shop by Silhouette</h4><div class="flex flex-col space-y-2"><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="eyeglasses-collection" href="#">Aviator</a><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="eyeglasses-collection" href="#">Geometric &amp; Octagonal</a><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="eyeglasses-collection" href="#">Cat Eye</a><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="eyeglasses-collection" href="#">Architectural Round</a><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="eyeglasses-collection" href="#">Tailored Rectangle</a></div></div><div class="space-y-3"><h4 class="font-label-sm text-label-sm uppercase tracking-wider text-secondary font-bold">Atelier Fit &amp; Material</h4><div class="flex flex-col space-y-2"><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="premium-atelier" href="#">Japanese Titanium</a><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="premium-atelier" href="#">Mazzucchelli Acetate</a><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="eyeglasses-collection" href="#">Ultra-light TR90 Memory</a><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="eyeglasses-collection" href="#">Nairobi Low-Bridge Fit</a></div></div><div class="space-y-3 bg-surface-container-low p-5 rounded-lg"><h4 class="font-label-sm text-label-sm uppercase tracking-wider text-secondary font-bold">Clinical Lens Tech</h4><div class="flex flex-col space-y-2"><a aria-current="page" class="text-primary font-bold" data-path="lens-customizer" href="#">Digital Single Vision</a><a aria-current="page" class="text-primary font-bold" data-path="lens-customizer" href="#">HD Varifocal / Progressive</a><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="screen-glasses" href="#">Blue-Light Defence (Nairobi Tech)</a><a class="font-label-sm text-label-sm text-primary font-bold hover:underline pt-2" data-path="book-eye-test" href="#">Free Eye Test at Sarit Centre →</a></div></div></div></div></div><div class="relative group py-1"><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors flex items-center gap-1" data-path="sunglasses-collection" href="#">Sunglasses</a><div class="hidden group-hover:block fixed left-0 top-full w-full bg-optical-white/95 backdrop-blur-2xl shadow-[0_20px_40px_rgba(0,0,0,0.08)] py-8 px-margin z-50"><div class="max-w-7xl mx-auto grid grid-cols-4 gap-8"><div class="space-y-3"><h4 class="font-label-sm text-label-sm uppercase tracking-wider text-secondary font-bold">Curated By Style</h4><div class="flex flex-col space-y-2"><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="sunglasses-collection" href="#">Polarized Equatorial Tint</a><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="sunglasses-collection" href="#">UV400 Driving Lenses</a><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="sunglasses-collection" href="#">Prescription Sun Optics</a><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="sunglasses-collection" href="#">Savannah Gradient Tints</a></div></div><div class="space-y-3"><h4 class="font-label-sm text-label-sm uppercase tracking-wider text-secondary font-bold">Iconic Shapes</h4><div class="flex flex-col space-y-2"><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="sunglasses-collection" href="#">Safari Aviator</a><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="sunglasses-collection" href="#">Oversized Modernist</a><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="sunglasses-collection" href="#">Angular Wayfarer</a><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="sunglasses-collection" href="#">Clinical Clip-On Shields</a></div></div><div class="space-y-3"><h4 class="font-label-sm text-label-sm uppercase tracking-wider text-secondary font-bold">Craftsmanship</h4><div class="flex flex-col space-y-2"><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="nairobi-edit" href="#">The Rift Edition (Local Horn)</a><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="premium-atelier" href="#">24k Gold Electroplated Hinges</a><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="sunglasses-collection" href="#">Scratch-Guard Oleophobic</a></div></div><div class="bg-surface-cream p-5 rounded-lg flex flex-col justify-between"><span class="font-headline-md text-headline-md text-primary font-bold">Savannah Sun 2025</span><p class="font-body-sm text-body-sm text-on-surface-variant">Hand-buffed Italian Mazzucchelli acetate crafted for equatorial sun angles.</p><a class="font-label-sm text-label-sm text-primary font-bold underline" data-path="sunglasses-collection" href="#">Discover Collection →</a></div></div></div></div><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="screen-glasses" href="#">Screen Glasses</a><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="kids-teens-optics" href="#">Kids &amp; Teens</a><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="contact-lenses" href="#">Contact Lenses</a><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="premium-atelier" href="#">Premium Atelier</a><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="nairobi-edit" href="#">Nairobi Edit</a></nav><div class="flex items-center gap-5 shrink-0 pl-6 border-l border-outline-variant/30"><a class="flex items-center gap-1.5 font-label-md text-label-md text-secondary hover:text-cyan-accent transition-colors" data-path="virtual-try-on" href="#"><span class="material-symbols-outlined text-[18px]">view_in_ar</span><span>3D Try-On Studio</span></a><a class="flex items-center gap-1.5 font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors" data-path="ai-frame-finder" href="#"><span class="material-symbols-outlined text-[18px]">auto_awesome</span><span>AI Frame Finder</span></a><a class="flex items-center gap-1.5 font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors" data-path="book-eye-test" href="#"><span class="material-symbols-outlined text-[18px]">calendar_month</span><span>Book Clinic Test</span></a><a class="px-3 py-1 bg-surface-container-high text-on-surface font-label-md text-label-md rounded hover:bg-graphite hover:text-on-primary transition-colors flex items-center gap-1" data-path="upload-prescription" href="#"><span class="material-symbols-outlined text-[16px]">upload_file</span><span>Upload Rx</span></a></div></div></div></header><main class="w-full pt-32 bg-surface min-h-screen"><div class="flex flex-col w-full">
+<!-- Interactive Cinematic Studio Space -->
+<div class="w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+<!-- Screen Narrative Breadcrumb & Precision Diagnostics Header -->
+<div class="flex flex-col md:flex-row md:items-center justify-between pb-6 gap-4">
+<div class="flex flex-col">
+<div class="flex items-center gap-2 font-label-sm text-label-sm text-secondary uppercase tracking-widest">
+<span class="inline-block w-2 h-2 rounded-full bg-cyan-accent animate-ping"></span>
+<span>AR Vision Laboratory • Nairobi Atelier Hub</span>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-primary tracking-tight mt-1">
+          Precision Spatial Virtual Try-On
+        </h1>
+<p class="font-body-md text-body-md text-on-surface-variant">
+          Sub-millimetre corneal mapping and automated facial anthropometry calibrated for equatorial light refractivity.
+        </p>
+</div>
+<!-- Studio Diagnostic Mode Pills -->
+<div class="flex items-center gap-3 bg-surface-container-high/60 backdrop-blur-md p-1.5 rounded-full self-start md:self-auto">
+<div class="flex items-center gap-2 px-3 py-1 bg-optical-white shadow-sm rounded-full">
+<span class="material-symbols-outlined text-mpesa-green text-[18px]">verified</span>
+<span class="font-label-md text-label-md text-primary font-bold">Biometric Depth: Active</span>
+</div>
+<div class="flex items-center gap-1.5 px-3 py-1 text-on-surface-variant font-label-md text-label-md">
+<span class="material-symbols-outlined text-[16px] text-cyan-accent">sensors</span>
+<span>Mediapipe 2.4 Mesh</span>
+</div>
+<button class="p-1 hover:bg-optical-white rounded-full text-on-surface-variant transition-colors" id="toggleCalibrationHelp" title="Measurement Protocol Info">
+<span class="material-symbols-outlined text-[20px]">help_outline</span>
+</button>
+</div>
+</div>
+<!-- Main Live AR Viewport & Clinical Panel Dual Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+<!-- Primary Live AR Canvas / Video Feed Viewport (8 Cols) -->
+<div class="lg:col-span-8 flex flex-col gap-4">
+<!-- Interactive Viewport Stage Frame -->
+<div class="relative w-full aspect-[4/3] sm:aspect-[16/10] bg-graphite rounded-xl overflow-hidden shadow-2xl transition-all duration-300" id="vtoViewportStage">
+<!-- Background Camera Feed Simulator with Kenyan Model Portrait -->
+<div class="absolute inset-0 z-0 select-none overflow-hidden">
+<img alt="High-precision AR viewport Kenyan model live headshot" class="w-full h-full object-cover object-center filter transition-all duration-700 brightness-105 contrast-[1.02]" id="arModelFace" src="https://lh3.googleusercontent.com/aida/AEtjO1Xv-gEWx-Z-slMIVAJhj2tcCy0NJrQmgqt-tDrfeYl8i5DsHsKZZkcnlo2Dgs58yV8K_wFnVSbZF7dlHn6HTYpOzkBPv8pld5DPYPEU2ahhjZIJ96YNd5l_Mv8FlqQ3EGvstyMokm1gHBB1nrdQGsbh8w8idEJmiAeXJEqOVBmYLzepeV5pnq4FYLXu0GbkNu8STM33EuXVTjTE-WtS2HgX3laXGm9KREbpsaTbh_OJl8atKRWprKSeGFtY"/>
+<!-- Lighting Simulation Ambient Tint Layer -->
+<div class="absolute inset-0 pointer-events-none transition-all duration-500 bg-transparent mix-blend-soft-light" id="lightingLayer"></div>
+<!-- Vignette Scrim for Deep Optical Studio Contrast -->
+<div class="absolute inset-0 pointer-events-none bg-gradient-to-t from-graphite/90 via-transparent to-graphite/40"></div>
+</div>
+<!-- Bare Face Compare Scrim (Hidden by default, triggered via toggle) -->
+<div class="absolute inset-0 bg-graphite/40 backdrop-blur-sm hidden items-center justify-center z-10" id="bareFaceNotice">
+<div class="bg-optical-white/95 px-5 py-2.5 rounded-full shadow-lg flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[20px]">face</span>
+<span class="font-label-md text-label-md text-primary font-bold">Bare Face Reference Active • Frames Suppressed</span>
+</div>
+</div>
+<!-- Real-Time Clinical Ocular HUD Overlay -->
+<svg class="absolute inset-0 w-full h-full pointer-events-none z-10" fill="none" viewbox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">
+<!-- Calibrated Pupil Centers (OD / OS) -->
+<!-- OD (Patient Right / Viewer Left) -->
+<g class="transition-transform duration-300" id="hudPupilRight">
+<circle class="animate-spin origin-[330px_275px]" cx="330" cy="275" r="14" stroke="#06B6D4" stroke-dasharray="2 3" stroke-width="1.2" style="animation-duration: 9s;"></circle>
+<circle cx="330" cy="275" fill="#06B6D4" r="3"></circle>
+<line stroke="#06B6D4" stroke-opacity="0.8" stroke-width="0.75" x1="312" x2="348" y1="275" y2="275"></line>
+<line stroke="#06B6D4" stroke-opacity="0.8" stroke-width="0.75" x1="330" x2="330" y1="257" y2="293"></line>
+<text fill="#06B6D4" font-family="Plus Jakarta Sans" font-size="10" font-weight="600" letter-spacing="0.08em" x="300" y="250">OD • OPTICAL CTR</text>
+</g>
+<!-- OS (Patient Left / Viewer Right) -->
+<g class="transition-transform duration-300" id="hudPupilLeft">
+<circle class="animate-spin origin-[470px_275px]" cx="470" cy="275" r="14" stroke="#06B6D4" stroke-dasharray="2 3" stroke-width="1.2" style="animation-duration: 9s;"></circle>
+<circle cx="470" cy="275" fill="#06B6D4" r="3"></circle>
+<line stroke="#06B6D4" stroke-opacity="0.8" stroke-width="0.75" x1="452" x2="488" y1="275" y2="275"></line>
+<line stroke="#06B6D4" stroke-opacity="0.8" stroke-width="0.75" x1="470" x2="470" y1="257" y2="293"></line>
+<text fill="#06B6D4" font-family="Plus Jakarta Sans" font-size="10" font-weight="600" letter-spacing="0.08em" x="445" y="250">OS • OPTICAL CTR</text>
+</g>
+<!-- Interpupillary Distance (PD) Measure Rail -->
+<line stroke="#06B6D4" stroke-linecap="round" stroke-width="1.5" x1="330" x2="470" y1="235" y2="235"></line>
+<circle cx="330" cy="235" fill="#06B6D4" r="2.5"></circle>
+<circle cx="470" cy="235" fill="#06B6D4" r="2.5"></circle>
+<rect fill="#111418" fill-opacity="0.85" height="18" rx="3" width="68" x="366" y="222"></rect>
+<text fill="#FFFFFF" font-family="Plus Jakarta Sans" font-size="10" font-weight="700" text-anchor="middle" x="400" y="235">PD 63.5 mm</text>
+<!-- Keyhole Nasal Bridge Apex Coordinates & Tilt Line -->
+<path d="M394 285 L400 278 L406 285" stroke="#FFFFFF" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.7" stroke-width="1.5"></path>
+<line stroke="#06B6D4" stroke-dasharray="2 2" stroke-width="0.75" x1="400" x2="400" y1="278" y2="305"></line>
+<text fill="#FFFFFF" fill-opacity="0.85" font-family="Plus Jakarta Sans" font-size="9" text-anchor="middle" x="400" y="318">Nasion Offset: 0.0mm</text>
+<!-- Sub-pixel Face Mesh Anchor Micro-Dots -->
+<circle cx="270" cy="285" fill="#06B6D4" fill-opacity="0.5" r="1.5"></circle>
+<circle cx="530" cy="285" fill="#06B6D4" fill-opacity="0.5" r="1.5"></circle>
+<circle cx="400" cy="390" fill="#06B6D4" fill-opacity="0.5" r="1.5"></circle>
+<circle cx="350" cy="360" fill="#06B6D4" fill-opacity="0.5" r="1.5"></circle>
+<circle cx="450" cy="360" fill="#06B6D4" fill-opacity="0.5" r="1.5"></circle>
+<!-- Pantoscopic Angle Horizon Guideline (Left Lateral) -->
+<line stroke="#06B6D4" stroke-dasharray="3 2" stroke-width="1" x1="160" x2="220" y1="290" y2="280"></line>
+<rect fill="#111418" fill-opacity="0.8" height="16" rx="2" width="76" x="135" y="268"></rect>
+<text fill="#06B6D4" font-family="Plus Jakarta Sans" font-size="9" font-weight="600" text-anchor="middle" x="173" y="280">Panto: 8.5°</text>
+</svg>
+<!-- Top-Left Status Telemetry Dock -->
+<div class="absolute top-4 left-4 z-20 flex flex-col gap-2">
+<div class="flex items-center gap-2 bg-graphite/85 backdrop-blur-md px-3.5 py-1.5 rounded-full text-on-primary shadow-lg">
+<span class="inline-block w-2.5 h-2.5 rounded-full bg-mpesa-green animate-pulse"></span>
+<span class="font-label-sm text-label-sm tracking-wider font-semibold">LIVE AR OCULAR TRACKING</span>
+<span class="text-optical-white/30">•</span>
+<span class="font-label-sm text-label-sm text-cyan-accent font-bold">60 FPS</span>
+<span class="text-optical-white/30">•</span>
+<span class="font-label-sm text-label-sm text-optical-white/80">&lt;11ms latency</span>
+</div>
+<div class="flex items-center gap-2 self-start bg-graphite/60 backdrop-blur-sm px-2.5 py-1 rounded text-optical-white/80 font-label-sm text-[10px]">
+<span class="material-symbols-outlined text-[12px] text-mpesa-green">check_circle</span>
+<span>Corneal Vertex Calibrated: 12mm Standard</span>
+</div>
+</div>
+<!-- Top-Right AR Environment Controls Dock -->
+<div class="absolute top-4 right-4 z-20 flex flex-col items-end gap-2">
+<!-- Quick Environment Toggles -->
+<div class="flex items-center gap-1.5 bg-graphite/85 backdrop-blur-md p-1 rounded-full text-on-primary shadow-lg">
+<button class="px-2.5 py-1 rounded-full text-xs font-label-sm transition-all bg-optical-white/20 text-on-primary font-bold hover:bg-optical-white/30" id="btnLightOffice" title="Office Interior Lighting (4000K)">
+                4000K Office
+              </button>
+<button class="px-2.5 py-1 rounded-full text-xs font-label-sm transition-all text-optical-white/70 hover:text-on-primary hover:bg-optical-white/20" id="btnLightSun" title="Nairobi Equatorial Sun (5600K)">
+                5600K Sun
+              </button>
+<button class="px-2.5 py-1 rounded-full text-xs font-label-sm transition-all text-optical-white/70 hover:text-on-primary hover:bg-optical-white/20" id="btnLightSunset" title="Golden Hour Rift Lighting (3200K)">
+                3200K Gold
+              </button>
+</div>
+<!-- Optical Feed Tool Buttons -->
+<div class="flex items-center gap-1.5 bg-graphite/85 backdrop-blur-md p-1.5 rounded-full text-on-primary shadow-lg">
+<button class="p-2 rounded-full hover:bg-optical-white/20 text-cyan-accent transition-colors" id="toggleAntiReflect" title="Toggle Anti-Reflective Crizal Glare Coat">
+<span class="material-symbols-outlined text-[18px]">lens_blur</span>
+</button>
+<button class="p-2 rounded-full hover:bg-optical-white/20 text-optical-white/80 transition-colors" id="toggleMirrorFeed" title="Flip Mirror Axis">
+<span class="material-symbols-outlined text-[18px]">flip</span>
+</button>
+<button class="p-2 rounded-full hover:bg-optical-white/20 text-optical-white/80 transition-colors" id="toggleBareFace" title="Hold/Click to Compare Bare Face">
+<span class="material-symbols-outlined text-[18px]">compare</span>
+</button>
+<button class="p-2 rounded-full hover:bg-optical-white/20 text-optical-white/80 transition-colors" id="toggleFullscreenVTO" title="Toggle Fullscreen Optical Viewport">
+<span class="material-symbols-outlined text-[18px]">fullscreen</span>
+</button>
+</div>
+</div>
+<!-- Bottom Floating Eyewear Quick-Switch Carousel Dock -->
+<div class="absolute bottom-4 inset-x-4 z-20">
+<div class="bg-graphite/80 backdrop-blur-xl rounded-xl p-3.5 text-on-primary shadow-2xl flex flex-col gap-2.5">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[18px]">auto_read_play</span>
+<span class="font-label-sm text-label-sm uppercase tracking-widest text-optical-white/90">Curated Atelier Silhouette Carousel</span>
+</div>
+<div class="flex items-center gap-1 text-optical-white/60 font-label-sm text-xs">
+<span>Swipe or click to mount</span>
+<span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+</div>
+</div>
+<!-- Horizontal Frame Scroll Cards -->
+<div class="flex items-center gap-3 overflow-x-auto pb-1 scrollbar-none snap-x">
+<!-- Frame 1: Selected (EK-902 Kibera Titanium) -->
+<button class="frame-selector-card snap-start shrink-0 flex items-center gap-3 p-2.5 rounded-lg bg-optical-white/20 text-left transition-all group min-w-[240px]">
+<div class="w-12 h-10 rounded bg-optical-white/10 flex items-center justify-center p-1">
+<span class="material-symbols-outlined text-cyan-accent text-[28px] group-hover:scale-110 transition-transform">eyeglasses</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-1.5">
+<span class="font-title-md text-body-md font-bold text-on-primary truncate">Kibera Titanium EK-902</span>
+<span class="w-1.5 h-1.5 rounded-full bg-cyan-accent"></span>
+</div>
+<span class="font-data-metric text-xs text-secondary-container">KSh 14,800</span>
+<span class="font-label-sm text-[10px] text-optical-white/60">Japanese Pure β-Titanium</span>
+</div>
+</button>
+<!-- Frame 2: The Mara Round 01 -->
+<button class="frame-selector-card snap-start shrink-0 flex items-center gap-3 p-2.5 rounded-lg bg-optical-white/5 hover:bg-optical-white/15 text-left transition-all group min-w-[240px]">
+<div class="w-12 h-10 rounded bg-optical-white/10 flex items-center justify-center p-1">
+<span class="material-symbols-outlined text-optical-white/70 text-[28px] group-hover:scale-110 transition-transform">eyeglasses</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-title-md text-body-md font-bold text-on-primary truncate">The Mara Round 01</span>
+<span class="font-data-metric text-xs text-secondary-container">KSh 14,800</span>
+<span class="font-label-sm text-[10px] text-optical-white/60">Fluted Crown Panto Form</span>
+</div>
+</button>
+<!-- Frame 3: EK-804 Westlands Octagonal -->
+<button class="frame-selector-card snap-start shrink-0 flex items-center gap-3 p-2.5 rounded-lg bg-optical-white/5 hover:bg-optical-white/15 text-left transition-all group min-w-[240px]">
+<div class="w-12 h-10 rounded bg-optical-white/10 flex items-center justify-center p-1">
+<span class="material-symbols-outlined text-optical-white/70 text-[28px] group-hover:scale-110 transition-transform">eyeglasses</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-title-md text-body-md font-bold text-on-primary truncate">Westlands Octagonal EK-804</span>
+<span class="font-data-metric text-xs text-secondary-container">KSh 13,800</span>
+<span class="font-label-sm text-[10px] text-optical-white/60">Architectural Bevel Edge</span>
+</div>
+</button>
+<!-- Frame 4: The Karen Aviator -->
+<button class="frame-selector-card snap-start shrink-0 flex items-center gap-3 p-2.5 rounded-lg bg-optical-white/5 hover:bg-optical-white/15 text-left transition-all group min-w-[240px]">
+<div class="w-12 h-10 rounded bg-optical-white/10 flex items-center justify-center p-1">
+<span class="material-symbols-outlined text-optical-white/70 text-[28px] group-hover:scale-110 transition-transform">eyeglasses</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-title-md text-body-md font-bold text-on-primary truncate">The Karen Aviator</span>
+<span class="font-data-metric text-xs text-secondary-container">KSh 19,800</span>
+<span class="font-label-sm text-[10px] text-optical-white/60">Double-Bridge Safari Spec</span>
+</div>
+</button>
+<!-- Frame 5: Muthaiga Lucent Poly -->
+<button class="frame-selector-card snap-start shrink-0 flex items-center gap-3 p-2.5 rounded-lg bg-optical-white/5 hover:bg-optical-white/15 text-left transition-all group min-w-[240px]">
+<div class="w-12 h-10 rounded bg-optical-white/10 flex items-center justify-center p-1">
+<span class="material-symbols-outlined text-optical-white/70 text-[28px] group-hover:scale-110 transition-transform">eyeglasses</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-title-md text-body-md font-bold text-on-primary truncate">Muthaiga Lucent Poly</span>
+<span class="font-data-metric text-xs text-secondary-container">KSh 9,800</span>
+<span class="font-label-sm text-[10px] text-optical-white/60">Crystal Mazzucchelli Sheet</span>
+</div>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Real-Time Interactive Spatial Adjustment Bar (Micro Alignment) -->
+<div class="bg-surface-container-lowest p-4 rounded-xl shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+<div class="flex items-center gap-3 w-full md:w-auto">
+<span class="material-symbols-outlined text-secondary text-[22px]">tune</span>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-primary font-bold">Bridge Height &amp; Temple Fine-Tuner</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Calibrate frame vertical resting position to mimic real nose pad clearance</span>
+</div>
+</div>
+<div class="flex items-center gap-6 w-full md:w-auto justify-end">
+<!-- Vertical Slider -->
+<div class="flex items-center gap-2">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Nose Elevation</span>
+<input class="w-24 accent-primary cursor-pointer" id="verticalOffsetSlider" max="3" min="-3" step="0.5" type="range" value="0"/>
+<span class="font-data-metric text-body-sm text-primary w-8 text-right" id="offsetValue">0 mm</span>
+</div>
+<!-- 360 Head Angle Indicator -->
+<div class="flex items-center gap-1.5 px-3 py-1 bg-surface-cream rounded text-on-surface font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-cyan-accent text-[16px]">screen_rotation</span>
+<span>Yaw: +2.1° (Facing True)</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Right-Hand Precision Fit & Prescription Order Desk (4 Cols) -->
+<div class="lg:col-span-4 flex flex-col gap-4">
+<!-- Master Fit Analysis Card -->
+<div class="bg-surface-container-lowest p-6 rounded-xl shadow-md flex flex-col gap-5">
+<!-- Top Title & Atelier Seal -->
+<div class="flex items-start justify-between">
+<div class="flex flex-col">
+<div class="flex items-center gap-1.5 mb-1">
+<span class="px-2 py-0.5 rounded bg-surface-container text-secondary font-label-sm text-[10px] font-bold uppercase tracking-wider">Nairobi Master Calibration</span>
+<span class="flex items-center text-xs font-bold text-on-surface">★ 4.9</span>
+<span class="text-xs text-outline">(84)</span>
+</div>
+<h2 class="font-headline-md text-headline-md text-primary font-bold">Kibera Minimalist Pure Titanium EK-902</h2>
+<span class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Ultralight Circular Architectural Wire</span>
+</div>
+<button class="p-2 hover:bg-surface-container rounded-full text-on-surface-variant hover:text-alert-clinical transition-colors" title="Save to Personal Wishlist">
+<span class="material-symbols-outlined text-[22px]">favorite_border</span>
+</button>
+</div>
+<!-- Colorway Atelier Swatches -->
+<div class="flex flex-col gap-2">
+<div class="flex items-center justify-between text-xs">
+<span class="font-label-md text-label-md text-on-surface-variant">Finish: <span class="text-primary font-bold" id="currentFinishLabel">Brushed Champagne Titanium</span></span>
+<span class="font-label-sm text-[11px] text-mpesa-green font-bold">In Stock • Nairobi Atelier Hub</span>
+</div>
+<div class="flex items-center gap-3">
+<button class="finish-swatch w-7 h-7 rounded-full bg-[#E5D7B7] p-0.5 shadow-sm transform scale-110 transition-transform" data-finish="Brushed Champagne Titanium" title="Brushed Champagne Titanium">
+<span class="block w-full h-full rounded-full bg-optical-white/20"></span>
+</button>
+<button class="finish-swatch w-7 h-7 rounded-full bg-[#232323] p-0.5 shadow-sm transition-transform hover:scale-105" data-finish="Matte Obsidian Black" title="Matte Obsidian Black">
+<span class="block w-full h-full rounded-full bg-optical-white/10"></span>
+</button>
+<button class="finish-swatch w-7 h-7 rounded-full bg-[#E0A899] p-0.5 shadow-sm transition-transform hover:scale-105" data-finish="Rift Rose Gold" title="Rift Rose Gold">
+<span class="block w-full h-full rounded-full bg-optical-white/20"></span>
+</button>
+<button class="finish-swatch w-7 h-7 rounded-full bg-[#9E9E9E] p-0.5 shadow-sm transition-transform hover:scale-105" data-finish="Raw Matte Silver" title="Raw Matte Silver">
+<span class="block w-full h-full rounded-full bg-optical-white/20"></span>
+</button>
+</div>
+</div>
+<!-- Dynamic Biometric Fit Diagnostic Score -->
+<div class="bg-surface-container-low p-4 rounded-lg flex flex-col gap-3">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-mpesa-green text-[20px]">recommend</span>
+<span class="font-title-md text-title-md text-primary font-bold">98% Anthropometric Match</span>
+</div>
+<span class="font-label-sm text-label-sm text-secondary font-bold">Optimal Fit</span>
+</div>
+<!-- Match Progress Gauge Bar -->
+<div class="w-full bg-surface-variant h-2 rounded-full overflow-hidden">
+<div class="bg-mpesa-green h-full rounded-full" style="width: 98%;"></div>
+</div>
+<!-- Biometric Metrics Breakdown Mini-Grid -->
+<div class="grid grid-cols-3 gap-2 pt-1 text-center">
+<div class="bg-optical-white p-2 rounded shadow-sm flex flex-col">
+<span class="font-label-sm text-[10px] text-outline uppercase">Face Oval</span>
+<span class="font-data-metric text-body-sm text-primary">Balanced</span>
+</div>
+<div class="bg-optical-white p-2 rounded shadow-sm flex flex-col">
+<span class="font-label-sm text-[10px] text-outline uppercase">Bridge 19mm</span>
+<span class="font-data-metric text-body-sm text-primary">Exact Lock</span>
+</div>
+<div class="bg-optical-white p-2 rounded shadow-sm flex flex-col">
+<span class="font-label-sm text-[10px] text-outline uppercase">Frame Weight</span>
+<span class="font-data-metric text-body-sm text-cyan-accent">12.8g Ultra</span>
+</div>
+</div>
+</div>
+<!-- Physical Frame Dimensions Schematic Strip -->
+<div class="p-3 bg-surface-cream rounded-lg flex items-center justify-between text-on-surface">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-graphite text-[18px]">straighten</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-medium">Calibrated Specs:</span>
+</div>
+<div class="flex items-center gap-3 font-data-metric text-xs text-primary font-bold">
+<span>Lens 49mm</span>
+<span class="text-outline">•</span>
+<span>Bridge 19mm</span>
+<span class="text-outline">•</span>
+<span>Temple 145mm</span>
+</div>
+</div>
+<!-- Price & M-PESA Indicator -->
+<div class="flex items-baseline justify-between pt-2">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-outline uppercase">Prescription Frame Price</span>
+<div class="flex items-baseline gap-2">
+<span class="font-display-lg text-headline-lg text-primary font-bold">KSh 14,800</span>
+<span class="font-body-sm text-body-sm text-outline line-through">KSh 17,500</span>
+</div>
+</div>
+<div class="flex items-center gap-1 text-mpesa-green font-label-md text-label-md font-bold">
+<span class="material-symbols-outlined text-[16px]">bolt</span>
+<span>Instant M-PESA STK</span>
+</div>
+</div>
+<!-- Primary & Secondary Actions Hierarchy -->
+<div class="flex flex-col gap-2.5 pt-1">
+<!-- Main CTA -->
+<a class="w-full py-3.5 px-4 bg-primary hover:bg-graphite text-on-primary font-label-lg text-label-lg rounded text-center transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary/10" data-path="lens-customizer" href="#">
+<span>Choose Lenses &amp; Enter Prescription</span>
+<span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</a>
+<!-- Home Try-On Service CTA -->
+<button class="w-full py-3 px-4 bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-label-md text-label-md font-bold rounded transition-colors flex items-center justify-center gap-2" id="btnOrderHomeTryOn">
+<span class="material-symbols-outlined text-[18px] text-secondary">local_shipping</span>
+<span>Order 4-Frame Home Try-On in Nairobi (Free)</span>
+</button>
+<!-- Physical In-Store Booking -->
+<a class="w-full py-2.5 px-4 text-on-surface-variant hover:text-primary font-label-sm text-label-sm text-center transition-colors flex items-center justify-center gap-1.5 underline" data-path="book-eye-test" href="#">
+<span class="material-symbols-outlined text-[16px]">apartment</span>
+<span>Book Optometrist Fitting at Westlands or Sarit Centre</span>
+</a>
+</div>
+<!-- Atelier Assurance Badges -->
+<div class="pt-3 border-t border-hairline/40 grid grid-cols-2 gap-2 text-on-surface-variant font-label-sm text-[11px]">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-mpesa-green text-[15px]">check</span>
+<span>Free Nairobi Express Delivery</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-secondary text-[15px]">shield</span>
+<span>2-Year Structural Warranty</span>
+</div>
+</div>
+</div>
+<!-- High-Res Instant Snapshot & Share Tool -->
+<div class="bg-surface-container-lowest p-4 rounded-xl shadow-sm flex items-center justify-between">
+<div class="flex items-center gap-3">
+<button class="w-10 h-10 rounded-full bg-surface-container-high hover:bg-graphite hover:text-on-primary text-primary flex items-center justify-center transition-colors" id="btnCaptureSnapshot" title="Capture AR High-Res Snapshot">
+<span class="material-symbols-outlined text-[20px]">photo_camera</span>
+</button>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-primary font-bold">Capture AR Lookbook</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Save 1080p fit snapshot to phone or WhatsApp</span>
+</div>
+</div>
+<button class="px-3 py-1.5 bg-surface-container hover:bg-surface-container-highest text-on-surface rounded font-label-sm text-label-sm font-semibold flex items-center gap-1 transition-colors" id="btnShareLook">
+<span class="material-symbols-outlined text-[16px]">share</span>
+<span>Share</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Supplementary Clinical Diagnostics Information Strip (Bento Section) -->
+<div class="mt-10 grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- Box 1: Equatorial Anti-Glare Optics -->
+<div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm flex flex-col gap-3">
+<div class="w-10 h-10 rounded-full bg-secondary-fixed/50 flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-[22px]">light_mode</span>
+</div>
+<h3 class="font-title-md text-title-md text-primary font-bold">Equatorial Light Calibrated</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+          Nairobi experiences high-angle UV radiation and intense solar reflectivity. EyeKart AR incorporates custom solar elevation simulation to preview high-index Crizal Sapphire anti-glare resistance.
+        </p>
+<span class="font-label-sm text-label-sm text-secondary font-bold pt-1">Learn About 1.67 High-Index →</span>
+</div>
+<!-- Box 2: Low-Bridge African Facial Anatomy Fit -->
+<div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm flex flex-col gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[22px]">verified_user</span>
+</div>
+<h3 class="font-title-md text-title-md text-primary font-bold">Low-Bridge Ergonomic Geometry</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+          Engineered specifically for East African facial topographies with flared ceramic nose pads, lengthened titanium pantoscopic shafts, and zero cheek-rest slippage.
+        </p>
+<span class="font-label-sm text-label-sm text-primary font-bold pt-1">Explore Nairobi Fit Anatomy →</span>
+</div>
+<!-- Box 3: 4-Frame In-Home Trial Protocol -->
+<div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm flex flex-col gap-3">
+<div class="w-10 h-10 rounded-full bg-mpesa-green/10 flex items-center justify-center text-mpesa-green">
+<span class="material-symbols-outlined text-[22px]">box_add</span>
+</div>
+<h3 class="font-title-md text-title-md text-primary font-bold">Complimentary Nairobi Home Try-On</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+          Unsure of the virtual fit? We dispatch 4 curated designer frames to your home or office in Westlands, Kilimani, Karen, or Gigiri for a 3-day personal fitting.
+        </p>
+<span class="font-label-sm text-label-sm text-mpesa-green font-bold pt-1">Select 4 Trial Frames →</span>
+</div>
+</div>
+</div>
+<!-- Snapshot Modal Overlay Feedback -->
+<div class="fixed bottom-6 right-6 z-50 bg-graphite text-on-primary px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3 transform translate-y-24 opacity-0 transition-all duration-300 pointer-events-none" id="snapshotSuccessToast">
+<span class="material-symbols-outlined text-mpesa-green text-[24px]">check_circle</span>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md font-bold">High-Res AR Snapshot Saved</span>
+<span class="font-body-sm text-xs text-optical-white/75">Calibrated portrait ready for WhatsApp sharing</span>
+</div>
+</div>
+<!-- Client Micro-Interactions Script -->
+<script>
+    (function () {
+      // Elements
+      const lightingLayer = document.getElementById('lightingLayer');
+      const btnLightOffice = document.getElementById('btnLightOffice');
+      const btnLightSun = document.getElementById('btnLightSun');
+      const btnLightSunset = document.getElementById('btnLightSunset');
+      const toggleMirror = document.getElementById('toggleMirrorFeed');
+      const toggleBare = document.getElementById('toggleBareFace');
+      const bareFaceNotice = document.getElementById('bareFaceNotice');
+      const toggleAntiReflect = document.getElementById('toggleAntiReflect');
+      const arModelFace = document.getElementById('arModelFace');
+      const hudPupilRight = document.getElementById('hudPupilRight');
+      const hudPupilLeft = document.getElementById('hudPupilLeft');
+      const verticalOffsetSlider = document.getElementById('verticalOffsetSlider');
+      const offsetValue = document.getElementById('offsetValue');
+      const currentFinishLabel = document.getElementById('currentFinishLabel');
+      const finishSwatches = document.querySelectorAll('.finish-swatch');
+      const frameCards = document.querySelectorAll('.frame-selector-card');
+      const btnCaptureSnapshot = document.getElementById('btnCaptureSnapshot');
+      const snapshotSuccessToast = document.getElementById('snapshotSuccessToast');
+      const vtoViewportStage = document.getElementById('vtoViewportStage');
+      const toggleFullscreenVTO = document.getElementById('toggleFullscreenVTO');
+
+      let isMirrored = false;
+      let isAntiReflect = true;
+
+      // 1. Lighting Simulation Swaps
+      function resetLightButtons() {
+        [btnLightOffice, btnLightSun, btnLightSunset].forEach(btn => {
+          btn.className = "px-2.5 py-1 rounded-full text-xs font-label-sm transition-all text-optical-white/70 hover:text-on-primary hover:bg-optical-white/20";
+        });
+      }
+
+      btnLightOffice.addEventListener('click', () => {
+        resetLightButtons();
+        btnLightOffice.className = "px-2.5 py-1 rounded-full text-xs font-label-sm transition-all bg-optical-white/20 text-on-primary font-bold hover:bg-optical-white/30";
+        lightingLayer.style.backgroundColor = "transparent";
+      });
+
+      btnLightSun.addEventListener('click', () => {
+        resetLightButtons();
+        btnLightSun.className = "px-2.5 py-1 rounded-full text-xs font-label-sm transition-all bg-optical-white/20 text-on-primary font-bold hover:bg-optical-white/30";
+        lightingLayer.style.backgroundColor = "rgba(6, 182, 212, 0.08)";
+      });
+
+      btnLightSunset.addEventListener('click', () => {
+        resetLightButtons();
+        btnLightSunset.className = "px-2.5 py-1 rounded-full text-xs font-label-sm transition-all bg-optical-white/20 text-on-primary font-bold hover:bg-optical-white/30";
+        lightingLayer.style.backgroundColor = "rgba(255, 183, 125, 0.16)";
+      });
+
+      // 2. Mirror Feed Axis Toggle
+      toggleMirror.addEventListener('click', () => {
+        isMirrored = !isMirrored;
+        arModelFace.style.transform = isMirrored ? 'scaleX(-1)' : 'scaleX(1)';
+        toggleMirror.classList.toggle('text-cyan-accent', isMirrored);
+      });
+
+      // 3. Before/After Bare Face Comparison
+      toggleBare.addEventListener('mousedown', () => {
+        bareFaceNotice.classList.remove('hidden');
+        bareFaceNotice.classList.add('flex');
+      });
+      toggleBare.addEventListener('mouseup', () => {
+        bareFaceNotice.classList.add('hidden');
+        bareFaceNotice.classList.remove('flex');
+      });
+      toggleBare.addEventListener('mouseleave', () => {
+        bareFaceNotice.classList.add('hidden');
+        bareFaceNotice.classList.remove('flex');
+      });
+
+      // 4. Anti-Reflective Glare Coat Simulation
+      toggleAntiReflect.addEventListener('click', () => {
+        isAntiReflect = !isAntiReflect;
+        toggleAntiReflect.classList.toggle('text-cyan-accent', isAntiReflect);
+        toggleAntiReflect.classList.toggle('text-optical-white/50', !isAntiReflect);
+      });
+
+      // 5. Vertical Real-time Slider
+      verticalOffsetSlider.addEventListener('input', (e) => {
+        const val = e.target.value;
+        offsetValue.textContent = (val > 0 ? '+' : '') + val + ' mm';
+        const offsetPx = parseFloat(val) * 3;
+        hudPupilRight.style.transform = `translateY(${offsetPx}px)`;
+        hudPupilLeft.style.transform = `translateY(${offsetPx}px)`;
+      });
+
+      // 6. Finish Swatch Color Selection
+      finishSwatches.forEach(swatch => {
+        swatch.addEventListener('click', () => {
+          finishSwatches.forEach(s => s.classList.remove('scale-110'));
+          swatch.classList.add('scale-110');
+          currentFinishLabel.textContent = swatch.getAttribute('data-finish');
+        });
+      });
+
+      // 7. Carousel Frame Active State
+      frameCards.forEach(card => {
+        card.addEventListener('click', () => {
+          frameCards.forEach(c => {
+            c.classList.remove('bg-optical-white/20');
+            c.classList.add('bg-optical-white/5');
+          });
+          card.classList.add('bg-optical-white/20');
+          card.classList.remove('bg-optical-white/5');
+        });
+      });
+
+      // 8. Snapshot Trigger Toast
+      btnCaptureSnapshot.addEventListener('click', () => {
+        snapshotSuccessToast.classList.remove('translate-y-24', 'opacity-0');
+        snapshotSuccessToast.classList.add('translate-y-0', 'opacity-100');
+        setTimeout(() => {
+          snapshotSuccessToast.classList.remove('translate-y-0', 'opacity-100');
+          snapshotSuccessToast.classList.add('translate-y-24', 'opacity-0');
+        }, 3200);
+      });
+
+      // 9. Fullscreen toggle
+      toggleFullscreenVTO.addEventListener('click', () => {
+        if (!document.fullscreenElement) {
+          vtoViewportStage.requestFullscreen().catch(() => {});
+        } else {
+          document.exitFullscreen().catch(() => {});
+        }
+      });
+    })();
+  </script>
+</div></main><footer class="w-full bg-surface-ivory pt-16 pb-12 shadow-[0_-1px_12px_rgba(0,0,0,0.02)]"><div class="max-w-7xl mx-auto px-gutter"><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 pb-12"><div class="lg:col-span-2 space-y-4"><div class="flex items-center gap-3"><img alt="EyeKart Brand Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1XFZlvgnz4SWLipOPqSIZA6RtCW2NZLqkeaxjHzXzq-AuFJsshCyySq1oMAHXLZ8ZKM16208tIChajcM2uOzO_U0Q43tULN75HulC8QmoFiz88aRjPJtaf6bDUP9s7YqVpxhYencqZ5aMMwdXo3qWk8zd8uGbV2re-bH6-vcloddnOnujhjZNiIdYZPLJqbGyCqr6UShZpx8TuTL2ufTBbwLpSflMBigbo40mlbMdu9nho9D8Ka33IoYzjA"/><span class="font-headline-sm text-headline-sm font-bold tracking-tight text-primary">EYEKART ATELIER</span></div><p class="font-body-md text-body-md text-on-surface-variant max-w-sm">Nairobi's foremost precision optometry house and handcrafted eyewear dispensary. Clinical accuracy calibrated for equatorial light, verified by registered East African optometrists.</p><div class="pt-2 space-y-2"><div class="flex items-center gap-2 text-on-surface font-label-md text-label-md"><span class="material-symbols-outlined text-mpesa-green text-[20px]">schedule</span><span>Clinics open Mon – Sat: 08:30 – 19:30 | Sun: 10:00 – 17:00</span></div><div class="flex items-center gap-2 text-on-surface font-label-md text-label-md"><span class="material-symbols-outlined text-secondary text-[20px]">verified_user</span><span>Licensed by Pharmacy and Poisons Board &amp; Optometrists Council</span></div></div></div><div><h4 class="font-title-md text-title-md text-primary font-bold mb-4">Nairobi Clinics &amp; Lounges</h4><ul class="space-y-2 font-body-sm text-body-sm text-on-surface-variant"><li><a class="hover:text-primary transition-colors font-medium text-on-surface" data-path="nairobi-clinics" href="#">Westlands Square</a><p class="text-outline text-xs">Ground Floor, Opp. The Mall</p></li><li><a class="hover:text-primary transition-colors font-medium text-on-surface" data-path="nairobi-clinics" href="#">Sarit Centre</a><p class="text-outline text-xs">New Wing, 2nd Floor (Eye Lab)</p></li><li><a class="hover:text-primary transition-colors font-medium text-on-surface" data-path="nairobi-clinics" href="#">Junction Mall</a><p class="text-outline text-xs">Ngong Road, 1st Level</p></li><li><a class="hover:text-primary transition-colors font-medium text-on-surface" data-path="nairobi-clinics" href="#">Village Market</a><p class="text-outline text-xs">Limuru Rd, Gigiri Courtyard</p></li></ul></div><div><h4 class="font-title-md text-title-md text-primary font-bold mb-4">Diagnostic Services</h4><ul class="space-y-2.5 font-body-sm text-body-sm text-on-surface-variant"><li><a class="hover:text-primary transition-colors" data-path="book-eye-test" href="#">Book 28-Point Optical Exam</a></li><li><a class="hover:text-primary transition-colors" data-path="upload-prescription" href="#">Optical Prescription Verification</a></li><li><a class="hover:text-primary transition-colors" data-path="lens-customizer" href="#">Custom Lens Configurator (OD/OS)</a></li><li><a class="hover:text-primary transition-colors" data-path="virtual-try-on" href="#">Pupillary Distance (PD) Scanner</a></li><li><a class="hover:text-primary transition-colors" data-path="contact-lenses" href="#">Contact Lens Corneal Fitting</a></li><li><a class="hover:text-primary transition-colors" data-path="order-tracking" href="#">Track M-PESA Optical Delivery</a></li></ul></div><div><h4 class="font-title-md text-title-md text-primary font-bold mb-4">The Nairobi Optical Gazette</h4><p class="font-body-sm text-body-sm text-on-surface-variant mb-3">Receive private atelier release notifications and eye care wellness essays.</p><div class="flex flex-col gap-2"><input class="px-3 py-2 bg-optical-white text-on-surface rounded font-body-sm text-body-sm placeholder:text-outline focus:outline-none shadow-[0_1px_4px_rgba(0,0,0,0.04)] focus:shadow-[0_2px_8px_rgba(0,0,0,0.08)]" placeholder="Your email address..." type="email"/><button class="px-4 py-2 bg-graphite hover:bg-primary text-on-primary font-label-sm text-label-sm rounded transition-colors text-center" type="button">Join Inner Circle</button></div></div></div><div class="pt-8 mt-8 border-t border-outline-variant/30 flex flex-col md:flex-row items-center justify-between gap-6 font-body-sm text-body-sm text-on-surface-variant"><div class="flex flex-wrap items-center gap-6"><span class="flex items-center gap-1.5 font-label-md text-label-md text-mpesa-green font-bold"><span class="material-symbols-outlined text-[18px]">payments</span>Verified M-PESA STK • Buy Goods 889211</span><span class="flex items-center gap-1.5 font-label-md text-label-md text-on-surface"><span class="material-symbols-outlined text-[18px]">credit_card</span>Visa • Mastercard Accepted</span><span class="text-xs text-outline">© 2025 EyeKart Optical Kenya Ltd. All Rights Reserved.</span></div><div class="flex items-center gap-4 text-xs"><a class="hover:text-primary" data-path="nairobi-clinics" href="#">Privacy Policy</a><a class="hover:text-primary" data-path="nairobi-clinics" href="#">Clinical Disclaimers</a><a class="hover:text-primary" data-path="nairobi-clinics" href="#">Warranty Protocol</a></div></div></div></footer></body></html>
