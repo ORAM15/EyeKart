@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 60" fill="none">
+  <g transform="translate(10, 8)">
+    <!-- Refined Optical Twin Lens & Bridge Geometry -->
+    <path d="M12 22C12 14.268 18.268 8 26 8C33.732 8 40 14.268 40 22C40 29.732 33.732 36 26 36C18.268 36 12 29.732 12 22Z" stroke="#111418" stroke-width="2.8" fill="none"/>
+    <path d="M48 22C48 14.268 54.268 8 62 8C69.732 8 76 14.268 76 22C76 29.732 69.732 36 62 36C54.268 36 48 29.732 48 22Z" stroke="#111418" stroke-width="2.8" fill="none"/>
+    <!-- Minimalist Precision Bridge -->
+    <path d="M40 20C42.5 18 45.5 18 48 20" stroke="#111418" stroke-width="2.6" stroke-linecap="round"/>
+    <!-- Subtle Optical Refraction Core in Teal -->
+    <circle cx="26" cy="22" r="6" fill="#0E7490" fill-opacity="0.15"/>
+    <circle cx="26" cy="22" r="2.5" fill="#0E7490"/>
+    <circle cx="62" cy="22" r="6" fill="#0E7490" fill-opacity="0.15"/>
+    <circle cx="62" cy="22" r="2.5" fill="#0E7490"/>
+    <!-- Temple Extension Accents -->
+    <path d="M12 20L4 21" stroke="#111418" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M76 20L84 21" stroke="#111418" stroke-width="2.5" stroke-linecap="round"/>
+  </g>
+  <!-- Wordmark -->
+  <text x="105" y="38" font-family="system-ui, -apple-system, sans-serif" font-size="28" font-weight="700" letter-spacing="-0.03em" fill="#111418">EYE<tspan fill="#0E7490" font-weight="400">KART</tspan></text>
+  <!-- Precision Tagline -->
+  <text x="106" y="49" font-family="system-ui, -apple-system, sans-serif" font-size="8.5" font-weight="600" letter-spacing="0.22em" fill="#64748B">NAIROBI • OPTICAL LUXURY</text>
+</svg>

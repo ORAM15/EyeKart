@@ -1,37 +1,7 @@
 <!DOCTYPE html>
-<html class="scroll-smooth" lang="en"><head>
-<meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><title>EyeKart — Luxury Optical &amp; Eye Care</title><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&amp;family=Plus+Jakarta+Sans:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>
-@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}
-::-webkit-scrollbar{display:none;}
-/* Hardware-accelerated motion & spatial depth system */
-.spatial-card {
-  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s ease;
-  will-change: transform, box-shadow;
-  transform-style: preserve-3d;
-}
-.spatial-card:hover {
-  transform: translateY(-6px) translateZ(12px);
-}
-@media (prefers-reduced-motion: reduce) {
-  .spatial-card, .reticle-spin, #hero-3d-frame, .mesh-point {
-    transition: none !important;
-    animation: none !important;
-    transform: none !important;
-  }
-}
-@keyframes apertureRotate {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-.reticle-spin {
-  animation: apertureRotate 38s linear infinite;
-}
-.lens-glare-overlay {
-  background: linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.05) 45%, rgba(0,71,186,0.18) 75%, transparent 100%);
-  pointer-events: none;
-}
-</style><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script><script id="tailwind-config">tailwind.config = {
+
+<html class="scroll-smooth" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><title>EyeKart — Luxury Optical &amp; Eye Care</title><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&amp;family=Plus+Jakarta+Sans:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = {
     darkMode: "class",
     theme: {
       extend: {
@@ -66,7 +36,6 @@
           "on-tertiary-container": "#c76c00",
           "primary": "#000000",
           "cyan-accent": "#06B6D4",
-          "cobalt-diopter": "#0047BA",
           "tertiary-container": "#2f1500",
           "on-secondary-fixed-variant": "#004d62",
           "on-background": "#0b1c30",
@@ -145,22 +114,8 @@
         }
       },
     },
-  };</script></head><body class="bg-surface font-body-md text-on-surface antialiased selection:bg-cobalt-diopter selection:text-white relative overflow-x-hidden">
-<!-- Persistent Spatial Optical Reticle & Caustic Background Layer -->
-<div class="fixed inset-0 pointer-events-none z-0 overflow-hidden opacity-[0.42]">
-<canvas class="w-full h-full block mix-blend-multiply" id="ambient-caustic-canvas"></canvas>
-<div class="absolute -top-[120px] -right-[120px] w-[680px] h-[680px] rounded-full border border-cobalt-diopter/15 reticle-spin pointer-events-none">
-<div class="absolute inset-4 rounded-full border border-dashed border-cyan-accent/20"></div>
-<div class="absolute inset-16 rounded-full border border-cobalt-diopter/10"></div>
-<span class="absolute top-1/2 left-2 text-[9px] font-mono tracking-widest text-cobalt-diopter/50 uppercase">λ 546.1nm • D+1.75</span>
-<span class="absolute top-3 left-1/2 text-[9px] font-mono tracking-widest text-cobalt-diopter/50 uppercase">NBO-OCT-2025</span>
-</div>
-<div class="absolute top-[48%] -left-[160px] w-[520px] h-[520px] rounded-full border border-secondary/15 reticle-spin" style="animation-direction: reverse; animation-duration: 48s;">
-<div class="absolute inset-8 rounded-full border border-dotted border-cobalt-diopter/20"></div>
-</div>
-</div>
-<header class="fixed top-0 left-0 w-full z-50 bg-optical-white/95 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="bg-graphite text-on-primary py-1.5 px-gutter"><div class="max-w-7xl mx-auto flex items-center justify-between font-label-sm text-label-sm"><div class="flex items-center gap-2 overflow-hidden truncate"><span class="inline-block w-1.5 h-1.5 rounded-full bg-mpesa-green animate-pulse"></span><span>Free Nairobi Express Delivery &amp; In-Home Optical Try-On • 2-Year Precision Frame Warranty • Pay via M-PESA &amp; All Major Cards</span></div><div class="hidden md:flex items-center gap-4 shrink-0"><span class="flex items-center gap-1 text-optical-white/80"><span class="material-symbols-outlined text-[14px]">support_agent</span>Call Optometrist: <a class="hover:text-optical-white font-label-sm text-label-sm underline" href="tel:+254700393527">+254 700 393 527</a></span><span class="text-optical-white/40">|</span><span class="flex items-center gap-1 text-optical-white/80"><span class="material-symbols-outlined text-[14px]">verified</span>Certified MOH / Optometry Council of Kenya</span></div></div></div><div class="h-20 max-w-7xl mx-auto px-gutter flex items-center justify-between gap-6"><div class="flex items-center gap-4"><a class="flex items-center gap-3 shrink-0 focus:outline-none" data-path="home" href="#"><img alt="EyeKart Brand Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1XFZlvgnz4SWLipOPqSIZA6RtCW2NZLqkeaxjHzXzq-AuFJsshCyySq1oMAHXLZ8ZKM16208tIChajcM2uOzO_U0Q43tULN75HulC8QmoFiz88aRjPJtaf6bDUP9s7YqVpxhYencqZ5aMMwdXo3qWk8zd8uGbV2re-bH6-vcloddnOnujhjZNiIdYZPLJqbGyCqr6UShZpx8TuTL2ufTBbwLpSflMBigbo40mlbMdu9nho9D8Ka33IoYzjA"/><span class="flex flex-col"><span class="font-headline-sm text-headline-sm font-bold tracking-tight text-primary leading-none">EYEKART</span><span class="font-label-sm text-label-sm uppercase tracking-widest text-secondary font-bold text-[9px]">Nairobi Atelier</span></span></a><div class="hidden xl:flex items-center gap-2 pl-4 text-on-surface-variant"><span class="material-symbols-outlined text-secondary text-[18px]">location_on</span><div class="flex flex-col text-left"><span class="font-label-sm text-label-sm text-on-surface-variant/70">Physical Clinics</span><button class="font-label-md text-label-md text-primary flex items-center gap-1 hover:text-secondary" type="button">Westlands / Junction Mall<span class="material-symbols-outlined text-[14px]">expand_more</span></button></div></div></div><div class="hidden lg:flex flex-1 max-w-xl mx-4"><div class="relative w-full flex items-center"><span class="material-symbols-outlined absolute left-3.5 text-outline text-[20px] pointer-events-none">search</span><input class="w-full pl-10 pr-24 py-2.5 bg-surface rounded-full text-on-surface font-body-sm text-body-sm placeholder:text-outline focus:outline-none focus:bg-optical-white shadow-[0_1px_4px_rgba(0,0,0,0.04)] focus:shadow-[0_4px_16px_rgba(0,0,0,0.08)] transition-all" placeholder="Search 120+ designer frames, shapes, or optical power..." type="text"/><button class="absolute right-1.5 px-3 py-1 bg-graphite hover:bg-primary text-on-primary rounded-full font-label-sm text-label-sm transition-colors" type="button">KSh Finder</button></div></div><div class="flex items-center gap-4 shrink-0"><div class="hidden sm:flex items-center px-2.5 py-1 rounded bg-surface-subtle/70 text-on-surface font-label-sm text-label-sm font-bold tracking-wide"><span>KES (KSh)</span></div><a aria-label="Saved Frames" class="relative p-2 text-on-surface-variant hover:text-primary transition-colors focus:outline-none" data-path="wishlist" href="#"><span class="material-symbols-outlined text-[24px]">favorite</span><span class="absolute top-1 right-1 w-4 h-4 bg-graphite text-on-primary font-label-sm text-[9px] flex items-center justify-center rounded-full">3</span></a><a aria-label="Optical Bag" class="relative p-2 text-on-surface-variant hover:text-primary transition-colors focus:outline-none" data-path="cart" href="#"><span class="material-symbols-outlined text-[24px]">shopping_bag</span><span class="absolute top-1 right-1 w-4 h-4 bg-mpesa-green text-on-primary font-label-sm text-[9px] flex items-center justify-center rounded-full font-bold">1</span></a><div class="flex items-center pl-2"><a class="flex items-center gap-2 group focus:outline-none" data-path="user-profile" href="#"><img alt="Profile" class="w-8 h-8 rounded-full object-cover shadow-[0_2px_6px_rgba(0,0,0,0.1)] group-hover:scale-105 transition-transform" src="https://lh3.googleusercontent.com/aida-public/AB6AXuALqcc-RXzOmLDEqTC-II86Kx1jCKzRYxbbyuR_UvjtPVAdgc2tJi7XJvd_uqAERJbbvjA4H7TkXaw6VFvA99f7lHeg268qGi7sHl8eJ4JjT1QHLoRVuTbKAzB-Dxi7hvgnKD-VvX7GfJqg6ad8G4A9-nQijEn6-slUaSfMX7MnMpmR5pG9PpYTbl6J2yraugIherzoLDN4A_v58Gy0k70ZKKQtWqJB0jqD2Y2KFb0BWs39ucd1mPZwHA"/><span class="hidden xl:block font-label-md text-label-md text-on-surface group-hover:text-primary">My Portal</span></a></div></div></div><div class="bg-optical-white/80 shadow-[0_1px_4px_rgba(0,0,0,0.02)]"><div class="max-w-7xl mx-auto px-gutter flex items-center justify-between overflow-x-auto"><nav class="flex items-center gap-6 py-2.5 shrink-0" data-active-classes="text-primary font-bold"><a aria-current="page" class="transition-colors text-primary font-bold" data-path="home" href="#">Home</a><div class="relative group py-1"><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors flex items-center gap-1" data-path="eyeglasses-collection" href="#">Eyeglasses</a><div class="hidden group-hover:block fixed left-0 top-full w-full bg-optical-white/95 backdrop-blur-2xl shadow-[0_20px_40px_rgba(0,0,0,0.08)] py-8 px-margin z-50"><div class="max-w-7xl mx-auto grid grid-cols-4 gap-8"><div class="space-y-3"><h4 class="font-label-sm text-label-sm uppercase tracking-wider text-secondary font-bold">Shop by Gender</h4><div class="flex flex-col space-y-2"><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="eyeglasses-collection" href="#">Men's Optical</a><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="eyeglasses-collection" href="#">Women's Collection</a><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="eyeglasses-collection" href="#">Unisex Frames</a><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="kids-teens-optics" href="#">Kids &amp; Teens Frames</a></div></div><div class="space-y-3"><h4 class="font-label-sm text-label-sm uppercase tracking-wider text-secondary font-bold">Shop by Silhouette</h4><div class="flex flex-col space-y-2"><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="eyeglasses-collection" href="#">Aviator</a><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="eyeglasses-collection" href="#">Geometric &amp; Octagonal</a><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="eyeglasses-collection" href="#">Cat Eye</a><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="eyeglasses-collection" href="#">Architectural Round</a><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="eyeglasses-collection" href="#">Tailored Rectangle</a></div></div><div class="space-y-3"><h4 class="font-label-sm text-label-sm uppercase tracking-wider text-secondary font-bold">Atelier Fit &amp; Material</h4><div class="flex flex-col space-y-2"><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="premium-atelier" href="#">Japanese Titanium</a><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="premium-atelier" href="#">Mazzucchelli Acetate</a><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="eyeglasses-collection" href="#">Ultra-light TR90 Memory</a><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="eyeglasses-collection" href="#">Nairobi Low-Bridge Fit</a></div></div><div class="space-y-3 bg-surface-container-low p-5 rounded-lg"><h4 class="font-label-sm text-label-sm uppercase tracking-wider text-secondary font-bold">Clinical Lens Tech</h4><div class="flex flex-col space-y-2"><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="lens-customizer" href="#">Digital Single Vision</a><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="lens-customizer" href="#">HD Varifocal / Progressive</a><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="screen-glasses" href="#">Blue-Light Defence (Nairobi Tech)</a><a class="font-label-sm text-label-sm text-primary font-bold hover:underline pt-2" data-path="book-eye-test" href="#">Free Eye Test at Sarit Centre →</a></div></div></div></div></div><div class="relative group py-1"><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors flex items-center gap-1" data-path="sunglasses-collection" href="#">Sunglasses</a><div class="hidden group-hover:block fixed left-0 top-full w-full bg-optical-white/95 backdrop-blur-2xl shadow-[0_20px_40px_rgba(0,0,0,0.08)] py-8 px-margin z-50"><div class="max-w-7xl mx-auto grid grid-cols-4 gap-8"><div class="space-y-3"><h4 class="font-label-sm text-label-sm uppercase tracking-wider text-secondary font-bold">Curated By Style</h4><div class="flex flex-col space-y-2"><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="sunglasses-collection" href="#">Polarized Equatorial Tint</a><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="sunglasses-collection" href="#">UV400 Driving Lenses</a><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="sunglasses-collection" href="#">Prescription Sun Optics</a><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="sunglasses-collection" href="#">Savannah Gradient Tints</a></div></div><div class="space-y-3"><h4 class="font-label-sm text-label-sm uppercase tracking-wider text-secondary font-bold">Iconic Shapes</h4><div class="flex flex-col space-y-2"><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="sunglasses-collection" href="#">Safari Aviator</a><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="sunglasses-collection" href="#">Oversized Modernist</a><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="sunglasses-collection" href="#">Angular Wayfarer</a><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="sunglasses-collection" href="#">Clinical Clip-On Shields</a></div></div><div class="space-y-3"><h4 class="font-label-sm text-label-sm uppercase tracking-wider text-secondary font-bold">Craftsmanship</h4><div class="flex flex-col space-y-2"><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="nairobi-edit" href="#">The Rift Edition (Local Horn)</a><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="premium-atelier" href="#">24k Gold Electroplated Hinges</a><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="sunglasses-collection" href="#">Scratch-Guard Oleophobic</a></div></div><div class="bg-surface-cream p-5 rounded-lg flex flex-col justify-between"><span class="font-headline-md text-headline-md text-primary font-bold">Savannah Sun 2025</span><p class="font-body-sm text-body-sm text-on-surface-variant">Hand-buffed Italian Mazzucchelli acetate crafted for equatorial sun angles.</p><a class="font-label-sm text-label-sm text-primary font-bold underline" data-path="sunglasses-collection" href="#">Discover Collection →</a></div></div></div></div><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="screen-glasses" href="#">Screen Glasses</a><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="kids-teens-optics" href="#">Kids &amp; Teens</a><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="contact-lenses" href="#">Contact Lenses</a><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="premium-atelier" href="#">Premium Atelier</a><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="nairobi-edit" href="#">Nairobi Edit</a></nav><div class="flex items-center gap-5 shrink-0 pl-6 border-l border-outline-variant/30"><a class="flex items-center gap-1.5 font-label-md text-label-md text-secondary hover:text-cyan-accent transition-colors" data-path="virtual-try-on" href="#"><span class="material-symbols-outlined text-[18px]">view_in_ar</span><span>3D Try-On Studio</span></a><a class="flex items-center gap-1.5 font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors" data-path="ai-frame-finder" href="#"><span class="material-symbols-outlined text-[18px]">auto_awesome</span><span>AI Frame Finder</span></a><a class="flex items-center gap-1.5 font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors" data-path="book-eye-test" href="#"><span class="material-symbols-outlined text-[18px]">calendar_month</span><span>Book Clinic Test</span></a><a class="px-3 py-1 bg-surface-container-high text-on-surface font-label-md text-label-md rounded hover:bg-graphite hover:text-on-primary transition-colors flex items-center gap-1" data-path="upload-prescription" href="#"><span class="material-symbols-outlined text-[16px]">upload_file</span><span>Upload Rx</span></a></div></div></div></header><main class="w-full pt-32 bg-surface min-h-screen relative z-10"><div class="flex flex-col w-full">
-<!-- Interactive Flagship Hero Stage with Cinematic 3D Optical Proximity & Specimen https://lh3.googleusercontent.com/aida/AEtjO1UMk6uDdO0v5GIqWDM8k-MHALYqWJgJsjlGj1Hg5a6qttwNK3yzOs6uV8M_3p4uRYgr3ueyRTVFBTiQUIowpLp9-SKHgnEDs6hWfDWsnrL6Oghz6s37pJkzYM9JK_cIB9U-kfXrreEtB6sR0NUeCiVNsd9ED9_W2W-TBk06b35Do2G7bh4_9GH374NVCFoGl5Tg_Wgmcy-_3xwTJH4Qy6AFyNPnnlL89Z_0qGsi4ymgkxD_fuXB4WEOvW8f -->
+  };</script></head><body class="bg-surface font-body-md text-on-surface antialiased selection:bg-cyan-accent selection:text-surface-container-lowest"><header class="fixed top-0 left-0 w-full z-50 bg-optical-white/95 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="bg-graphite text-on-primary py-1.5 px-gutter"><div class="max-w-7xl mx-auto flex items-center justify-between font-label-sm text-label-sm"><div class="flex items-center gap-2 overflow-hidden truncate"><span class="inline-block w-1.5 h-1.5 rounded-full bg-mpesa-green animate-pulse"></span><span>Free Nairobi Express Delivery &amp; In-Home Optical Try-On • 2-Year Precision Frame Warranty • Pay via M-PESA &amp; All Major Cards</span></div><div class="hidden md:flex items-center gap-4 shrink-0"><span class="flex items-center gap-1 text-optical-white/80"><span class="material-symbols-outlined text-[14px]">support_agent</span>Call Optometrist: <a class="hover:text-optical-white font-label-sm text-label-sm underline" href="tel:+254700393527">+254 700 393 527</a></span><span class="text-optical-white/40">|</span><span class="flex items-center gap-1 text-optical-white/80"><span class="material-symbols-outlined text-[14px]">verified</span>Certified MOH / Optometry Council of Kenya</span></div></div></div><div class="h-20 max-w-7xl mx-auto px-gutter flex items-center justify-between gap-6"><div class="flex items-center gap-4"><a class="flex items-center gap-3 shrink-0 focus:outline-none" data-path="home" href="#"><img alt="EyeKart Brand Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1XFZlvgnz4SWLipOPqSIZA6RtCW2NZLqkeaxjHzXzq-AuFJsshCyySq1oMAHXLZ8ZKM16208tIChajcM2uOzO_U0Q43tULN75HulC8QmoFiz88aRjPJtaf6bDUP9s7YqVpxhYencqZ5aMMwdXo3qWk8zd8uGbV2re-bH6-vcloddnOnujhjZNiIdYZPLJqbGyCqr6UShZpx8TuTL2ufTBbwLpSflMBigbo40mlbMdu9nho9D8Ka33IoYzjA"/><span class="flex flex-col"><span class="font-headline-sm text-headline-sm font-bold tracking-tight text-primary leading-none">EYEKART</span><span class="font-label-sm text-label-sm uppercase tracking-widest text-secondary font-bold text-[9px]">Nairobi Atelier</span></span></a><div class="hidden xl:flex items-center gap-2 pl-4 text-on-surface-variant"><span class="material-symbols-outlined text-secondary text-[18px]">location_on</span><div class="flex flex-col text-left"><span class="font-label-sm text-label-sm text-on-surface-variant/70">Physical Clinics</span><button class="font-label-md text-label-md text-primary flex items-center gap-1 hover:text-secondary" type="button">Westlands / Junction Mall<span class="material-symbols-outlined text-[14px]">expand_more</span></button></div></div></div><div class="hidden lg:flex flex-1 max-w-xl mx-4"><div class="relative w-full flex items-center"><span class="material-symbols-outlined absolute left-3.5 text-outline text-[20px] pointer-events-none">search</span><input class="w-full pl-10 pr-24 py-2.5 bg-surface rounded-full text-on-surface font-body-sm text-body-sm placeholder:text-outline focus:outline-none focus:bg-optical-white shadow-[0_1px_4px_rgba(0,0,0,0.04)] focus:shadow-[0_4px_16px_rgba(0,0,0,0.08)] transition-all" placeholder="Search 120+ designer frames, shapes, or optical power..." type="text"/><button class="absolute right-1.5 px-3 py-1 bg-graphite hover:bg-primary text-on-primary rounded-full font-label-sm text-label-sm transition-colors" type="button">KSh Finder</button></div></div><div class="flex items-center gap-4 shrink-0"><div class="hidden sm:flex items-center px-2.5 py-1 rounded bg-surface-subtle/70 text-on-surface font-label-sm text-label-sm font-bold tracking-wide"><span>KES (KSh)</span></div><a aria-label="Saved Frames" class="relative p-2 text-on-surface-variant hover:text-primary transition-colors focus:outline-none" data-path="wishlist" href="#"><span class="material-symbols-outlined text-[24px]">favorite</span><span class="absolute top-1 right-1 w-4 h-4 bg-graphite text-on-primary font-label-sm text-[9px] flex items-center justify-center rounded-full">3</span></a><a aria-label="Optical Bag" class="relative p-2 text-on-surface-variant hover:text-primary transition-colors focus:outline-none" data-path="cart" href="#"><span class="material-symbols-outlined text-[24px]">shopping_bag</span><span class="absolute top-1 right-1 w-4 h-4 bg-mpesa-green text-on-primary font-label-sm text-[9px] flex items-center justify-center rounded-full font-bold">1</span></a><div class="flex items-center pl-2"><a class="flex items-center gap-2 group focus:outline-none" data-path="user-profile" href="#"><img alt="Profile" class="w-8 h-8 rounded-full object-cover shadow-[0_2px_6px_rgba(0,0,0,0.1)] group-hover:scale-105 transition-transform" src="https://lh3.googleusercontent.com/aida-public/AB6AXuALqcc-RXzOmLDEqTC-II86Kx1jCKzRYxbbyuR_UvjtPVAdgc2tJi7XJvd_uqAERJbbvjA4H7TkXaw6VFvA99f7lHeg268qGi7sHl8eJ4JjT1QHLoRVuTbKAzB-Dxi7hvgnKD-VvX7GfJqg6ad8G4A9-nQijEn6-slUaSfMX7MnMpmR5pG9PpYTbl6J2yraugIherzoLDN4A_v58Gy0k70ZKKQtWqJB0jqD2Y2KFb0BWs39ucd1mPZwHA"/><span class="hidden xl:block font-label-md text-label-md text-on-surface group-hover:text-primary">My Portal</span></a></div></div></div><div class="bg-optical-white/80 shadow-[0_1px_4px_rgba(0,0,0,0.02)]"><div class="max-w-7xl mx-auto px-gutter flex items-center justify-between overflow-x-auto"><nav class="flex items-center gap-6 py-2.5 shrink-0" data-active-classes="text-primary font-bold"><a aria-current="page" class="transition-colors text-primary font-bold" data-path="home" href="#">Home</a><div class="relative group py-1"><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors flex items-center gap-1" data-path="eyeglasses-collection" href="#">Eyeglasses</a><div class="hidden group-hover:block fixed left-0 top-full w-full bg-optical-white/95 backdrop-blur-2xl shadow-[0_20px_40px_rgba(0,0,0,0.08)] py-8 px-margin z-50"><div class="max-w-7xl mx-auto grid grid-cols-4 gap-8"><div class="space-y-3"><h4 class="font-label-sm text-label-sm uppercase tracking-wider text-secondary font-bold">Shop by Gender</h4><div class="flex flex-col space-y-2"><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="eyeglasses-collection" href="#">Men's Optical</a><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="eyeglasses-collection" href="#">Women's Collection</a><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="eyeglasses-collection" href="#">Unisex Frames</a><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="kids-teens-optics" href="#">Kids &amp; Teens Frames</a></div></div><div class="space-y-3"><h4 class="font-label-sm text-label-sm uppercase tracking-wider text-secondary font-bold">Shop by Silhouette</h4><div class="flex flex-col space-y-2"><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="eyeglasses-collection" href="#">Aviator</a><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="eyeglasses-collection" href="#">Geometric &amp; Octagonal</a><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="eyeglasses-collection" href="#">Cat Eye</a><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="eyeglasses-collection" href="#">Architectural Round</a><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="eyeglasses-collection" href="#">Tailored Rectangle</a></div></div><div class="space-y-3"><h4 class="font-label-sm text-label-sm uppercase tracking-wider text-secondary font-bold">Atelier Fit &amp; Material</h4><div class="flex flex-col space-y-2"><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="premium-atelier" href="#">Japanese Titanium</a><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="premium-atelier" href="#">Mazzucchelli Acetate</a><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="eyeglasses-collection" href="#">Ultra-light TR90 Memory</a><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="eyeglasses-collection" href="#">Nairobi Low-Bridge Fit</a></div></div><div class="space-y-3 bg-surface-container-low p-5 rounded-lg"><h4 class="font-label-sm text-label-sm uppercase tracking-wider text-secondary font-bold">Clinical Lens Tech</h4><div class="flex flex-col space-y-2"><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="lens-customizer" href="#">Digital Single Vision</a><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="lens-customizer" href="#">HD Varifocal / Progressive</a><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="screen-glasses" href="#">Blue-Light Defence (Nairobi Tech)</a><a class="font-label-sm text-label-sm text-primary font-bold hover:underline pt-2" data-path="book-eye-test" href="#">Free Eye Test at Sarit Centre →</a></div></div></div></div></div><div class="relative group py-1"><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors flex items-center gap-1" data-path="sunglasses-collection" href="#">Sunglasses</a><div class="hidden group-hover:block fixed left-0 top-full w-full bg-optical-white/95 backdrop-blur-2xl shadow-[0_20px_40px_rgba(0,0,0,0.08)] py-8 px-margin z-50"><div class="max-w-7xl mx-auto grid grid-cols-4 gap-8"><div class="space-y-3"><h4 class="font-label-sm text-label-sm uppercase tracking-wider text-secondary font-bold">Curated By Style</h4><div class="flex flex-col space-y-2"><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="sunglasses-collection" href="#">Polarized Equatorial Tint</a><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="sunglasses-collection" href="#">UV400 Driving Lenses</a><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="sunglasses-collection" href="#">Prescription Sun Optics</a><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="sunglasses-collection" href="#">Savannah Gradient Tints</a></div></div><div class="space-y-3"><h4 class="font-label-sm text-label-sm uppercase tracking-wider text-secondary font-bold">Iconic Shapes</h4><div class="flex flex-col space-y-2"><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="sunglasses-collection" href="#">Safari Aviator</a><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="sunglasses-collection" href="#">Oversized Modernist</a><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="sunglasses-collection" href="#">Angular Wayfarer</a><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="sunglasses-collection" href="#">Clinical Clip-On Shields</a></div></div><div class="space-y-3"><h4 class="font-label-sm text-label-sm uppercase tracking-wider text-secondary font-bold">Craftsmanship</h4><div class="flex flex-col space-y-2"><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="nairobi-edit" href="#">The Rift Edition (Local Horn)</a><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="premium-atelier" href="#">24k Gold Electroplated Hinges</a><a class="font-body-md text-body-md text-on-surface hover:text-cyan-accent" data-path="sunglasses-collection" href="#">Scratch-Guard Oleophobic</a></div></div><div class="bg-surface-cream p-5 rounded-lg flex flex-col justify-between"><span class="font-headline-md text-headline-md text-primary font-bold">Savannah Sun 2025</span><p class="font-body-sm text-body-sm text-on-surface-variant">Hand-buffed Italian Mazzucchelli acetate crafted for equatorial sun angles.</p><a class="font-label-sm text-label-sm text-primary font-bold underline" data-path="sunglasses-collection" href="#">Discover Collection →</a></div></div></div></div><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="screen-glasses" href="#">Screen Glasses</a><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="kids-teens-optics" href="#">Kids &amp; Teens</a><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="contact-lenses" href="#">Contact Lenses</a><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="premium-atelier" href="#">Premium Atelier</a><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="nairobi-edit" href="#">Nairobi Edit</a></nav><div class="flex items-center gap-5 shrink-0 pl-6 border-l border-outline-variant/30"><a class="flex items-center gap-1.5 font-label-md text-label-md text-secondary hover:text-cyan-accent transition-colors" data-path="virtual-try-on" href="#"><span class="material-symbols-outlined text-[18px]">view_in_ar</span><span>3D Try-On Studio</span></a><a class="flex items-center gap-1.5 font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors" data-path="ai-frame-finder" href="#"><span class="material-symbols-outlined text-[18px]">auto_awesome</span><span>AI Frame Finder</span></a><a class="flex items-center gap-1.5 font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors" data-path="book-eye-test" href="#"><span class="material-symbols-outlined text-[18px]">calendar_month</span><span>Book Clinic Test</span></a><a class="px-3 py-1 bg-surface-container-high text-on-surface font-label-md text-label-md rounded hover:bg-graphite hover:text-on-primary transition-colors flex items-center gap-1" data-path="upload-prescription" href="#"><span class="material-symbols-outlined text-[16px]">upload_file</span><span>Upload Rx</span></a></div></div></div></header><main class="w-full pt-32 bg-surface min-h-screen"><div class="flex flex-col w-full">
+<!-- Interactive Flagship Hero Stage -->
 <section class="relative w-full overflow-hidden bg-gradient-to-b from-surface-subtle/50 via-surface-ivory to-surface pb-16 pt-6">
 <div class="max-w-7xl mx-auto px-gutter">
 <!-- Top Announcement Micro Ribbon -->
@@ -185,7 +140,7 @@
 <div class="lg:col-span-6 space-y-6">
 <div class="space-y-3">
 <div class="flex items-center gap-2">
-<span class="w-8 h-[2px] bg-cobalt-diopter"></span>
+<span class="w-8 h-[2px] bg-cyan-accent"></span>
 <span class="font-label-md text-label-md uppercase tracking-widest text-secondary font-bold">Kenyan Craft • Japanese Engineering</span>
 </div>
 <h1 class="font-display-lg text-display-lg text-primary tracking-tight leading-[1.08]">
@@ -200,15 +155,15 @@
           </p>
 <!-- Specifications Micro Grid -->
 <div class="grid grid-cols-3 gap-3 pt-2 max-w-lg">
-<div class="bg-optical-white p-3.5 rounded shadow-sm border border-outline-variant/30">
+<div class="bg-optical-white p-3.5 rounded shadow-sm">
 <span class="font-label-sm text-label-sm text-outline uppercase">Frame Weight</span>
 <p class="font-data-metric text-data-metric text-primary">11.4 grams</p>
 </div>
-<div class="bg-optical-white p-3.5 rounded shadow-sm border border-outline-variant/30">
+<div class="bg-optical-white p-3.5 rounded shadow-sm">
 <span class="font-label-sm text-label-sm text-outline uppercase">Hinge Stress</span>
 <p class="font-data-metric text-data-metric text-primary">85,000 cycles</p>
 </div>
-<div class="bg-optical-white p-3.5 rounded shadow-sm border border-outline-variant/30">
+<div class="bg-optical-white p-3.5 rounded shadow-sm">
 <span class="font-label-sm text-label-sm text-outline uppercase">Lens Index</span>
 <p class="font-data-metric text-data-metric text-primary">Up to 1.74 HD</p>
 </div>
@@ -219,8 +174,8 @@
 <span>Explore 3D Catalog</span>
 <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
 </a>
-<a class="h-12 px-6 bg-optical-white text-primary font-label-lg text-label-lg rounded hover:bg-surface-subtle transition-all shadow-sm flex items-center justify-center gap-2 border border-outline-variant/40" data-path="virtual-try-on" href="#">
-<span class="material-symbols-outlined text-[20px] text-cobalt-diopter">view_in_ar</span>
+<a class="h-12 px-6 bg-optical-white text-primary font-label-lg text-label-lg rounded hover:bg-surface-subtle transition-all shadow-sm flex items-center justify-center gap-2" data-path="virtual-try-on" href="#">
+<span class="material-symbols-outlined text-[20px] text-cyan-accent">view_in_ar</span>
 <span>Launch Virtual Try-On</span>
 </a>
 </div>
@@ -235,81 +190,75 @@
 </p>
 </div>
 </div>
-<!-- Right 3D Optical Stage & Specimen https://lh3.googleusercontent.com/aida/AEtjO1UMk6uDdO0v5GIqWDM8k-MHALYqWJgJsjlGj1Hg5a6qttwNK3yzOs6uV8M_3p4uRYgr3ueyRTVFBTiQUIowpLp9-SKHgnEDs6hWfDWsnrL6Oghz6s37pJkzYM9JK_cIB9U-kfXrreEtB6sR0NUeCiVNsd9ED9_W2W-TBk06b35Do2G7bh4_9GH374NVCFoGl5Tg_Wgmcy-_3xwTJH4Qy6AFyNPnnlL89Z_0qGsi4ymgkxD_fuXB4WEOvW8f -->
+<!-- Right 3D Eyewear Viewer Stage -->
 <div class="lg:col-span-6">
-<div class="relative bg-optical-white rounded-xl shadow-xl overflow-hidden p-6 sm:p-8 border border-border-hairline" id="hero-3d-stage">
+<div class="relative bg-optical-white rounded-xl shadow-xl overflow-hidden p-6 sm:p-8">
 <!-- Refractive Ambient Radial Glow -->
-<div class="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-cobalt-diopter/15 blur-3xl pointer-events-none" id="stage-glow-1"></div>
-<div class="absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-secondary-fixed/40 blur-3xl pointer-events-none"></div>
+<div class="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-cyan-accent/15 blur-3xl pointer-events-none"></div>
+<div class="absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-secondary-fixed/30 blur-3xl pointer-events-none"></div>
 <!-- Stage Top Chrome HUD -->
-<div class="relative z-10 flex items-center justify-between pb-4 border-b border-border-hairline/60">
+<div class="relative z-10 flex items-center justify-between pb-4">
 <div class="flex items-center gap-2">
-<span class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-surface-container-low text-secondary font-label-sm text-label-sm rounded-full font-bold">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-surface-container-low text-secondary font-label-sm text-label-sm rounded-full">
 <span class="material-symbols-outlined text-[15px] animate-spin">rotate_right</span>
-<span id="renderer-mode-text">6-DOF Studio Renderer</span>
+<span>360° Studio Renderer</span>
 </span>
 <span class="hidden sm:inline-block font-label-sm text-label-sm text-outline" id="hero-lighting-tag">Equatorial Daylight (5400K)</span>
 </div>
 <div class="flex items-center gap-2">
-<span class="text-[11px] font-mono text-outline px-2 py-0.5 bg-surface-ivory rounded" id="hero-pitch-yaw-hud">Pitch: 0° | Yaw: 0°</span>
-<button class="p-2 text-on-surface-variant hover:text-primary bg-surface-subtle/70 rounded hover:bg-surface-subtle transition-colors" id="btn-lighting-toggle" title="Toggle Studio Lighting (5400K / 3200K)" type="button">
+<button class="p-2 text-on-surface-variant hover:text-primary bg-surface-subtle/70 rounded hover:bg-surface-subtle transition-colors" id="btn-lighting-toggle" title="Toggle Studio Lighting" type="button">
 <span class="material-symbols-outlined text-[18px]">light_mode</span>
 </button>
-<button class="p-2 text-on-surface-variant hover:text-primary bg-surface-subtle/70 rounded hover:bg-surface-subtle transition-colors" id="btn-dimension-hud" title="Toggle Caliper HUD Blueprint" type="button">
+<button class="p-2 text-on-surface-variant hover:text-primary bg-surface-subtle/70 rounded hover:bg-surface-subtle transition-colors" id="btn-dimension-hud" title="Toggle Caliper HUD" type="button">
 <span class="material-symbols-outlined text-[18px]">square_foot</span>
 </button>
 </div>
 </div>
-<!-- 3D Optical Silhouette Canvas with Mouse Tilt & Specimen https://lh3.googleusercontent.com/aida/AEtjO1UMk6uDdO0v5GIqWDM8k-MHALYqWJgJsjlGj1Hg5a6qttwNK3yzOs6uV8M_3p4uRYgr3ueyRTVFBTiQUIowpLp9-SKHgnEDs6hWfDWsnrL6Oghz6s37pJkzYM9JK_cIB9U-kfXrreEtB6sR0NUeCiVNsd9ED9_W2W-TBk06b35Do2G7bh4_9GH374NVCFoGl5Tg_Wgmcy-_3xwTJH4Qy6AFyNPnnlL89Z_0qGsi4ymgkxD_fuXB4WEOvW8f -->
-<div class="relative w-full h-[330px] sm:h-[390px] flex items-center justify-center select-none overflow-hidden my-2 cursor-grab active:cursor-grabbing" id="hero-tilt-container" style="perspective: 1000px;">
-<!-- Caliper Dimension Blueprint Overlay -->
-<div class="absolute inset-0 pointer-events-none opacity-40 transition-opacity duration-300 z-10" id="caliper-overlay">
-<div class="w-full h-full flex flex-col justify-between p-4 font-label-sm text-[10px] text-cobalt-diopter font-mono">
-<div class="flex justify-between border-b border-cobalt-diopter/30 pb-1">
-<span>FRAME WIDTH: 138.4 mm [51◻19]</span>
-<span>HIGH-BRIDGE FIT: 19 mm</span>
+<!-- Optical Silhouette Display Canvas -->
+<div class="relative w-full h-[320px] sm:h-[380px] flex items-center justify-center select-none overflow-hidden my-2">
+<!-- Caliper Overlay Grid (toggleable) -->
+<div class="absolute inset-0 pointer-events-none opacity-40 transition-opacity duration-300" id="caliper-overlay">
+<div class="w-full h-full flex flex-col justify-between p-4 font-label-sm text-[10px] text-cyan-accent">
+<div class="flex justify-between border-b border-cyan-accent/20 pb-1">
+<span>FRAME WIDTH: 138.4 mm</span>
+<span>BRIDGE: 19 mm</span>
 </div>
 <div class="flex justify-between items-center text-center">
-<span class="[writing-mode:vertical-rl] tracking-widest text-outline">TEMPLE: 145mm • OBE 5-BARREL</span>
-<div class="w-16 h-16 rounded-full border border-dashed border-cobalt-diopter/60 flex flex-col items-center justify-center bg-white/40 backdrop-blur-[2px]">
-<span class="w-2 h-2 rounded-full bg-cobalt-diopter animate-ping"></span>
-<span class="text-[8px] font-mono mt-0.5 text-primary">OD/OS</span>
+<span class="[writing-mode:vertical-rl] tracking-widest text-outline">TEMPLE: 145mm</span>
+<div class="w-12 h-12 rounded-full border border-dashed border-cyan-accent/50 flex items-center justify-center">
+<span class="w-1.5 h-1.5 rounded-full bg-cyan-accent"></span>
 </div>
-<span class="[writing-mode:vertical-rl] tracking-widest text-outline">OPTICAL AXIS: 180°</span>
+<span class="[writing-mode:vertical-rl] tracking-widest text-outline">PUPIL OPTIC: OD/OS</span>
 </div>
-<div class="flex justify-between border-t border-cobalt-diopter/30 pt-1">
-<span>LENS VERTICAL: 43.5 mm</span>
-<span>BASE CURVE: 4.0 • 11.2g MASS</span>
-</div>
+<div class="flex justify-between border-t border-cyan-accent/20 pt-1">
+<span>LENS HEIGHT: 43.5 mm</span>
+<span>BASE CURVE: 4.0</span>
 </div>
 </div>
-<!-- Main 3D Interactive Specimen Frame https://lh3.googleusercontent.com/aida/AEtjO1UMk6uDdO0v5GIqWDM8k-MHALYqWJgJsjlGj1Hg5a6qttwNK3yzOs6uV8M_3p4uRYgr3ueyRTVFBTiQUIowpLp9-SKHgnEDs6hWfDWsnrL6Oghz6s37pJkzYM9JK_cIB9U-kfXrreEtB6sR0NUeCiVNsd9ED9_W2W-TBk06b35Do2G7bh4_9GH374NVCFoGl5Tg_Wgmcy-_3xwTJH4Qy6AFyNPnnlL89Z_0qGsi4ymgkxD_fuXB4WEOvW8f -->
-<div class="relative z-20 w-full max-w-[450px] flex items-center justify-center transition-transform ease-out duration-150" id="hero-frame-wrapper" style="transform-style: preserve-3d;">
-<img class="w-full h-auto object-contain max-h-[270px] drop-shadow-2xl transition-all duration-300 pointer-events-none" data-alt="Close-up studio photograph of luxury handcrafted eyeglasses with Japanese titanium hinges and warm tortoiseshell acetate rims sitting on an architectural white marble pedestal with soft equatorial natural lighting and reflections" id="hero-frame-img" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCgrXAAZEFnokcz4n4O4j3utZhg8Fo7Jyias-VCnnFmbSRBohgQVO6igzs0ISMP8byuauY_gumxKwZIof0IVRvwKrH6dFOyVjCRytWfCrmUjJtv1pef3ljonCOEOAZSsp6wSwXnIMy-uCgVQdn0y0Uyx650wJlUAjwjglG0CKcD985_rHH2QmeksGtiVhq4TGS_KjjqIaCVqAYa65dlrxUCARxsQR8e2gwT_Cpp0E69_MSCidmDv0OqEQ"/>
-<div class="absolute inset-0 lens-glare-overlay rounded-lg opacity-60 mix-blend-overlay transition-opacity" id="hero-glare"></div>
+</div>
+<!-- Main Frame Showcase Image (Swappable finish) -->
+<div class="relative z-10 w-full max-w-[440px] transition-transform duration-500 hover:scale-105 flex items-center justify-center" id="hero-frame-wrapper">
+<img class="w-full h-auto object-contain max-h-[260px] drop-shadow-2xl transition-all duration-300" data-alt="Close-up studio photograph of luxury handcrafted eyeglasses with Japanese titanium hinges and warm tortoiseshell acetate rims sitting on an architectural white marble pedestal with soft equatorial natural lighting and reflections" id="hero-frame-img" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCgrXAAZEFnokcz4n4O4j3utZhg8Fo7Jyias-VCnnFmbSRBohgQVO6igzs0ISMP8byuauY_gumxKwZIof0IVRvwKrH6dFOyVjCRytWfCrmUjJtv1pef3ljonCOEOAZSsp6wSwXnIMy-uCgVQdn0y0Uyx650wJlUAjwjglG0CKcD985_rHH2QmeksGtiVhq4TGS_KjjqIaCVqAYa65dlrxUCARxsQR8e2gwT_Cpp0E69_MSCidmDv0OqEQ"/>
 </div>
 <!-- Interactive Floating Caliper Pointer -->
-<div class="absolute bottom-5 left-5 z-30 bg-optical-white/95 backdrop-blur-md px-3.5 py-1.5 rounded-full shadow-md flex items-center gap-2 border border-border-hairline">
-<span class="material-symbols-outlined text-cobalt-diopter text-[16px]">touch_app</span>
-<span class="font-label-sm text-label-sm text-primary font-medium">Move mouse to tilt • Drag to orbit specimen</span>
-</div>
-<div class="absolute bottom-5 right-5 z-30 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded text-[11px] font-mono text-outline border border-border-hairline">
-<span>REFRACTIVE INDEX: 1.67 HD</span>
+<div class="absolute bottom-6 left-6 z-20 bg-optical-white/90 backdrop-blur-md px-3 py-1.5 rounded-full shadow-md flex items-center gap-2">
+<span class="material-symbols-outlined text-cyan-accent text-[16px]">touch_app</span>
+<span class="font-label-sm text-label-sm text-primary">Drag or click swatches to test luster</span>
 </div>
 </div>
 <!-- Frame Controls & Variant Selector -->
-<div class="relative z-10 pt-4 bg-surface-ivory p-4 rounded-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border border-border-hairline">
+<div class="relative z-10 pt-4 bg-surface-ivory p-4 rounded-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
 <div>
-<span class="font-label-sm text-label-sm uppercase tracking-wider text-secondary font-bold" id="hero-model-sku">WESTLANDS OCTAGONAL • TITANIUM SERIE 01</span>
-<p class="font-title-md text-title-md text-primary font-bold" id="hero-finish-name">Champagne Gold &amp; Obsidian Acetate</p>
-<p class="font-body-sm text-body-sm text-outline" id="hero-finish-price">KSh 18,500 • Ready for Digital Prescription</p>
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-secondary font-bold" id="hero-model-sku">KIBERA TITANIUM • SERIE 01</span>
+<p class="font-title-md text-title-md text-primary font-bold" id="hero-finish-name">Milled Obsidian Black &amp; Raw Titanium</p>
+<p class="font-body-sm text-body-sm text-outline">KSh 18,500 • Ready for Digital Prescription</p>
 </div>
 <!-- Finish Swatches -->
 <div class="flex items-center gap-2.5">
-<button class="swatch-btn w-7 h-7 rounded-full bg-[#D4AF37] ring-2 ring-primary ring-offset-2 transition-transform hover:scale-110 shadow-sm" data-finish="Champagne Gold &amp; Obsidian Acetate" data-price="KSh 18,500" data-sku="WESTLANDS OCTAGONAL • SERIE 01" title="Champagne Gold" type="button"></button>
-<button class="swatch-btn w-7 h-7 rounded-full bg-[#94a3b8] ring-1 ring-outline-variant transition-transform hover:scale-110 shadow-sm" data-finish="Raw Satin Japanese Titanium" data-price="KSh 21,500" data-sku="WESTLANDS OCTAGONAL • SERIE 02" title="Raw Titanium" type="button"></button>
-<button class="swatch-btn w-7 h-7 rounded-full bg-[#111418] ring-1 ring-outline-variant transition-transform hover:scale-110 shadow-sm" data-finish="Milled Obsidian Midnight Black" data-price="KSh 17,900" data-sku="WESTLANDS OCTAGONAL • SERIE 03" title="Obsidian Black" type="button"></button>
-<button class="swatch-btn w-7 h-7 rounded-full bg-[#78350F] ring-1 ring-outline-variant transition-transform hover:scale-110 shadow-sm" data-finish="Amber Rift Havana Tortoise" data-price="KSh 19,800" data-sku="WESTLANDS OCTAGONAL • SERIE 04" title="Havana Tortoise" type="button"></button>
+<button class="swatch-btn w-7 h-7 rounded-full bg-[#111418] ring-2 ring-primary ring-offset-2 transition-transform hover:scale-110" data-finish="Obsidian Black" data-price="KSh 18,500" data-sku="KIBERA TITANIUM • SERIE 01" title="Obsidian Black" type="button"></button>
+<button class="swatch-btn w-7 h-7 rounded-full bg-[#D4AF37] ring-1 ring-outline-variant transition-transform hover:scale-110" data-finish="Brushed Savannah Gold" data-price="KSh 21,500" data-sku="KIBERA TITANIUM • SERIE 02" title="Brushed Savannah Gold" type="button"></button>
+<button class="swatch-btn w-7 h-7 rounded-full bg-[#78350F] ring-1 ring-outline-variant transition-transform hover:scale-110" data-finish="Amber Rift Tortoise" data-price="KSh 19,800" data-sku="KIBERA TITANIUM • SERIE 03" title="Amber Rift Tortoise" type="button"></button>
+<button class="swatch-btn w-7 h-7 rounded-full bg-[#475569] ring-1 ring-outline-variant transition-transform hover:scale-110" data-finish="Frosted Smoke Quartz" data-price="KSh 17,900" data-sku="KIBERA TITANIUM • SERIE 04" title="Frosted Smoke Quartz" type="button"></button>
 </div>
 </div>
 <!-- In-Clinic Try-On Callout Footer -->
@@ -327,18 +276,6 @@
 </div>
 </div>
 </section>
-<!-- Canonical Optical Aperture Motif Transition Rail -->
-<div class="w-full bg-optical-white border-y border-border-hairline py-3">
-<div class="max-w-7xl mx-auto px-gutter flex items-center justify-between font-mono text-[11px] text-outline uppercase tracking-wider overflow-x-auto gap-6 scrollbar-none">
-<span class="flex items-center gap-2 shrink-0"><span class="w-1.5 h-1.5 rounded-full bg-cobalt-diopter"></span>STEP 01: DIOPTER FOCUS RING</span>
-<span class="text-outline-variant">→</span>
-<span class="flex items-center gap-2 shrink-0"><span class="w-1.5 h-1.5 rounded-full bg-cyan-accent"></span>STEP 02: 68-POINT ANTHROPOMETRIC MESH</span>
-<span class="text-outline-variant">→</span>
-<span class="flex items-center gap-2 shrink-0"><span class="w-1.5 h-1.5 rounded-full bg-mpesa-green"></span>STEP 03: MULTI-COAT NANO SURFACING</span>
-<span class="text-outline-variant">→</span>
-<span class="flex items-center gap-2 shrink-0"><span class="w-1.5 h-1.5 rounded-full bg-primary"></span>STEP 04: NAIROBI IN-HOME DISPENSARY</span>
-</div>
-</div>
 <!-- Quick Category Filter Rail -->
 <section class="w-full bg-optical-white py-6 shadow-sm">
 <div class="max-w-7xl mx-auto px-gutter">
@@ -375,7 +312,7 @@
 </div>
 </section>
 <!-- Interactive Face Shape & Fit Guide Studio -->
-<section class="w-full py-16 bg-surface-ivory relative">
+<section class="w-full py-16 bg-surface-ivory">
 <div class="max-w-7xl mx-auto px-gutter">
 <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
 <!-- Explainer -->
@@ -390,7 +327,7 @@
 <p class="font-body-md text-body-md text-on-surface-variant">
             Every facial contour requires counter-balancing geometry. Select your cranial profile below for optometrist-approved silhouettes calibrated for optimal pupillary alignment.
           </p>
-<div class="pt-2 bg-optical-white p-4 rounded-lg shadow-sm space-y-2 border border-border-hairline">
+<div class="pt-2 bg-optical-white p-4 rounded-lg shadow-sm space-y-2">
 <span class="font-label-sm text-label-sm text-outline uppercase font-bold">Clinical Rule of Contrast</span>
 <p class="font-body-sm text-body-sm text-on-surface" id="face-shape-rule">
 <strong>Oval Faces:</strong> Balanced proportions allow almost all silhouettes. Geometric and square frames add striking visual edge.
@@ -401,34 +338,34 @@
 <div class="lg:col-span-8 space-y-6">
 <!-- Shape Switchers -->
 <div class="grid grid-cols-5 gap-2 sm:gap-3">
-<button class="face-tab active bg-optical-white hover:bg-surface-container-low p-3 sm:p-4 rounded-xl shadow-sm text-center transition-all flex flex-col items-center gap-2 border border-border-hairline" data-shape="oval" type="button">
+<button class="face-tab active bg-optical-white hover:bg-surface-container-low p-3 sm:p-4 rounded-xl shadow-sm text-center transition-all flex flex-col items-center gap-2" data-shape="oval" type="button">
 <span class="material-symbols-outlined text-secondary text-[28px]">egg_alt</span>
 <span class="font-label-sm text-label-sm font-bold text-primary">Oval</span>
 <span class="text-[10px] text-outline uppercase">Universal</span>
 </button>
-<button class="face-tab bg-optical-white hover:bg-surface-container-low p-3 sm:p-4 rounded-xl shadow-sm text-center transition-all flex flex-col items-center gap-2 border border-border-hairline" data-shape="round" type="button">
+<button class="face-tab bg-optical-white hover:bg-surface-container-low p-3 sm:p-4 rounded-xl shadow-sm text-center transition-all flex flex-col items-center gap-2" data-shape="round" type="button">
 <span class="material-symbols-outlined text-on-surface-variant text-[28px]">radio_button_unchecked</span>
 <span class="font-label-sm text-label-sm font-bold text-primary">Round</span>
 <span class="text-[10px] text-outline uppercase">Soft Lines</span>
 </button>
-<button class="face-tab bg-optical-white hover:bg-surface-container-low p-3 sm:p-4 rounded-xl shadow-sm text-center transition-all flex flex-col items-center gap-2 border border-border-hairline" data-shape="square" type="button">
+<button class="face-tab bg-optical-white hover:bg-surface-container-low p-3 sm:p-4 rounded-xl shadow-sm text-center transition-all flex flex-col items-center gap-2" data-shape="square" type="button">
 <span class="material-symbols-outlined text-on-surface-variant text-[28px]">crop_square</span>
 <span class="font-label-sm text-label-sm font-bold text-primary">Square</span>
 <span class="text-[10px] text-outline uppercase">Strong Jaw</span>
 </button>
-<button class="face-tab bg-optical-white hover:bg-surface-container-low p-3 sm:p-4 rounded-xl shadow-sm text-center transition-all flex flex-col items-center gap-2 border border-border-hairline" data-shape="heart" type="button">
+<button class="face-tab bg-optical-white hover:bg-surface-container-low p-3 sm:p-4 rounded-xl shadow-sm text-center transition-all flex flex-col items-center gap-2" data-shape="heart" type="button">
 <span class="material-symbols-outlined text-on-surface-variant text-[28px]">favorite_border</span>
 <span class="font-label-sm text-label-sm font-bold text-primary">Heart</span>
 <span class="text-[10px] text-outline uppercase">Wide Brow</span>
 </button>
-<button class="face-tab bg-optical-white hover:bg-surface-container-low p-3 sm:p-4 rounded-xl shadow-sm text-center transition-all flex flex-col items-center gap-2 border border-border-hairline" data-shape="diamond" type="button">
+<button class="face-tab bg-optical-white hover:bg-surface-container-low p-3 sm:p-4 rounded-xl shadow-sm text-center transition-all flex flex-col items-center gap-2" data-shape="diamond" type="button">
 <span class="material-symbols-outlined text-on-surface-variant text-[28px]">change_history</span>
 <span class="font-label-sm text-label-sm font-bold text-primary">Diamond</span>
 <span class="text-[10px] text-outline uppercase">High Cheek</span>
 </button>
 </div>
 <!-- Live Recommended Silhouette Showcase Card -->
-<div class="bg-optical-white p-6 rounded-xl shadow-md flex flex-col md:flex-row items-center justify-between gap-6 transition-all border border-border-hairline" id="face-recommendation-card">
+<div class="bg-optical-white p-6 rounded-xl shadow-md flex flex-col md:flex-row items-center justify-between gap-6 transition-all" id="face-recommendation-card">
 <div class="w-full md:w-1/2 space-y-2">
 <span class="px-2 py-0.5 bg-secondary-fixed text-secondary font-label-sm text-label-sm rounded uppercase font-bold">Prime Match Recommendation</span>
 <h3 class="font-headline-md text-headline-md text-primary" id="rec-title">Architectural Octagonal &amp; Aviator</h3>
@@ -458,21 +395,21 @@
 </div>
 </div>
 </section>
-<!-- AI Frame Finder & Biometric Scanner with 68-Point Mesh Overlay & 6-DOF Alignment -->
+<!-- AI Frame Finder & Instant PD Scanner Banner -->
 <section class="w-full py-12 bg-graphite text-on-primary relative overflow-hidden">
 <div class="absolute right-0 top-0 w-1/3 h-full bg-gradient-to-l from-cyan-accent/20 to-transparent pointer-events-none"></div>
 <div class="max-w-7xl mx-auto px-gutter relative z-10">
 <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
 <div class="lg:col-span-8 space-y-4">
 <div class="inline-flex items-center gap-2 bg-optical-white/10 px-3 py-1 rounded-full text-cyan-accent font-label-sm text-label-sm font-bold">
-<span class="material-symbols-outlined text-[16px]">qr_code_scanner</span>
+<span class="material-symbols-outlined text-[16px]">csv</span>
 <span>Proprietary Kenyan AI Biometrics Engine</span>
 </div>
 <h2 class="font-headline-lg text-headline-lg text-optical-white">
-            Scan Your Face &amp; Auto-Lock Pupillary Distance (PD) in 15 Seconds.
+            Scan Your Face &amp; Measure Pupillary Distance (PD) in 15 Seconds.
           </h2>
 <p class="font-body-md text-body-md text-primary-fixed max-w-2xl">
-            Eliminate optical guesswork. Our browser-based machine vision detects inter-pupillary spacing to ±0.5mm accuracy with real-time 68-point facial mesh alignment. Directly recognized by our certified optometrists across Nairobi clinics.
+            Eliminate optical guesswork. Our browser-based machine vision detects inter-pupillary spacing to ±0.5mm accuracy using any standard smartphone or laptop camera. Recognized by our registered clinic optometrists.
           </p>
 <div class="flex flex-wrap items-center gap-6 pt-2">
 <div class="flex items-center gap-2 text-sm text-optical-white">
@@ -490,40 +427,24 @@
 </div>
 </div>
 <div class="lg:col-span-4 flex flex-col items-start lg:items-end justify-center">
-<div class="bg-optical-white/10 backdrop-blur-md p-6 rounded-xl w-full max-w-sm space-y-4 border border-white/15">
+<div class="bg-optical-white/10 backdrop-blur-md p-6 rounded-xl w-full max-w-sm space-y-4">
 <div class="flex items-center justify-between text-xs text-primary-fixed uppercase tracking-wider">
 <span>Biometric Scanner Status</span>
 <span class="flex items-center gap-1 text-cyan-accent font-bold">
-<span class="w-2 h-2 rounded-full bg-cyan-accent animate-pulse"></span> Auto-Lock Ready
+<span class="w-2 h-2 rounded-full bg-cyan-accent animate-pulse"></span> Online
               </span>
 </div>
-<!-- Animated 68-Point Mesh Simulation HUD -->
-<div class="relative h-32 rounded bg-primary-container/80 flex items-center justify-center overflow-hidden border border-cyan-accent/30" id="biometric-mesh-stage">
-<!-- Subtle SVG mesh grid -->
-<svg class="absolute inset-0 w-full h-full opacity-40" viewbox="0 0 260 120">
-<path d="M40,60 Q80,20 130,20 Q180,20 220,60 Q180,100 130,100 Q80,100 40,60 Z" fill="none" stroke="#06B6D4" stroke-dasharray="2 2" stroke-width="0.75"></path>
-<line stroke="#06B6D4" stroke-dasharray="1 3" stroke-width="0.5" x1="130" x2="130" y1="10" y2="110"></line>
-<circle cx="85" cy="55" fill="none" r="14" stroke="#06B6D4" stroke-width="1"></circle>
-<circle cx="175" cy="55" fill="none" r="14" stroke="#06B6D4" stroke-width="1"></circle>
-<!-- 68 Key Landmark Dots -->
-<circle cx="85" cy="55" fill="#00A859" r="2"></circle>
-<circle cx="175" cy="55" fill="#00A859" r="2"></circle>
-<circle cx="130" cy="62" fill="#06B6D4" r="1.5"></circle>
-<circle cx="130" cy="74" fill="#06B6D4" r="1.5"></circle>
-<circle cx="115" cy="88" fill="#06B6D4" r="1.5"></circle>
-<circle cx="145" cy="88" fill="#06B6D4" r="1.5"></circle>
-<circle cx="65" cy="48" fill="#06B6D4" r="1.5"></circle>
-<circle cx="105" cy="48" fill="#06B6D4" r="1.5"></circle>
-<circle cx="155" cy="48" fill="#06B6D4" r="1.5"></circle>
-<circle cx="195" cy="48" fill="#06B6D4" r="1.5"></circle>
-</svg>
-<div class="relative z-10 flex items-center justify-between w-full px-6">
-<div class="text-[10px] font-mono text-cyan-accent bg-black/60 px-1.5 py-0.5 rounded">OD: 32.0mm</div>
-<div class="flex flex-col items-center">
-<span class="text-xs font-data-metric text-white font-bold tracking-tight" id="live-pd-counter">PD: 64.0 mm</span>
-<span class="text-[8px] font-mono text-mpesa-green uppercase tracking-wider">● Optical Centered</span>
+<div class="relative h-28 rounded bg-primary-container/70 flex items-center justify-center overflow-hidden">
+<div class="absolute inset-x-4 top-1/2 -translate-y-1/2 flex items-center justify-between">
+<div class="w-8 h-8 rounded-full border border-cyan-accent/80 flex items-center justify-center">
+<span class="w-1.5 h-1.5 rounded-full bg-cyan-accent"></span>
 </div>
-<div class="text-[10px] font-mono text-cyan-accent bg-black/60 px-1.5 py-0.5 rounded">OS: 32.0mm</div>
+<div class="flex-1 border-t border-dashed border-cyan-accent/50 mx-2 flex justify-center">
+<span class="bg-primary text-[10px] px-2 py-0.5 rounded text-cyan-accent font-data-metric -mt-2">PD: 63.5 mm</span>
+</div>
+<div class="w-8 h-8 rounded-full border border-cyan-accent/80 flex items-center justify-center">
+<span class="w-1.5 h-1.5 rounded-full bg-cyan-accent"></span>
+</div>
 </div>
 </div>
 <a class="w-full h-11 bg-cyan-accent text-primary font-label-lg text-label-lg rounded font-bold hover:bg-cyan-accent/90 transition-all shadow-md flex items-center justify-center gap-2" data-path="ai-frame-finder" href="#">
@@ -535,8 +456,8 @@
 </div>
 </div>
 </section>
-<!-- Featured 8 Flagship Optical SKUs Grid with Spatial Physics Tilt & Reticle HUD -->
-<section class="w-full py-16 bg-surface relative">
+<!-- Featured 8 Flagship Optical SKUs Grid -->
+<section class="w-full py-16 bg-surface">
 <div class="max-w-7xl mx-auto px-gutter space-y-10">
 <!-- Section Header -->
 <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
@@ -549,12 +470,12 @@
             Flagship Optical Creations
           </h2>
 <p class="font-body-md text-body-md text-on-surface-variant max-w-xl">
-            Each pair is individually serial-numbered, finished with anti-corrosion equatorial coatings, and eligible for verified M-PESA checkout. Hover to inspect 3D perspective.
+            Each pair is individually serial-numbered, finished with anti-corrosion equatorial coatings, and eligible for verified M-PESA checkout.
           </p>
 </div>
 <div class="flex items-center gap-3">
 <span class="font-label-sm text-label-sm text-outline">Sort By:</span>
-<select class="bg-optical-white text-on-surface font-label-md text-label-md px-3 py-2 rounded shadow-sm focus:outline-none border border-border-hairline">
+<select class="bg-optical-white text-on-surface font-label-md text-label-md px-3 py-2 rounded shadow-sm focus:outline-none">
 <option>Featured Atelier Models</option>
 <option>Price: High to Low (KES)</option>
 <option>Price: Low to High (KES)</option>
@@ -562,10 +483,10 @@
 </select>
 </div>
 </div>
-<!-- 8 Optical Cards Responsive Grid with Spatial Object Lift -->
+<!-- 8 Optical Cards Responsive Grid -->
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
 <!-- Card 1 -->
-<div class="spatial-card group bg-optical-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between overflow-hidden p-5 border border-border-hairline">
+<div class="group bg-optical-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between overflow-hidden p-5">
 <div class="space-y-3">
 <div class="flex items-center justify-between">
 <span class="px-2 py-0.5 bg-amber-100 text-amber-900 font-label-sm text-[10px] rounded uppercase font-bold">Mazzucchelli 1849</span>
@@ -574,7 +495,7 @@
 </button>
 </div>
 <!-- Frame Pedestal Stage -->
-<div class="relative w-full h-44 flex items-center justify-center bg-surface-ivory/60 rounded-lg overflow-hidden group-hover:bg-surface-subtle/40 transition-colors">
+<div class="relative w-full h-44 flex items-center justify-center bg-surface-ivory/60 rounded-lg overflow-hidden group-hover:bg-surface-subtle/30 transition-colors">
 <span class="absolute top-2 left-2 text-[10px] text-outline font-data-metric">12.2g</span>
 <span class="absolute top-2 right-2 flex items-center gap-0.5 text-[10px] text-secondary font-bold">
 <span class="material-symbols-outlined text-[13px]">view_in_ar</span> 3D
@@ -613,7 +534,7 @@
 </div>
 </div>
 <!-- Card 2 -->
-<div class="spatial-card group bg-optical-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between overflow-hidden p-5 border border-border-hairline">
+<div class="group bg-optical-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between overflow-hidden p-5">
 <div class="space-y-3">
 <div class="flex items-center justify-between">
 <span class="px-2 py-0.5 bg-secondary-fixed text-secondary font-label-sm text-[10px] rounded uppercase font-bold">Titanium Beta</span>
@@ -621,7 +542,7 @@
 <span class="material-symbols-outlined text-[20px]">favorite_border</span>
 </button>
 </div>
-<div class="relative w-full h-44 flex items-center justify-center bg-surface-ivory/60 rounded-lg overflow-hidden group-hover:bg-surface-subtle/40 transition-colors">
+<div class="relative w-full h-44 flex items-center justify-center bg-surface-ivory/60 rounded-lg overflow-hidden group-hover:bg-surface-subtle/30 transition-colors">
 <span class="absolute top-2 left-2 text-[10px] text-outline font-data-metric">9.8g</span>
 <span class="absolute top-2 right-2 flex items-center gap-0.5 text-[10px] text-secondary font-bold">
 <span class="material-symbols-outlined text-[13px]">view_in_ar</span> 3D
@@ -659,7 +580,7 @@
 </div>
 </div>
 <!-- Card 3 -->
-<div class="spatial-card group bg-optical-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between overflow-hidden p-5 border border-border-hairline">
+<div class="group bg-optical-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between overflow-hidden p-5">
 <div class="space-y-3">
 <div class="flex items-center justify-between">
 <span class="px-2 py-0.5 bg-surface-container-highest text-primary font-label-sm text-[10px] rounded uppercase font-bold">Limited 50 Pcs</span>
@@ -667,7 +588,7 @@
 <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">favorite</span>
 </button>
 </div>
-<div class="relative w-full h-44 flex items-center justify-center bg-surface-ivory/60 rounded-lg overflow-hidden group-hover:bg-surface-subtle/40 transition-colors">
+<div class="relative w-full h-44 flex items-center justify-center bg-surface-ivory/60 rounded-lg overflow-hidden group-hover:bg-surface-subtle/30 transition-colors">
 <span class="absolute top-2 left-2 text-[10px] text-outline font-data-metric">14.1g</span>
 <span class="absolute top-2 right-2 flex items-center gap-0.5 text-[10px] text-secondary font-bold">
 <span class="material-symbols-outlined text-[13px]">view_in_ar</span> 3D
@@ -705,7 +626,7 @@
 </div>
 </div>
 <!-- Card 4 -->
-<div class="spatial-card group bg-optical-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between overflow-hidden p-5 border border-border-hairline">
+<div class="group bg-optical-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between overflow-hidden p-5">
 <div class="space-y-3">
 <div class="flex items-center justify-between">
 <span class="px-2 py-0.5 bg-cyan-100 text-cyan-900 font-label-sm text-[10px] rounded uppercase font-bold">Digital Screen</span>
@@ -713,7 +634,7 @@
 <span class="material-symbols-outlined text-[20px]">favorite_border</span>
 </button>
 </div>
-<div class="relative w-full h-44 flex items-center justify-center bg-surface-ivory/60 rounded-lg overflow-hidden group-hover:bg-surface-subtle/40 transition-colors">
+<div class="relative w-full h-44 flex items-center justify-center bg-surface-ivory/60 rounded-lg overflow-hidden group-hover:bg-surface-subtle/30 transition-colors">
 <span class="absolute top-2 left-2 text-[10px] text-outline font-data-metric">10.5g</span>
 <span class="absolute top-2 right-2 flex items-center gap-0.5 text-[10px] text-secondary font-bold">
 <span class="material-symbols-outlined text-[13px]">view_in_ar</span> 3D
@@ -751,7 +672,7 @@
 </div>
 </div>
 <!-- Card 5 -->
-<div class="spatial-card group bg-optical-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between overflow-hidden p-5 border border-border-hairline">
+<div class="group bg-optical-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between overflow-hidden p-5">
 <div class="space-y-3">
 <div class="flex items-center justify-between">
 <span class="px-2 py-0.5 bg-surface-subtle text-on-surface font-label-sm text-[10px] rounded uppercase font-bold">Women's Cat Eye</span>
@@ -759,7 +680,7 @@
 <span class="material-symbols-outlined text-[20px]">favorite_border</span>
 </button>
 </div>
-<div class="relative w-full h-44 flex items-center justify-center bg-surface-ivory/60 rounded-lg overflow-hidden group-hover:bg-surface-subtle/40 transition-colors">
+<div class="relative w-full h-44 flex items-center justify-center bg-surface-ivory/60 rounded-lg overflow-hidden group-hover:bg-surface-subtle/30 transition-colors">
 <span class="absolute top-2 left-2 text-[10px] text-outline font-data-metric">13.0g</span>
 <img class="w-5/6 h-auto object-contain transition-transform duration-300 group-hover:scale-105" data-alt="Sculpted feminine cat-eye optical spectacles with refined rose gold metallic temples and polished black front frame elegant studio product photo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC8uCzYtLbTnUaFm_Y8HXxTorHpviww7fBlneq-xZjHG-2JnbUwMjxZ_Nz9Wg4NhWme6G4LqsZSHt0L_VD96grD2jF3Rw-nUzzQXEoGprwz-aMJgWuXxUDLarYviSv3L6d8JJDMoSxJ42BZumd7qOvCEEnXYxzPjfJCDlN5pKkLMg6TZN8w8mqSkVnNtc6KkihRhZqh7lHdhks9GzPXZIKvctBbRpIHQ2rsqhvptDIdIWPXPoDm37wD0g"/>
 </div>
@@ -794,7 +715,7 @@
 </div>
 </div>
 <!-- Card 6 -->
-<div class="spatial-card group bg-optical-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between overflow-hidden p-5 border border-border-hairline">
+<div class="group bg-optical-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between overflow-hidden p-5">
 <div class="space-y-3">
 <div class="flex items-center justify-between">
 <span class="px-2 py-0.5 bg-yellow-100 text-yellow-900 font-label-sm text-[10px] rounded uppercase font-bold">Polarized Sun</span>
@@ -802,7 +723,7 @@
 <span class="material-symbols-outlined text-[20px]">favorite_border</span>
 </button>
 </div>
-<div class="relative w-full h-44 flex items-center justify-center bg-surface-ivory/60 rounded-lg overflow-hidden group-hover:bg-surface-subtle/40 transition-colors">
+<div class="relative w-full h-44 flex items-center justify-center bg-surface-ivory/60 rounded-lg overflow-hidden group-hover:bg-surface-subtle/30 transition-colors">
 <span class="absolute top-2 left-2 text-[10px] text-outline font-data-metric">15.5g</span>
 <img class="w-5/6 h-auto object-contain transition-transform duration-300 group-hover:scale-105" data-alt="Polarized savannah safari sunglasses with dark gradient lenses and heavy tortoiseshell frame on rough volcanic rock background luxury fashion" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBBZicI7kkG2oWhUyjj1X4LkxkEXIUyCzKlR36573hs_vC7S0cx9fxmllDlp-FN7CE3F3HEdIo-EdzNJPt-aY8JPSkQ83HGtuHl3wF8AiZuADqpm9NmROTVowCFr5eFHLGWsyEiAtVpCAlQ1CJIal5BnThgC9SGA4sDTaWKpWOt8ItSQPa72IoMpRahQ1v8zQ7U_5ym-HV67jCyN_Mg9Q5eAlEPtrorwk1JJNC1FsnweygvC50PtIqFtA"/>
 </div>
@@ -837,7 +758,7 @@
 </div>
 </div>
 <!-- Card 7 -->
-<div class="spatial-card group bg-optical-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between overflow-hidden p-5 border border-border-hairline">
+<div class="group bg-optical-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between overflow-hidden p-5">
 <div class="space-y-3">
 <div class="flex items-center justify-between">
 <span class="px-2 py-0.5 bg-surface-container-high text-primary font-label-sm text-[10px] rounded uppercase font-bold">Classic Heritage</span>
@@ -845,7 +766,7 @@
 <span class="material-symbols-outlined text-[20px]">favorite_border</span>
 </button>
 </div>
-<div class="relative w-full h-44 flex items-center justify-center bg-surface-ivory/60 rounded-lg overflow-hidden group-hover:bg-surface-subtle/40 transition-colors">
+<div class="relative w-full h-44 flex items-center justify-center bg-surface-ivory/60 rounded-lg overflow-hidden group-hover:bg-surface-subtle/30 transition-colors">
 <span class="absolute top-2 left-2 text-[10px] text-outline font-data-metric">11.8g</span>
 <img class="w-5/6 h-auto object-contain transition-transform duration-300 group-hover:scale-105" data-alt="Classic round tailored intellectual eyeglasses with thin black acetate rims and subtle silver rivets isolated on white luxury studio backdrop" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCic0Ww9rqCYBG7Ohg05iv2xNDNy9UWouNVAtV9xDObLwH3-Jr8oazf1qVRbOTwq6PfzT0mrwR1bXnNlG2lScXd1rnfhjcUIGzq-vY_YwsnbjCtHbr26I3Arr-AfIlV0pEQBveDvuXCWfRBPDycY3zaidfjc1mByGVbxlL0drYFDhvUC3LfeP5f63o6W7bV6Ymhd99jE6qXBimws1PSNkCW4PcjQRMKvLF3ZlVt6k0EoXmbaf2-8opS7Q"/>
 </div>
@@ -880,7 +801,7 @@
 </div>
 </div>
 <!-- Card 8 -->
-<div class="spatial-card group bg-optical-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between overflow-hidden p-5 border border-border-hairline">
+<div class="group bg-optical-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between overflow-hidden p-5">
 <div class="space-y-3">
 <div class="flex items-center justify-between">
 <span class="px-2 py-0.5 bg-green-100 text-green-900 font-label-sm text-[10px] rounded uppercase font-bold">Atelier Apex</span>
@@ -888,7 +809,7 @@
 <span class="material-symbols-outlined text-[20px]">favorite_border</span>
 </button>
 </div>
-<div class="relative w-full h-44 flex items-center justify-center bg-surface-ivory/60 rounded-lg overflow-hidden group-hover:bg-surface-subtle/40 transition-colors">
+<div class="relative w-full h-44 flex items-center justify-center bg-surface-ivory/60 rounded-lg overflow-hidden group-hover:bg-surface-subtle/30 transition-colors">
 <span class="absolute top-2 left-2 text-[10px] text-outline font-data-metric">8.9g</span>
 <img class="w-5/6 h-auto object-contain transition-transform duration-300 group-hover:scale-105" data-alt="Ultra premium Japanese rimless titanium spectacles with 24 karat gold electroplated hinges and diamond-beveled lens edges on minimalist stand" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBQXnUCuNr96V2V5Pi7Ns2aIMbMn33no4X2PoWjfYqIQ4UVCThmqKwNWNYO1zjO4h3UsREJv1Eb9-Ff8yaCQ0ErIPpKlMz663KKpDvGzxedfDXdPUQNNoDgWiicN5rArR7PCLjqKyxppjczoqmYySU2psg3nhiy18p00SyxO1BRTQ_hkaL0-owq7RRknM5FEsdoYJk-V1UzKJxdqLjvgPww0HaacatBTeGLDmDCXjPY-5_p_bHVFhO1qw"/>
 </div>
@@ -925,8 +846,8 @@
 </div>
 </div>
 </section>
-<!-- Comprehensive Lens Technology Interactive Module with Material Dispersion Sheen -->
-<section class="w-full py-16 bg-surface-cream relative">
+<!-- Comprehensive Lens Technology Interactive Module -->
+<section class="w-full py-16 bg-surface-cream">
 <div class="max-w-7xl mx-auto px-gutter space-y-10">
 <div class="max-w-3xl space-y-3">
 <span class="inline-flex items-center gap-2 text-secondary font-label-sm text-label-sm uppercase tracking-widest font-bold">
@@ -940,36 +861,10 @@
           Equatorial coordinates subject lenses to severe UV exposure and screen glare. We surface digital German free-form lenses that preserve retinal longevity.
         </p>
 </div>
-<!-- Interactive Refractive Coating Substrate Selector Simulator -->
-<div class="bg-optical-white p-6 rounded-2xl shadow-sm border border-border-hairline space-y-6">
-<div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-<div>
-<span class="font-label-sm text-label-sm uppercase tracking-wider text-cobalt-diopter font-bold">Live Dispersion &amp; Anti-Reflective Sheen Simulator</span>
-<h3 class="font-title-md text-title-md text-primary font-bold" id="lens-sim-name">AR Clear Precision 99.8% Transmittance</h3>
-<p class="font-body-sm text-body-sm text-on-surface-variant" id="lens-sim-desc">16-layer vacuum nanocoating that neutralizes reflections from oncoming headlights and fluorescent clinic tubes.</p>
-</div>
-<div class="flex items-center gap-2">
-<button class="lens-coating-btn active px-3 py-1.5 rounded-full text-xs font-label-md font-bold bg-primary text-white transition-all" data-coating="ar-clear" type="button">AR Clear 99.8%</button>
-<button class="lens-coating-btn px-3 py-1.5 rounded-full text-xs font-label-md font-bold bg-surface-subtle text-primary hover:bg-surface-container-high transition-all" data-coating="blueshield" type="button">420nm BlueShield</button>
-<button class="lens-coating-btn px-3 py-1.5 rounded-full text-xs font-label-md font-bold bg-surface-subtle text-primary hover:bg-surface-container-high transition-all" data-coating="photochromic" type="button">UV Emerald Adaptive</button>
-<button class="lens-coating-btn px-3 py-1.5 rounded-full text-xs font-label-md font-bold bg-surface-subtle text-primary hover:bg-surface-container-high transition-all" data-coating="polarized" type="button">Kilifi Polarized 99%</button>
-</div>
-</div>
-<!-- Simulated Lens Cross-Section Interactive Prism View -->
-<div class="relative w-full h-32 rounded-xl bg-gradient-to-r from-surface-subtle/50 via-surface-ivory to-surface-subtle/50 flex items-center justify-center overflow-hidden border border-border-hairline" id="lens-dispersion-canvas-box">
-<div class="absolute inset-0 transition-opacity duration-500 opacity-30" id="lens-tint-layer" style="background: radial-gradient(circle, rgba(0,71,186,0.2) 0%, transparent 70%);"></div>
-<div class="relative z-10 flex items-center gap-8 text-xs font-mono text-primary">
-<div class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-cobalt-diopter"></span><span>Abbe Value: 42</span></div>
-<div class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-cyan-accent"></span><span>UV Cut: 400nm</span></div>
-<div class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-mpesa-green"></span><span>Hydrophobic / Oleophobic Matrix</span></div>
-<div class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-600"></span><span>Scratch Mohs: 8.5</span></div>
-</div>
-</div>
-</div>
 <!-- 4-Column Lens Tech Bento Grid -->
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 <!-- Lens Tech 1 -->
-<div class="bg-optical-white p-6 rounded-xl shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-4 border border-border-hairline">
+<div class="bg-optical-white p-6 rounded-xl shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-4">
 <div class="space-y-3">
 <div class="w-12 h-12 rounded-lg bg-surface-container flex items-center justify-center text-secondary">
 <span class="material-symbols-outlined text-[26px]">screen_search_desktop</span>
@@ -985,7 +880,7 @@
 </div>
 </div>
 <!-- Lens Tech 2 -->
-<div class="bg-optical-white p-6 rounded-xl shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-4 border border-border-hairline">
+<div class="bg-optical-white p-6 rounded-xl shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-4">
 <div class="space-y-3">
 <div class="w-12 h-12 rounded-lg bg-secondary-fixed flex items-center justify-center text-secondary">
 <span class="material-symbols-outlined text-[26px]">flare</span>
@@ -1001,7 +896,7 @@
 </div>
 </div>
 <!-- Lens Tech 3 -->
-<div class="bg-optical-white p-6 rounded-xl shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-4 border border-border-hairline">
+<div class="bg-optical-white p-6 rounded-xl shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-4">
 <div class="space-y-3">
 <div class="w-12 h-12 rounded-lg bg-amber-100 flex items-center justify-center text-amber-800">
 <span class="material-symbols-outlined text-[26px]">layers</span>
@@ -1017,7 +912,7 @@
 </div>
 </div>
 <!-- Lens Tech 4 -->
-<div class="bg-optical-white p-6 rounded-xl shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-4 border border-border-hairline">
+<div class="bg-optical-white p-6 rounded-xl shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-4">
 <div class="space-y-3">
 <div class="w-12 h-12 rounded-lg bg-cyan-100 flex items-center justify-center text-secondary">
 <span class="material-symbols-outlined text-[26px]">transition_push</span>
@@ -1034,7 +929,7 @@
 </div>
 </div>
 <!-- Interactive Lens Thickness Comparison Bar -->
-<div class="bg-optical-white p-6 rounded-xl shadow-sm space-y-4 border border-border-hairline">
+<div class="bg-optical-white p-6 rounded-xl shadow-sm space-y-4">
 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
 <h4 class="font-title-md text-title-md text-primary font-bold">Simulate High-Index Profile at -5.50 Diopters</h4>
 <span class="font-label-sm text-label-sm text-outline">Click index to view lens edge taper</span>
@@ -1063,7 +958,7 @@
 </div>
 </section>
 <!-- Nairobi Physical Clinics & Home Try-On Slot Booking -->
-<section class="w-full py-16 bg-surface-ivory relative">
+<section class="w-full py-16 bg-surface-ivory">
 <div class="max-w-7xl mx-auto px-gutter">
 <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
 <!-- Left Clinic Details & Home Try-On Info -->
@@ -1082,7 +977,7 @@
 </div>
 <!-- Studio Location List -->
 <div class="space-y-3">
-<div class="clinic-radio-card p-4 rounded-xl bg-optical-white shadow-sm hover:shadow-md cursor-pointer transition-all flex items-start justify-between gap-4 active border border-border-hairline">
+<div class="clinic-radio-card p-4 rounded-xl bg-optical-white shadow-sm hover:shadow-md cursor-pointer transition-all flex items-start justify-between gap-4 active">
 <div class="flex items-start gap-3">
 <span class="material-symbols-outlined text-secondary text-[22px] mt-0.5">location_on</span>
 <div>
@@ -1093,7 +988,7 @@
 </div>
 <input checked="" class="mt-1 text-primary focus:ring-0" name="clinic_location" type="radio"/>
 </div>
-<div class="clinic-radio-card p-4 rounded-xl bg-optical-white shadow-sm hover:shadow-md cursor-pointer transition-all flex items-start justify-between gap-4 border border-border-hairline">
+<div class="clinic-radio-card p-4 rounded-xl bg-optical-white shadow-sm hover:shadow-md cursor-pointer transition-all flex items-start justify-between gap-4">
 <div class="flex items-start gap-3">
 <span class="material-symbols-outlined text-secondary text-[22px] mt-0.5">location_on</span>
 <div>
@@ -1104,7 +999,7 @@
 </div>
 <input class="mt-1 text-primary focus:ring-0" name="clinic_location" type="radio"/>
 </div>
-<div class="clinic-radio-card p-4 rounded-xl bg-optical-white shadow-sm hover:shadow-md cursor-pointer transition-all flex items-start justify-between gap-4 border border-border-hairline">
+<div class="clinic-radio-card p-4 rounded-xl bg-optical-white shadow-sm hover:shadow-md cursor-pointer transition-all flex items-start justify-between gap-4">
 <div class="flex items-start gap-3">
 <span class="material-symbols-outlined text-secondary text-[22px] mt-0.5">location_on</span>
 <div>
@@ -1117,7 +1012,7 @@
 </div>
 </div>
 <!-- Free In-Home Delivery Callout -->
-<div class="p-4 rounded-xl bg-surface-container-low flex items-center gap-3 border border-border-hairline">
+<div class="p-4 rounded-xl bg-surface-container-low flex items-center gap-3">
 <div class="w-10 h-10 rounded-full bg-mpesa-green text-on-primary flex items-center justify-center shrink-0">
 <span class="material-symbols-outlined text-[22px]">local_shipping</span>
 </div>
@@ -1129,7 +1024,7 @@
 </div>
 <!-- Right Quick Appointment Booking Widget -->
 <div class="lg:col-span-7">
-<div class="bg-optical-white p-8 rounded-2xl shadow-xl space-y-6 border border-border-hairline">
+<div class="bg-optical-white p-8 rounded-2xl shadow-xl space-y-6">
 <div class="border-b border-surface-container-high pb-4">
 <span class="font-label-sm text-label-sm uppercase tracking-wider text-secondary font-bold">Instant Booking</span>
 <h3 class="font-headline-md text-headline-md text-primary">Schedule Your 28-Point Optical Exam</h3>
@@ -1139,21 +1034,21 @@
 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 <div class="space-y-1">
 <label class="font-label-sm text-label-sm text-on-surface font-bold">Full Name</label>
-<input class="w-full px-3.5 py-2.5 bg-surface rounded text-on-surface font-body-sm placeholder:text-outline focus:outline-none focus:bg-optical-white shadow-sm border border-border-hairline" placeholder="e.g. Wanjiku Muthoni" required="" type="text"/>
+<input class="w-full px-3.5 py-2.5 bg-surface rounded text-on-surface font-body-sm placeholder:text-outline focus:outline-none focus:bg-optical-white shadow-sm" placeholder="e.g. Wanjiku Muthoni" required="" type="text"/>
 </div>
 <div class="space-y-1">
 <label class="font-label-sm text-label-sm text-on-surface font-bold">M-PESA / Phone Number</label>
-<input class="w-full px-3.5 py-2.5 bg-surface rounded text-on-surface font-body-sm placeholder:text-outline focus:outline-none focus:bg-optical-white shadow-sm border border-border-hairline" placeholder="+254 7XX XXX XXX" required="" type="tel"/>
+<input class="w-full px-3.5 py-2.5 bg-surface rounded text-on-surface font-body-sm placeholder:text-outline focus:outline-none focus:bg-optical-white shadow-sm" placeholder="+254 7XX XXX XXX" required="" type="tel"/>
 </div>
 </div>
 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 <div class="space-y-1">
 <label class="font-label-sm text-label-sm text-on-surface font-bold">Select Date</label>
-<input class="w-full px-3.5 py-2.5 bg-surface rounded text-on-surface font-body-sm focus:outline-none focus:bg-optical-white shadow-sm border border-border-hairline" type="date" value="2025-03-10"/>
+<input class="w-full px-3.5 py-2.5 bg-surface rounded text-on-surface font-body-sm focus:outline-none focus:bg-optical-white shadow-sm" type="date" value="2025-03-10"/>
 </div>
 <div class="space-y-1">
 <label class="font-label-sm text-label-sm text-on-surface font-bold">Select Time Slot</label>
-<select class="w-full px-3.5 py-2.5 bg-surface rounded text-on-surface font-body-sm focus:outline-none focus:bg-optical-white shadow-sm border border-border-hairline">
+<select class="w-full px-3.5 py-2.5 bg-surface rounded text-on-surface font-body-sm focus:outline-none focus:bg-optical-white shadow-sm">
 <option>10:00 AM – 10:45 AM (Available)</option>
 <option>11:30 AM – 12:15 PM (Available)</option>
 <option>02:00 PM – 02:45 PM (Available)</option>
@@ -1165,15 +1060,15 @@
 <div class="space-y-1">
 <label class="font-label-sm text-label-sm text-on-surface font-bold">Clinical Reason / Eyewear Need</label>
 <div class="grid grid-cols-3 gap-2">
-<label class="flex items-center gap-2 p-2 rounded bg-surface-ivory cursor-pointer font-body-sm text-xs border border-border-hairline">
+<label class="flex items-center gap-2 p-2 rounded bg-surface-ivory cursor-pointer font-body-sm text-xs">
 <input checked="" class="text-primary rounded focus:ring-0" type="checkbox"/>
 <span>Routine Check</span>
 </label>
-<label class="flex items-center gap-2 p-2 rounded bg-surface-ivory cursor-pointer font-body-sm text-xs border border-border-hairline">
+<label class="flex items-center gap-2 p-2 rounded bg-surface-ivory cursor-pointer font-body-sm text-xs">
 <input class="text-primary rounded focus:ring-0" type="checkbox"/>
 <span>Screen Strain</span>
 </label>
-<label class="flex items-center gap-2 p-2 rounded bg-surface-ivory cursor-pointer font-body-sm text-xs border border-border-hairline">
+<label class="flex items-center gap-2 p-2 rounded bg-surface-ivory cursor-pointer font-body-sm text-xs">
 <input class="text-primary rounded focus:ring-0" type="checkbox"/>
 <span>Driving Glare</span>
 </label>
@@ -1197,15 +1092,15 @@
 </div>
 </section>
 <!-- Customer Trust & Verified Kenyan Testimonials Bar -->
-<section class="w-full py-16 bg-surface relative">
+<section class="w-full py-16 bg-surface">
 <div class="max-w-7xl mx-auto px-gutter space-y-10">
 <div class="text-center max-w-2xl mx-auto space-y-2">
 <span class="font-label-sm text-label-sm uppercase tracking-widest text-secondary font-bold">Customer Endorsements</span>
 <h2 class="font-headline-lg text-headline-lg text-primary">Voices from Nairobi's Discerning Optical Wearers</h2>
 </div>
-<!-- 3 Testimonial Cards with Physical Lift -->
+<!-- 3 Testimonial Cards -->
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-<div class="spatial-card bg-optical-white p-6 rounded-xl shadow-sm hover:shadow-md transition-all space-y-4 flex flex-col justify-between border border-border-hairline">
+<div class="bg-optical-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow space-y-4 flex flex-col justify-between">
 <div class="space-y-3">
 <div class="flex items-center gap-1 text-amber-500">
 <span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">star</span>
@@ -1228,7 +1123,7 @@
 </div>
 </div>
 </div>
-<div class="spatial-card bg-optical-white p-6 rounded-xl shadow-sm hover:shadow-md transition-all space-y-4 flex flex-col justify-between border border-border-hairline">
+<div class="bg-optical-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow space-y-4 flex flex-col justify-between">
 <div class="space-y-3">
 <div class="flex items-center gap-1 text-amber-500">
 <span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">star</span>
@@ -1246,4 +1141,242 @@
               AW
             </div>
 <div>
-<h4 class="font-title-md text-title-md text-primary font-bold">Amina Warsame</h4></div></div></div></div></div></section></div></main></body></html>
+<h4 class="font-title-md text-title-md text-primary font-bold">Amina Warsame</h4>
+<p class="font-label-sm text-label-sm text-outline">Architect • Karen</p>
+</div>
+</div>
+</div>
+<div class="bg-optical-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow space-y-4 flex flex-col justify-between">
+<div class="space-y-3">
+<div class="flex items-center gap-1 text-amber-500">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface italic">
+              “The blue-light filter has completely cured my end-of-day eye strain. Also very proud to see such refined, world-class craftsmanship originating right here in Kenya.”
+            </p>
+</div>
+<div class="flex items-center gap-3 pt-3 border-t border-surface-container-high">
+<div class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center font-bold text-amber-900 text-sm">
+              DO
+            </div>
+<div>
+<h4 class="font-title-md text-title-md text-primary font-bold">David Ochieng</h4>
+<p class="font-label-sm text-label-sm text-outline">Financial Analyst • Kilimani</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Guarantee Bar -->
+<div class="p-6 rounded-2xl bg-optical-white shadow-sm grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-center">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-mpesa-green/10 flex items-center justify-center text-mpesa-green shrink-0">
+<span class="material-symbols-outlined text-[22px]">payments</span>
+</div>
+<div>
+<h5 class="font-label-md text-label-md font-bold text-primary">M-PESA Express • Pay After Try</h5>
+<p class="text-xs text-outline">Instant STK push or card payment</p>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-cyan-accent/10 flex items-center justify-center text-cyan-accent shrink-0">
+<span class="material-symbols-outlined text-[22px]">verified</span>
+</div>
+<div>
+<h5 class="font-label-md text-label-md font-bold text-primary">2-Year Structural Warranty</h5>
+<p class="text-xs text-outline">Complimentary screw &amp; pad maintenance</p>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-secondary-fixed flex items-center justify-center text-secondary shrink-0">
+<span class="material-symbols-outlined text-[22px]">published_with_changes</span>
+</div>
+<div>
+<h5 class="font-label-md text-label-md font-bold text-primary">30-Day Prescription Fit Guarantee</h5>
+<p class="text-xs text-outline">Free re-test &amp; lens adjustment if needed</p>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-800 shrink-0">
+<span class="material-symbols-outlined text-[22px]">local_shipping</span>
+</div>
+<div>
+<h5 class="font-label-md text-label-md font-bold text-primary">Free Nairobi Metro Delivery</h5>
+<p class="text-xs text-outline">Delivered within 24h • Nationwide available</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Interactive JavaScript Engine -->
+<script>
+    (function () {
+      // 1. Hero 3D Finish Switcher Logic
+      const swatchBtns = document.querySelectorAll('.swatch-btn');
+      const finishName = document.getElementById('hero-finish-name');
+      const skuTag = document.getElementById('hero-model-sku');
+      const caliperOverlay = document.getElementById('caliper-overlay');
+      const btnCaliper = document.getElementById('btn-dimension-hud');
+      const btnLight = document.getElementById('btn-lighting-toggle');
+      const lightTag = document.getElementById('hero-lighting-tag');
+
+      swatchBtns.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          swatchBtns.forEach(b => {
+            b.classList.remove('ring-2', 'ring-primary', 'ring-offset-2');
+            b.classList.add('ring-1', 'ring-outline-variant');
+          });
+          btn.classList.add('ring-2', 'ring-primary', 'ring-offset-2');
+          btn.classList.remove('ring-1', 'ring-outline-variant');
+
+          const finish = btn.getAttribute('data-finish');
+          const sku = btn.getAttribute('data-sku');
+          if (finishName) finishName.textContent = finish;
+          if (skuTag) skuTag.textContent = sku;
+        });
+      });
+
+      // Caliper overlay toggle
+      if (btnCaliper && caliperOverlay) {
+        btnCaliper.addEventListener('click', () => {
+          caliperOverlay.classList.toggle('opacity-0');
+          btnCaliper.classList.toggle('text-cyan-accent');
+        });
+      }
+
+      // Studio light toggle
+      let isStudioWarm = false;
+      if (btnLight && lightTag) {
+        btnLight.addEventListener('click', () => {
+          isStudioWarm = !isStudioWarm;
+          lightTag.textContent = isStudioWarm ? 'Tungsten Atelier Glow (3200K)' : 'Equatorial Daylight (5400K)';
+          btnLight.classList.toggle('text-amber-600');
+        });
+      }
+
+      // 2. Face Shape Selector dynamic matching
+      const faceData = {
+        oval: {
+          rule: '<strong>Oval Faces:</strong> Balanced proportions allow almost all silhouettes. Geometric and square frames add striking visual edge.',
+          title: 'Architectural Octagonal & Aviator',
+          desc: 'Structured upper frame borders define the cheekbones without overwhelming facial symmetry. Best matched with slim Japanese wire rims.',
+          width: '136 - 141 mm',
+          bridge: 'Keyhole / High',
+          label: 'The Sarit Octagon • KSh 16,500'
+        },
+        round: {
+          rule: '<strong>Round Faces:</strong> Soft curves benefit from angular rectangular frames with sharp corner points to visually lengthen the visage.',
+          title: 'Tailored Rectangle & Deep Square',
+          desc: 'Angular frame profiles establish crisp geometric contouring and sharpen jawline projection.',
+          width: '138 - 144 mm',
+          bridge: 'Standard 18mm',
+          label: 'The Westlands Square • KSh 14,500'
+        },
+        square: {
+          rule: '<strong>Square Faces:</strong> Strong jawline and broad forehead are gracefully balanced by soft curvilinear pantos and round wireframes.',
+          title: 'Architectural Round & Oval Titanium',
+          desc: 'Circular balance softens prominent jaw vertices and centers pupillary gaze naturally.',
+          width: '135 - 139 mm',
+          bridge: 'Saddle Bridge Wire',
+          label: 'The Lavington Round • KSh 13,200'
+        },
+        heart: {
+          rule: '<strong>Heart Faces:</strong> Broader forehead tapering to a narrow chin is complemented by bottom-heavy rimless or aviator teardrop designs.',
+          title: 'Equatorial Teardrop Aviator',
+          desc: 'Directs ocular focus down toward the center plane, harmonizing tapering cheekbones.',
+          width: '137 - 142 mm',
+          bridge: 'Double Brow Bar',
+          label: 'The Karen Aviator • KSh 19,800'
+        },
+        diamond: {
+          rule: '<strong>Diamond Faces:</strong> High, dramatic cheekbones paired with narrow eyes and chin call for upswept cat-eye and rimless brows.',
+          title: 'Sculpted Cat-Eye & Beveled Rimless',
+          desc: 'Highlights expressive eyes and balances angular cranial cheek crests.',
+          width: '133 - 138 mm',
+          bridge: 'High Arch 19mm',
+          label: 'The Runda Modernist • KSh 16,000'
+        }
+      };
+
+      const faceTabs = document.querySelectorAll('.face-tab');
+      const shapeRule = document.getElementById('face-shape-rule');
+      const recTitle = document.getElementById('rec-title');
+      const recDesc = document.getElementById('rec-desc');
+      const recWidth = document.getElementById('rec-width');
+      const recBridge = document.getElementById('rec-bridge');
+      const recLabel = document.getElementById('rec-sku-label');
+
+      faceTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          faceTabs.forEach(t => {
+            t.classList.remove('bg-surface-container-low', 'border-secondary', 'active');
+            t.classList.add('bg-optical-white');
+          });
+          tab.classList.remove('bg-optical-white');
+          tab.classList.add('bg-surface-container-low', 'active');
+
+          const shape = tab.getAttribute('data-shape');
+          const d = faceData[shape];
+          if (d) {
+            if (shapeRule) shapeRule.innerHTML = d.rule;
+            if (recTitle) recTitle.textContent = d.title;
+            if (recDesc) recDesc.textContent = d.desc;
+            if (recWidth) recWidth.textContent = d.width;
+            if (recBridge) recBridge.textContent = d.bridge;
+            if (recLabel) recLabel.textContent = d.label;
+          }
+        });
+      });
+
+      // 3. Category Filter pills visual state
+      const categoryPills = document.querySelectorAll('.category-pill');
+      categoryPills.forEach(pill => {
+        pill.addEventListener('click', () => {
+          categoryPills.forEach(p => {
+            p.classList.remove('bg-primary', 'text-on-primary');
+            p.classList.add('bg-surface-cream', 'text-primary');
+          });
+          pill.classList.remove('bg-surface-cream', 'text-primary');
+          pill.classList.add('bg-primary', 'text-on-primary');
+        });
+      });
+
+      // 4. Clinic Radio Selection visual highlighting
+      const clinicCards = document.querySelectorAll('.clinic-radio-card');
+      clinicCards.forEach(card => {
+        card.addEventListener('click', () => {
+          clinicCards.forEach(c => {
+            c.classList.remove('bg-surface-container-low');
+            c.classList.add('bg-optical-white');
+            const r = c.querySelector('input[type="radio"]');
+            if (r) r.checked = false;
+          });
+          card.classList.remove('bg-optical-white');
+          card.classList.add('bg-surface-container-low');
+          const radio = card.querySelector('input[type="radio"]');
+          if (radio) radio.checked = true;
+        });
+      });
+
+      // 5. Booking Form Submission feedback
+      const bookingForm = document.getElementById('clinic-booking-form');
+      if (bookingForm) {
+        bookingForm.addEventListener('submit', (e) => {
+          e.preventDefault();
+          const btn = bookingForm.querySelector('button[type="submit"]');
+          if (btn) {
+            btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-[20px]">sync</span><span>Securing Slot...</span>';
+            setTimeout(() => {
+              btn.classList.remove('bg-primary');
+              btn.classList.add('bg-mpesa-green');
+              btn.innerHTML = '<span class="material-symbols-outlined text-[20px]">check_circle</span><span>Appointment Confirmed! SMS Sent.</span>';
+            }, 900);
+          }
+        });
+      }
+    })();
+  </script>
+</div></main><footer class="w-full bg-surface-ivory pt-16 pb-12 shadow-[0_-1px_12px_rgba(0,0,0,0.02)]"><div class="max-w-7xl mx-auto px-gutter"><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 pb-12"><div class="lg:col-span-2 space-y-4"><div class="flex items-center gap-3"><img alt="EyeKart Brand Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1XFZlvgnz4SWLipOPqSIZA6RtCW2NZLqkeaxjHzXzq-AuFJsshCyySq1oMAHXLZ8ZKM16208tIChajcM2uOzO_U0Q43tULN75HulC8QmoFiz88aRjPJtaf6bDUP9s7YqVpxhYencqZ5aMMwdXo3qWk8zd8uGbV2re-bH6-vcloddnOnujhjZNiIdYZPLJqbGyCqr6UShZpx8TuTL2ufTBbwLpSflMBigbo40mlbMdu9nho9D8Ka33IoYzjA"/><span class="font-headline-sm text-headline-sm font-bold tracking-tight text-primary">EYEKART ATELIER</span></div><p class="font-body-md text-body-md text-on-surface-variant max-w-sm">Nairobi's foremost precision optometry house and handcrafted eyewear dispensary. Clinical accuracy calibrated for equatorial light, verified by registered East African optometrists.</p><div class="pt-2 space-y-2"><div class="flex items-center gap-2 text-on-surface font-label-md text-label-md"><span class="material-symbols-outlined text-mpesa-green text-[20px]">schedule</span><span>Clinics open Mon – Sat: 08:30 – 19:30 | Sun: 10:00 – 17:00</span></div><div class="flex items-center gap-2 text-on-surface font-label-md text-label-md"><span class="material-symbols-outlined text-secondary text-[20px]">verified_user</span><span>Licensed by Pharmacy and Poisons Board &amp; Optometrists Council</span></div></div></div><div><h4 class="font-title-md text-title-md text-primary font-bold mb-4">Nairobi Clinics &amp; Lounges</h4><ul class="space-y-2 font-body-sm text-body-sm text-on-surface-variant"><li><a class="hover:text-primary transition-colors font-medium text-on-surface" data-path="nairobi-clinics" href="#">Westlands Square</a><p class="text-outline text-xs">Ground Floor, Opp. The Mall</p></li><li><a class="hover:text-primary transition-colors font-medium text-on-surface" data-path="nairobi-clinics" href="#">Sarit Centre</a><p class="text-outline text-xs">New Wing, 2nd Floor (Eye Lab)</p></li><li><a class="hover:text-primary transition-colors font-medium text-on-surface" data-path="nairobi-clinics" href="#">Junction Mall</a><p class="text-outline text-xs">Ngong Road, 1st Level</p></li><li><a class="hover:text-primary transition-colors font-medium text-on-surface" data-path="nairobi-clinics" href="#">Village Market</a><p class="text-outline text-xs">Limuru Rd, Gigiri Courtyard</p></li></ul></div><div><h4 class="font-title-md text-title-md text-primary font-bold mb-4">Diagnostic Services</h4><ul class="space-y-2.5 font-body-sm text-body-sm text-on-surface-variant"><li><a class="hover:text-primary transition-colors" data-path="book-eye-test" href="#">Book 28-Point Optical Exam</a></li><li><a class="hover:text-primary transition-colors" data-path="upload-prescription" href="#">Optical Prescription Verification</a></li><li><a class="hover:text-primary transition-colors" data-path="lens-customizer" href="#">Custom Lens Configurator (OD/OS)</a></li><li><a class="hover:text-primary transition-colors" data-path="virtual-try-on" href="#">Pupillary Distance (PD) Scanner</a></li><li><a class="hover:text-primary transition-colors" data-path="contact-lenses" href="#">Contact Lens Corneal Fitting</a></li><li><a class="hover:text-primary transition-colors" data-path="order-tracking" href="#">Track M-PESA Optical Delivery</a></li></ul></div><div><h4 class="font-title-md text-title-md text-primary font-bold mb-4">The Nairobi Optical Gazette</h4><p class="font-body-sm text-body-sm text-on-surface-variant mb-3">Receive private atelier release notifications and eye care wellness essays.</p><div class="flex flex-col gap-2"><input class="px-3 py-2 bg-optical-white text-on-surface rounded font-body-sm text-body-sm placeholder:text-outline focus:outline-none shadow-[0_1px_4px_rgba(0,0,0,0.04)] focus:shadow-[0_2px_8px_rgba(0,0,0,0.08)]" placeholder="Your email address..." type="email"/><button class="px-4 py-2 bg-graphite hover:bg-primary text-on-primary font-label-sm text-label-sm rounded transition-colors text-center" type="button">Join Inner Circle</button></div></div></div><div class="pt-8 mt-8 border-t border-outline-variant/30 flex flex-col md:flex-row items-center justify-between gap-6 font-body-sm text-body-sm text-on-surface-variant"><div class="flex flex-wrap items-center gap-6"><span class="flex items-center gap-1.5 font-label-md text-label-md text-mpesa-green font-bold"><span class="material-symbols-outlined text-[18px]">payments</span>Verified M-PESA STK • Buy Goods 889211</span><span class="flex items-center gap-1.5 font-label-md text-label-md text-on-surface"><span class="material-symbols-outlined text-[18px]">credit_card</span>Visa • Mastercard Accepted</span><span class="text-xs text-outline">© 2025 EyeKart Optical Kenya Ltd. All Rights Reserved.</span></div><div class="flex items-center gap-4 text-xs"><a class="hover:text-primary" data-path="nairobi-clinics" href="#">Privacy Policy</a><a class="hover:text-primary" data-path="nairobi-clinics" href="#">Clinical Disclaimers</a><a class="hover:text-primary" data-path="nairobi-clinics" href="#">Warranty Protocol</a></div></div></div></footer></body></html>

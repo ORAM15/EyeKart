@@ -1,0 +1,10 @@
+{
+  "name": "EyeKart — Luxury Optical & Eye Care",
+  "description": "Nairobi luxury optical commerce platform & precision clinic featuring 3D try-on, lens configurator, 28-point eye exam booking, and M-Pesa STK push.",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
