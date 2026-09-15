@@ -1,0 +1,187 @@
+Directory: close_up_professional_studio_portrait_headshot_of_a_stylish_modern_kenyan_woman
+  No code.html found.
+
+Directory: eyekart_3d_product_detail_studio
+  Page/Component: EyeKart — Luxury Optical &amp; Eye Care
+  Interactive Elements: 24 buttons, 0 forms, 69 links, 2 inputs
+  Data Bindings: data-active-classes, data-alt, data-metric, data-path
+  IDs (JS Hooks?): bgToggle, blueprintBtn, blueprintReticle, clinicalNotes, fitModal, frameDisplayContainer, lightClinical, lightGolden, lightStudio, mainFrameImage...
+  Onclicks: buyFrameOnly(), closeFitModal(), openFitModal(), resetRotation(), setColorway(, setStudioLight(, switchAngle(, toggleBlueprintOverlay(), toggleBlueprintOverlay(); switchAngle(, toggleCanvasBg()...
+  Dead Hrefs: #
+
+Directory: eyekart_brand_logo
+  Page/Component: No Title
+  Interactive Elements: 0 buttons, 0 forms, 0 links, 0 inputs
+  Data Bindings: 
+  IDs (JS Hooks?): 
+  Onclicks: 
+
+Directory: eyekart_catalog_collection_live_try_on_studio_active_mode
+  Page/Component: EyeKart — Luxury Optical &amp; Eye Care
+  Interactive Elements: 22 buttons, 0 forms, 62 links, 2 inputs
+  Data Bindings: data-active-classes, data-alt, data-frame-id, data-material, data-metric, data-metrics, data-path, data-price, data-title
+  IDs (JS Hooks?): EK-007, EK-102, EK-308, EK-505, EK-804, EK-915, active-frame-material, active-frame-price, active-frame-title, carousel-next...
+  Onclicks: 
+  Dead Hrefs: #
+
+Directory: eyekart_claim_approved_electronic_pre_auth_letter_modal
+  Page/Component: EyeKart Nairobi | Luxury Optical Atelier &amp; Clinical Optometry
+  Interactive Elements: 5 buttons, 0 forms, 29 links, 2 inputs
+  Data Bindings: data-active-classes, data-metric, data-path
+  IDs (JS Hooks?): claimApprovalModal, tailwind-config
+  Onclicks: document.getElementById(, window.print()
+  Dead Hrefs: #
+
+Directory: eyekart_clinic_appointment_28_point_eye_exam_booking
+  Page/Component: EyeKart Nairobi | Luxury Optical Atelier &amp; Clinical Optometry
+  Interactive Elements: 24 buttons, 0 forms, 27 links, 15 inputs
+  Data Bindings: data-active-classes, data-metric, data-path
+  IDs (JS Hooks?): dossier-clinician, dossier-datetime, dossier-fee, dossier-package, pkg-28point, selected-time-btn, stage-datetime, stage-location, stage-optometrist, stage-package...
+  Onclicks: alert(, selectClinic(this, , selectDate(this, , selectDoctor(this, , selectTier(this, , selectTime(this, 
+  Dead Hrefs: #
+
+Directory: eyekart_clinical_examination_report_precision_diopter_summary
+  Page/Component: EyeKart Nairobi | Luxury Optical Atelier &amp; Clinical Optometry
+  Interactive Elements: 6 buttons, 0 forms, 31 links, 2 inputs
+  Data Bindings: data-active-classes, data-alt, data-metric, data-path
+  IDs (JS Hooks?): tailwind-config, toggle-units
+  Onclicks: 
+  Dead Hrefs: #
+
+Directory: eyekart_corporate_optical_insurance_claim_pre_authorization
+  Page/Component: EyeKart Nairobi | Luxury Optical Atelier &amp; Clinical Optometry
+  Interactive Elements: 7 buttons, 0 forms, 30 links, 5 inputs
+  Data Bindings: data-active-classes, data-alt, data-metric, data-path
+  IDs (JS Hooks?): patientConsentCheckbox, submissionStatus, submitClaimBtn, switchInsurerBtn, tailwind-config
+  Onclicks: 
+  Dead Hrefs: #
+
+Directory: eyekart_customer_account_orders_prescriptions_management
+  Page/Component: EyeKart Nairobi | Luxury Optical Atelier &amp; Clinical Optometry
+  Interactive Elements: 21 buttons, 0 forms, 27 links, 2 inputs
+  Data Bindings: data-active-classes, data-alt, data-location, data-metric, data-path
+  IDs (JS Hooks?): tailwind-config
+  Onclicks: 
+  Dead Hrefs: #
+
+Directory: eyekart_desktop_m_pesa_express_checkout
+  Page/Component: EyeKart Nairobi | Luxury Optical Atelier &amp; Clinical Optometry
+  Interactive Elements: 6 buttons, 0 forms, 28 links, 3 inputs
+  Data Bindings: data-active-classes, data-alt, data-metric, data-path
+  IDs (JS Hooks?): button-label, mpesa-number, simulator-status, stk-prompt-text, stk-simulator, tailwind-config, toggle-edit-btn, trigger-stk-button
+  Onclicks: handleStkPush(), toggleEditPhone()
+  Dead Hrefs: #
+
+Directory: eyekart_grand_optical_homepage
+  Page/Component: EyeKart — Luxury Optical &amp; Eye Care
+  Interactive Elements: 32 buttons, 1 forms, 81 links, 13 inputs
+  Data Bindings: data-active-classes, data-alt, data-finish, data-metric, data-path, data-price, data-shape, data-sku
+  IDs (JS Hooks?): btn-dimension-hud, btn-lighting-toggle, caliper-overlay, clinic-booking-form, face-recommendation-card, face-shape-rule, hero-finish-name, hero-frame-img, hero-frame-wrapper, hero-lighting-tag...
+  Onclicks: 
+  Dead Hrefs: #
+
+Directory: eyekart_integrated_spatial_optical_master_experience
+  Page/Component: EyeKart — Luxury Optical &amp; Eye Care
+  Interactive Elements: 35 buttons, 1 forms, 68 links, 12 inputs
+  Data Bindings: data-active-classes, data-alt, data-coating, data-finish, data-metric, data-path, data-price, data-shape, data-sku
+  IDs (JS Hooks?): ambient-caustic-canvas, biometric-mesh-stage, btn-dimension-hud, btn-lighting-toggle, caliper-overlay, clinic-booking-form, face-recommendation-card, face-shape-rule, hero-3d-stage, hero-finish-name...
+  Onclicks: 
+  Dead Hrefs: #
+
+Directory: eyekart_kra_etr_tax_invoice_clinical_ophthalmic_certificate
+  Page/Component: EyeKart Nairobi | Luxury Optical Atelier &amp; Clinical Optometry
+  Interactive Elements: 5 buttons, 0 forms, 30 links, 2 inputs
+  Data Bindings: data-active-classes, data-metric, data-path
+  IDs (JS Hooks?): downloadPdfBtn, emailCopyBtn, itaxSyncBtn, printableTaxDocket, tailwind-config
+  Onclicks: window.print()
+  Dead Hrefs: #
+
+Directory: eyekart_live_camera_virtual_try_on_vto_studio
+  Page/Component: EyeKart — Luxury Optical &amp; Eye Care
+  Interactive Elements: 24 buttons, 0 forms, 61 links, 3 inputs
+  Data Bindings: data-active-classes, data-finish, data-metric, data-path
+  IDs (JS Hooks?): arModelFace, bareFaceNotice, btnCaptureSnapshot, btnLightOffice, btnLightSun, btnLightSunset, btnOrderHomeTryOn, btnShareLook, currentFinishLabel, hudPupilLeft...
+  Onclicks: 
+  Dead Hrefs: #
+
+Directory: eyekart_m_pesa_payment_verified_live_courier_dispatch
+  Page/Component: EyeKart Nairobi | Luxury Optical Atelier &amp; Clinical Optometry
+  Interactive Elements: 4 buttons, 0 forms, 32 links, 2 inputs
+  Data Bindings: data-active-classes, data-alt, data-location, data-metric, data-path
+  IDs (JS Hooks?): tailwind-config, toast-feedback
+  Onclicks: alert(, copyReceipt(
+  Dead Hrefs: #
+
+Directory: eyekart_mobile_m_pesa_stk_push_checkout
+  Page/Component: No Title
+  Interactive Elements: 7 buttons, 0 forms, 1 links, 1 inputs
+  Data Bindings: data-alt, data-metric
+  IDs (JS Hooks?): countdownTimer, mpesaPhone, summaryChevron, summaryContent, summaryToggleBtn, tailwind-config
+  Onclicks: alert(, const content = document.getElementById(, const input = document.getElementById(, history.back(), this.innerHTML=
+
+Directory: eyekart_mobile_split_screen_vto_comparison
+  Page/Component: No Title
+  Interactive Elements: 17 buttons, 0 forms, 6 links, 0 inputs
+  Data Bindings: data-active-classes, data-alt, data-metric, data-path
+  IDs (JS Hooks?): btn-fade, btn-quick-swap-trigger, btn-split, btn-swipe, tab-comfort, tab-content, tab-fit, tab-rx, tailwind-config
+  Onclicks: 
+  Dead Hrefs: #
+
+Directory: eyekart_optical_catalog_faceted_filters
+  Page/Component: EyeKart — Luxury Optical &amp; Eye Care
+  Interactive Elements: 56 buttons, 0 forms, 100 links, 21 inputs
+  Data Bindings: data-active-classes, data-alt, data-metric, data-path, data-sku
+  IDs (JS Hooks?): bridgeValueDisplay, resetAllFilters, selectedWidthBadge, tailwind-config
+  Onclicks: 
+  Dead Hrefs: #
+
+Directory: eyekart_optical_catalog_quick_view_dimension_blueprint
+  Page/Component: EyeKart — Luxury Optical &amp; Eye Care
+  Interactive Elements: 17 buttons, 0 forms, 66 links, 2 inputs
+  Data Bindings: data-active-classes, data-alt, data-angle, data-blueprint, data-color, data-img, data-metric, data-path
+  IDs (JS Hooks?): active-angle-label, blueprint-hud, buy-frame-only-btn, choice-complete, choice-frame-only, copy-promo-btn, primary-optic-image, promo-code-text, quickview-modal-stage, selected-finish-name...
+  Onclicks: 
+  Dead Hrefs: #
+
+Directory: eyekart_optical_comparison_matrix_multi_sku_technical_spec_studio
+  Page/Component: EyeKart — Luxury Optical &amp; Eye Care
+  Interactive Elements: 23 buttons, 0 forms, 63 links, 2 inputs
+  Data Bindings: data-active-classes, data-alt, data-identical, data-metric, data-path
+  IDs (JS Hooks?): btn-highlight-diff, btn-show-all, cat-biometrics, cat-clinical, cat-hardware, cat-ledger, icon-cat-biometrics, icon-cat-clinical, icon-cat-hardware, icon-cat-ledger...
+  Onclicks: alert(, if(confirm(, removeSku(, toggleCategory(, toggleDifferences(false), toggleDifferences(true), window.print()
+  Dead Hrefs: #
+
+Directory: eyekart_order_confirmation_live_nairobi_courier_tracking
+  Page/Component: EyeKart Nairobi | Luxury Optical Atelier &amp; Clinical Optometry
+  Interactive Elements: 4 buttons, 0 forms, 28 links, 2 inputs
+  Data Bindings: data-active-classes, data-alt, data-location, data-metric, data-path
+  IDs (JS Hooks?): tailwind-config
+  Onclicks: 
+  Dead Hrefs: #
+
+Directory: eyekart_precision_lens_configurator
+  Page/Component: EyeKart — Luxury Optical &amp; Eye Care
+  Interactive Elements: 12 buttons, 0 forms, 62 links, 25 inputs
+  Data Bindings: data-active-classes, data-alt, data-method, data-metric, data-path, data-step-target
+  IDs (JS Hooks?): arReflex, edge-metric-text, edge-spec-badge, edge-thickness-indicator, frameRim, index-options-group, left-lens-reflex, left-tint-overlay, lens-ambient-glow, lensFresnel...
+  Onclicks: 
+  Dead Hrefs: #
+
+Directory: eyekart_split_screen_comparison_vto_frame_a_vs_frame_b
+  Page/Component: EyeKart — Luxury Optical &amp; Eye Care
+  Interactive Elements: 23 buttons, 0 forms, 63 links, 2 inputs
+  Data Bindings: data-active-classes, data-alt, data-metric, data-path
+  IDs (JS Hooks?): tailwind-config, yawSyncToggle
+  Onclicks: 
+  Dead Hrefs: #
+
+Directory: eyekart_vto_calibration_pd_biometric_scanner
+  Page/Component: EyeKart — Luxury Optical &amp; Eye Care
+  Interactive Elements: 8 buttons, 0 forms, 62 links, 5 inputs
+  Data Bindings: data-active-classes, data-alt, data-metric, data-path
+  IDs (JS Hooks?): binocularPdInput, cardGuideSvg, cardInstructionBox, displayPdTotal, manualPdBox, modeBtnA, modeBtnB, modeBtnC, odInput, osInput...
+  Onclicks: retakeFrame(), switchMode(, toggleTroubleshooter()
+  Dead Hrefs: #
+
+Directory: optical_editorial_precision_clinic
+  No code.html found.

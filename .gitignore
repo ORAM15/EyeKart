@@ -1,0 +1,22 @@
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Database
+.pgdata/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Storage Uploads
+uploads/
+server/uploads/
