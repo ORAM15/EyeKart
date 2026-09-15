@@ -317,19 +317,71 @@
     }
 
     _activateAssetRequiredFallback(frame, reason) {
+      const canvas = document.getElementById('three-viewer-canvas');
+      const mainImg = document.getElementById('mainFrameImage');
+      const THREE = window.THREE;
+
+      // If Three.js and ProceduralEyewearModel are available, mount procedural 3D model!
+      if (this.scene && THREE && global.ProceduralEyewearModel) {
+        if (this.currentModel) this.scene.remove(this.currentModel);
+
+        const initialVariant = global.EyeKartStore ? global.EyeKartStore.getActiveVariant() : 'Obsidian Black';
+        const initialColor = this._resolveVariantHex(initialVariant);
+        this.currentModel = global.ProceduralEyewearModel.create(THREE, initialColor);
+        this.currentModel.scale.set(1.4, 1.4, 1.4);
+        this.scene.add(this.currentModel);
+
+        this.hasLoaded3DModel = true;
+        this.classification = 'INTERACTIVE PROCEDURAL 3D DEMO — GLB PIPELINE READY';
+
+        if (canvas) canvas.style.display = 'block';
+        if (mainImg) mainImg.style.display = 'none';
+
+        this._mountStudioStatusBadge('Procedural 3D Model • Real GLB Pipeline Ready');
+        console.info(`[EyeKart 3D Studio] Verified GLB file not found (${reason}). Procedural 3D Eyewear loaded. Classification: INTERACTIVE PROCEDURAL 3D DEMO`);
+        return;
+      }
+
       this.hasLoaded3DModel = false;
       this.classification = 'WEBGL 3D VIEWER — ASSET REQUIRED';
 
       // Keep canvas hidden, ensure 2D photographic display is active
-      const canvas = document.getElementById('three-viewer-canvas');
-      const mainImg = document.getElementById('mainFrameImage');
       if (canvas) canvas.style.display = 'none';
       if (mainImg) {
         mainImg.style.display = 'block';
         mainImg.style.opacity = '1';
       }
 
-      console.info(`[EyeKart 3D Studio] WebGL viewer architecture initialized. Verified 3D GLB asset for ${frame.sku} is unavailable (${reason}). Active Classification: WEBGL 3D VIEWER — ASSET REQUIRED. 2D photographic fallback preserved.`);
+      console.info(`[EyeKart 3D Studio] WebGL viewer architecture initialized. Verified 3D GLB asset for ${frame ? frame.sku : 'EK-902'} is unavailable (${reason}). Active Classification: WEBGL 3D VIEWER — ASSET REQUIRED. 2D photographic fallback preserved.`);
+    }
+
+    _resolveVariantHex(name) {
+      const map = {
+        'Obsidian Black': 0x202224,
+        'Matte Obsidian Black': 0x202224,
+        'Brushed Champagne Titanium': 0xE5D7B7,
+        'Champagne Gold': 0xE5C158,
+        'Raw Brushed Platinum': 0xD1D5DB,
+        'Matte Platinum': 0xD5D8DC,
+        'Havana Tortoise': 0x6B3E11,
+        'Havana Tortoise & Rose Titanium': 0x6B3E11,
+        'Forest Acacia': 0x1B4332,
+        'Midnight Navy': 0x1E293B
+      };
+      return map[name] || 0x202224;
+    }
+
+    _mountStudioStatusBadge(text) {
+      const container = document.getElementById('rotationArea') || document.getElementById('viewerStage');
+      if (!container) return;
+      let badge = document.getElementById('studio-3d-status-pill');
+      if (!badge) {
+        badge = document.createElement('div');
+        badge.id = 'studio-3d-status-pill';
+        badge.className = 'absolute top-3 right-3 z-20 eyekart-status-pill shadow-sm';
+        container.appendChild(badge);
+      }
+      badge.innerHTML = `<span class="material-symbols-outlined text-[13px] text-cyan-accent">tune</span><span>${text}</span>`;
     }
 
     setLightingPreset(preset) {
@@ -540,6 +592,9 @@
         if (global.EyeKartStore) {
           global.EyeKartStore.setActiveVariant(colorName);
         }
+        if (this.currentModel && typeof this.currentModel.updateFinishColor === 'function') {
+          this.currentModel.updateFinishColor(this._resolveVariantHex(colorName));
+        }
       };
 
       const colorBtns = document.querySelectorAll(dom.colorButtons || '.color-btn');
@@ -551,6 +606,9 @@
           const colorName = match ? match[1] : (btn.getAttribute('data-color') || btn.getAttribute('title'));
           if (colorName && global.EyeKartStore) {
             global.EyeKartStore.setActiveVariant(colorName);
+          }
+          if (colorName && this.currentModel && typeof this.currentModel.updateFinishColor === 'function') {
+            this.currentModel.updateFinishColor(this._resolveVariantHex(colorName));
           }
         });
       });

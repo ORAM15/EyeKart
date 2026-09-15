@@ -155,6 +155,15 @@
       this.overlayCanvas = canvasEl;
       this.overlayCtx = canvasEl.getContext('2d', { alpha: true });
 
+      // Mount snapshot flash overlay
+      let flashEl = document.getElementById('vto-snapshot-flash');
+      if (!flashEl) {
+        flashEl = document.createElement('div');
+        flashEl.id = 'vto-snapshot-flash';
+        flashEl.className = 'vto-snapshot-flash';
+        container.appendChild(flashEl);
+      }
+
       // Synchronize canvas buffer resolution with container display size
       this._resizeCanvas();
       if (typeof window !== 'undefined') {
@@ -839,6 +848,13 @@
 
     _captureSnapshot() {
       const toast = document.getElementById('snapshotSuccessToast');
+
+      // Trigger realistic camera shutter flash animation
+      const flash = document.getElementById('vto-snapshot-flash');
+      if (flash) {
+        flash.classList.add('active');
+        setTimeout(() => flash.classList.remove('active'), 250);
+      }
 
       // Create offscreen canvas for real composite
       const offscreen = document.createElement('canvas');

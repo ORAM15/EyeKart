@@ -113,6 +113,15 @@
   function bootstrapHomepage(dom) {
     dom = dom || {};
 
+    // Initialize Cinematic 3D Engine
+    try {
+      if (global.EyeKartCinematic3D) {
+        global.EyeKartCinematic3D.init();
+      }
+    } catch (e3dErr) {
+      console.warn('[EyeKart Runtime] Cinematic 3D init warning:', e3dErr);
+    }
+
     // Caliper Dimension HUD Toggle
     const caliperBtn = document.querySelector(dom.btnDimensionHud || '#btn-dimension-hud');
     const caliperOverlay = document.querySelector(dom.caliperOverlay || '#caliper-overlay');

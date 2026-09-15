@@ -1,0 +1,217 @@
+/* ==========================================================================
+   EyeKart Luxury Optical Commerce Platform — Premium Visual Experience Layer
+   Visual Language: Optical, Cinematic, Minimal, Immersive, Precision
+   ========================================================================== */
+
+/* --- 1. Optical Background Motifs & Ambience --- */
+.eyekart-optical-mesh {
+  background-image: 
+    radial-gradient(circle at 50% 20%, rgba(6, 182, 212, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(0, 103, 129, 0.06) 0%, transparent 45%),
+    linear-gradient(to bottom, #ffffff 0%, #f8f9ff 50%, #f4f3f0 100%);
+}
+
+.eyekart-precision-grid {
+  background-size: 40px 40px;
+  background-image: 
+    linear-gradient(to right, rgba(117, 119, 123, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(117, 119, 123, 0.04) 1px, transparent 1px);
+}
+
+/* --- 2. Optical Diopter & Concentric Guide Rings --- */
+.optical-guide-ring {
+  position: absolute;
+  border-radius: 9999px;
+  border: 1px dashed rgba(6, 182, 212, 0.25);
+  pointer-events: none;
+  animation: opticalRingRotate 60s linear infinite;
+}
+
+@keyframes opticalRingRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.optical-lens-glow {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(48px);
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(6, 182, 212, 0.22) 0%, rgba(143, 223, 255, 0.12) 60%, transparent 80%);
+}
+
+/* --- 3. Hero 3D Stage & Canvas Container --- */
+#eyekart-hero-canvas-stage {
+  position: relative;
+  width: 100%;
+  height: 440px;
+  overflow: hidden;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 50% 50%, #ffffff 0%, #f8f9ff 80%);
+}
+
+@media (max-width: 640px) {
+  #eyekart-hero-canvas-stage {
+    height: 340px;
+  }
+}
+
+#hero-3d-webgl-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+  outline: none;
+  cursor: grab;
+}
+
+#hero-3d-webgl-canvas:active {
+  cursor: grabbing;
+}
+
+/* --- 4. 3D Product Card Perspective Tilt & Specular Reflection --- */
+.eyekart-tilt-card {
+  transition: transform 0.25s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.25s ease;
+  transform-style: preserve-3d;
+  will-change: transform;
+  position: relative;
+}
+
+.eyekart-tilt-card:hover {
+  box-shadow: 0 20px 35px -10px rgba(11, 28, 48, 0.12), 0 8px 16px -8px rgba(11, 28, 48, 0.08);
+}
+
+.eyekart-card-sheen {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    rgba(255, 255, 255, 0.45) 0%,
+    rgba(255, 255, 255, 0) 65%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  mix-blend-mode: overlay;
+  z-index: 10;
+}
+
+.eyekart-tilt-card:hover .eyekart-card-sheen {
+  opacity: 1;
+}
+
+/* --- 5. Glassmorphic HUD & Precision Overlays --- */
+.eyekart-hud-dock {
+  background: rgba(42, 46, 53, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 12px 32px rgba(11, 28, 48, 0.2);
+}
+
+.eyekart-glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(197, 198, 203, 0.4);
+}
+
+/* --- 6. Caliper & Diopter Reticle Lines --- */
+.eyekart-caliper-line {
+  position: relative;
+}
+
+.eyekart-caliper-line::before,
+.eyekart-caliper-line::after {
+  content: '';
+  position: absolute;
+  background-color: #06B6D4;
+}
+
+/* --- 7. Floating 3D Badge & Status Indicators --- */
+.eyekart-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(6, 182, 212, 0.3);
+  color: #006781;
+}
+
+/* --- 8. VTO Enhanced Clinical HUD --- */
+.vto-hud-reticle {
+  position: absolute;
+  border: 1.5px dashed rgba(6, 182, 212, 0.6);
+  border-radius: 9999px;
+  pointer-events: none;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.vto-snapshot-flash {
+  position: absolute;
+  inset: 0;
+  background-color: #ffffff;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease-out;
+  z-index: 50;
+}
+
+.vto-snapshot-flash.active {
+  opacity: 0.9;
+  transition: opacity 0.05s ease-in;
+}
+
+/* --- 9. Interactive Micro-Animations --- */
+@keyframes shimmerPass {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+
+.eyekart-shimmer-btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.eyekart-shimmer-btn::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+  transform: translateX(-100%);
+}
+
+.eyekart-shimmer-btn:hover::after {
+  animation: shimmerPass 1.2s ease-in-out;
+}
+
+/* --- 10. Accessibility & Reduced Motion Support --- */
+@media (prefers-reduced-motion: reduce) {
+  .optical-guide-ring {
+    animation: none !important;
+  }
+  .eyekart-tilt-card {
+    transition: none !important;
+    transform: none !important;
+  }
+  .eyekart-shimmer-btn::after {
+    animation: none !important;
+  }
+  #hero-3d-webgl-canvas {
+    cursor: default;
+  }
+}
