@@ -3,8 +3,7 @@
  * Handles upload intents, file ingestion, IDOR access controls, and optometrist RBAC.
  */
 const { requireAuth } = require('../middleware/auth');
-const LocalStorageProvider = require('../services/storage/LocalStorageProvider');
-const S3StorageProvider = require('../services/storage/S3StorageProvider');
+const { getStorageProvider } = require('../services/storage');
 const { query } = require('../db/pool');
 const { logAuditEvent } = require('../services/auditService');
 
@@ -17,10 +16,8 @@ const ALLOWED_MIME_TYPES = [
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
 const CLINICAL_ROLES = ['OPTOMETRIST', 'ADMIN', 'LAB_TECH', 'STORE_STAFF'];
 
-// Initialize storage provider based on environment
-const storageProvider = process.env.STORAGE_PROVIDER === 'S3'
-  ? new S3StorageProvider()
-  : new LocalStorageProvider();
+// Initialize storage provider based on environment and configuration
+const storageProvider = getStorageProvider();
 
 async function storageRoutes(fastify, options) {
   // 1. POST /api/storage/upload-intent - Issue upload intent ticket

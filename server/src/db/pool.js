@@ -9,17 +9,27 @@ let pool = null;
 
 function getPool() {
   if (!pool) {
-    pool = new Pool({
-      host: config.db.host,
-      port: config.db.port,
-      user: config.db.user,
-      password: config.db.password,
-      database: config.db.database,
-      ssl: config.db.ssl,
-      max: 20,
-      idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 5000
-    });
+    const poolConfig = {
+      max: config.db.max || 20,
+      idleTimeoutMillis: config.db.idleTimeoutMillis || 30000,
+      connectionTimeoutMillis: config.db.connectionTimeoutMillis || 5000
+    };
+
+    if (config.db.connectionString) {
+      poolConfig.connectionString = config.db.connectionString;
+    } else {
+      poolConfig.host = config.db.host;
+      poolConfig.port = config.db.port;
+      poolConfig.user = config.db.user;
+      poolConfig.password = config.db.password;
+      poolConfig.database = config.db.database;
+    }
+
+    if (config.db.ssl) {
+      poolConfig.ssl = config.db.ssl;
+    }
+
+    pool = new Pool(poolConfig);
 
     pool.on('error', (err) => {
       console.error('[EyeKart DB Pool] Unexpected error on idle client:', err.message);

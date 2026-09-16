@@ -12,162 +12,33 @@
     selectedSku: "EK-902",
     activeVariant: "Obsidian Black",
     cart: {
-      items: [
-        {
-          id: "item_init_902",
-          sku: "EK-902",
-          name: "Kibera Minimalist Titanium",
-          variant: "Obsidian Black",
-          lensConfig: {
-            lensType: "Digital Single Vision",
-            index: "1.67 Ultra-Thin",
-            coatings: ["BlueShield 420nm", "Anti-Glare AR"],
-            lensPrice: 4700
-          },
-          framePrice: 18500,
-          totalPrice: 23200,
-          qty: 1,
-          productSnapshot: {
-            category: "eyeglasses",
-            material: "Japanese Beta-Titanium",
-            dimensions: "50 □ 19 - 140",
-            image: "https://lh3.googleusercontent.com/aida-public/AB6AXuBKQv_VnLuN8ds7xO3zgoSxc0DRFCJbfyaP_3BAYw_00SEWiB3Q_5TDyc0SW-uSuW8A1McFkE6u6wAyZ36yJ3KYBIaEo3fhghOFtSuKhqQjVYCRu4YQg3KlRXs4ZwFcFsTA4LWWJucRzbzAR1y7iNyPeejKz5L-iO4zNyLSMrgbnW_gTA7dWVgP6G4O3sqCMB16_opTwdRLhvzw3urr-e0ykitbgWDQ6YA1dV34BbvuJvRVYVLl6WYZyw"
-          }
-        }
-      ],
-      subtotal: 23200,
-      vat: Math.round(23200 * 16 / 116), // VAT included (16%) — extracted from VAT-inclusive price
+      items: [],
+      subtotal: 0,
+      vat: 0,
       deliveryFee: 0,
-      total: 23200
+      total: 0
     },
-    wishlist: ["EK-902", "EK-804", "EK-102"],
-    comparison: ["EK-902", "EK-804", "EK-102"],
+    wishlist: [],
+    comparison: [],
     prescription: {
       type: "manual",
       mode: "manual",
-      verificationStatus: "USER_ENTERED",
-      od: { sph: "-2.25", cyl: "-0.50", axis: "175", add: "+1.25" },
-      os: { sph: "-2.00", cyl: "-0.75", axis: "005", add: "+1.25" },
+      verificationStatus: "NONE",
+      od: { sph: "0.00", cyl: "0.00", axis: "0", add: "0.00" },
+      os: { sph: "0.00", cyl: "0.00", axis: "0", add: "0.00" },
       pd: 63,
       verified: false
     },
     lensConfig: {
       lensType: "Digital Single Vision",
-      index: "1.67",
-      coatings: ["BlueShield 420nm", "Anti-Glare AR"],
-      lensPrice: 4700
+      index: "1.56",
+      coatings: ["Anti-Reflective"],
+      lensPrice: 0
     },
-    appointments: [
-      {
-        id: "APT-2025-9912",
-        clinicId: "sarit_centre",
-        clinicName: "Sarit Centre Precision Clinic",
-        date: "2025-11-16",
-        time: "10:30 AM",
-        optometrist: "Dr. Farida Onyango (Council #281)",
-        examType: "28-Point Comprehensive Ophthalmic Exam",
-        patient: {
-          fullName: "Zawadi Kamau",
-          phone: "+254 712 345 678",
-          email: "z.kamau@eyekart.ke"
-        },
-        status: "CONFIRMED_DEMO"
-      }
-    ],
-    insurance: {
-      underwriter: "Jubilee Insurance",
-      policyNumber: "JUB-MED-849102",
-      memberId: "EMP-09214",
-      opticalLimit: 40000,
-      utilizedAmount: 5000,
-      remainingBalance: 35000,
-      preAuthCode: "JUB-OPT-2025-8841X",
-      status: "APPROVED_DEMO"
-    },
-    orders: [
-      {
-        orderId: "EK-NBI-89421",
-        date: new Date().toISOString(),
-        paymentMethod: "M-PESA Express",
-        payment: {
-          rail: "Safaricom Daraja 2.0 (Demo Rail)",
-          status: "COMPLETED_DEMO",
-          transactionId: "SFA91028X4",
-          timestamp: new Date().toISOString()
-        },
-        mpesaReceipt: "SFA91028X4",
-        total: 23200,
-        subtotal: 23200,
-        vat: 3200,
-        deliveryFee: 0,
-        customer: {
-          name: "Zawadi Kamau",
-          email: "z.kamau@eyekart.ke",
-          phone: "+254 712 345 678",
-          clientId: "EK-NRB-1904"
-        },
-        deliveryAddress: "Riverside Green Suites, Block B Apt 402, Riverside Drive, Nairobi",
-        gateProtocol: "Ring Apt 402 buzzer or call upon arrival at the security gate.",
-        itemsSummary: "EK-902 Kibera Titanium + 1.67 BlueShield Lenses",
-        items: [
-          {
-            id: "cart_init_902",
-            sku: "EK-902",
-            name: "Kibera Minimalist Titanium",
-            variant: "Champagne Titanium",
-            qty: 1,
-            framePrice: 18500,
-            lensConfig: {
-              lensType: "Digital Single Vision",
-              index: "1.67 Ultra-Thin",
-              coatings: ["BlueShield 420nm", "Anti-Glare AR"],
-              lensPrice: 4700
-            },
-            totalPrice: 23200,
-            productSnapshot: {
-              category: "eyeglasses",
-              material: "Japanese Beta-Titanium",
-              dimensions: "51 • 19 • 145 mm",
-              image: "https://lh3.googleusercontent.com/aida-public/AB6AXuBKQv_VnLuN8ds7xO3zgoSxc0DRFCJbfyaP_3BAYw_00SEWiB3Q_5TDyc0SW-uSuW8A1McFkE6u6wAyZ36yJ3KYBIaEo3fhghOFtSuKhqQjVYCRu4YQg3KlRXs4ZwFcFsTA4LWWJucRzbzAR1y7iNyPeejKz5L-iO4zNyLSMrgbnW_gTA7dWVgP6G4O3sqCMB16_opTwdRLhvzw3urr-e0ykitbgWDQ6YA1dV34BbvuJvRVYVLl6WYZyw"
-            }
-          }
-        ],
-        prescriptionSnapshot: {
-          mode: "manual",
-          verificationStatus: "USER_ENTERED",
-          od: { sph: "-4.25", cyl: "-0.75", axis: "095", add: "+1.25" },
-          os: { sph: "-3.75", cyl: "-0.50", axis: "085", add: "+1.25" },
-          pd: "63.5"
-        },
-        tracking: {
-          stage: "DISPATCHED",
-          stageNumber: 8,
-          stageTitle: "Stage 8 of 10: Out for Delivery",
-          riderName: "Juma Kamau",
-          riderPhone: "+254 700 918 274",
-          vehicleReg: "Electric Moto Transporter #EK-E12",
-          etaMinutes: 24,
-          temperature: "21.4°C",
-          speed: "38 km/h",
-          routeText: "En Route via Waiyaki Way • Rhapta Road"
-        },
-        kraInvoiceNumber: "KRA-ETR-2025-0098412",
-        status: "CONFIRMED",
-        lifecycleHistory: [
-          { status: "PAYMENT_INITIATED", timestamp: new Date(Date.now() - 30000).toISOString() },
-          { status: "PAYMENT_CONFIRMED_DEMO", timestamp: new Date(Date.now() - 25000).toISOString() },
-          { status: "LAB_SURFACING", timestamp: new Date(Date.now() - 15000).toISOString() },
-          { status: "QA_CLINICAL_PASSED", timestamp: new Date(Date.now() - 8000).toISOString() },
-          { status: "DISPATCHED", timestamp: new Date().toISOString() }
-        ]
-      }
-    ],
-    user: {
-      name: "Zawadi Kamau",
-      phone: "+254 712 345 678",
-      email: "z.kamau@eyekart.ke",
-      tier: "Atelier VIP Member"
-    }
+    appointments: [],
+    insurance: null,
+    orders: [],
+    user: null
   };
 
   class Store {
@@ -997,7 +868,10 @@
   }
 
   const storeInstance = new Store();
+  storeInstance.DefaultState = DefaultState;
+  Store.DefaultState = DefaultState;
   global.EyeKartStore = storeInstance;
+  global.EyeKartStoreClass = Store;
 
   // Phase 6.1: Non-destructive asynchronous API adapter bootstrap
   if (typeof document !== 'undefined' && !document.querySelector('script[src*="eyekart-api-adapter"]')) {
@@ -1007,4 +881,12 @@
     document.head.appendChild(s);
   }
 
+  // Node.js CommonJS compatibility for test suites
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+      EyeKartStore: storeInstance,
+      Store,
+      DefaultState
+    };
+  }
 })(typeof window !== 'undefined' ? window : (typeof global !== 'undefined' ? global : this));
