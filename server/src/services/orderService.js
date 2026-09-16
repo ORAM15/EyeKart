@@ -8,6 +8,7 @@ const { getQuoteById, generateCheckoutQuote } = require('./checkoutService');
 const { clearCart } = require('./cartService');
 const { logAuditEvent } = require('./auditService');
 const { checkIdempotency, saveIdempotency } = require('./idempotencyService');
+const { reserveStock, releaseStock } = require('./inventoryService');
 
 const ORDER_STATES = {
   CREATED: 'CREATED',
@@ -181,7 +182,16 @@ async function createOrderFromQuote({
     savedItems.push(itemRes.rows[0]);
   }
 
-  // 7. Clear Cart if cartId provided
+  // 7. Atomically Reserve Inventory for Order Items
+  await reserveStock({
+    orderId: order.id,
+    items: quote.items.map(it => ({ sku: it.sku, qty: it.qty || 1 })),
+    actorId: userId,
+    actorRole,
+    ipAddress
+  });
+
+  // 8. Clear Cart if cartId provided
   if (cartId) {
     await clearCart(cartId);
     await query(`UPDATE carts SET status = 'CONVERTED', updated_at = CURRENT_TIMESTAMP WHERE id = $1`, [cartId]);
@@ -317,6 +327,18 @@ async function cancelOrder(orderId, userId, userRole, reason = null, ipAddress =
      RETURNING *`,
     [cancelTime, cancelReason, order.id]
   );
+
+  // Release any reserved inventory back to active catalog
+  try {
+    await releaseStock({
+      orderId: order.id,
+      actorId: userId,
+      actorRole: userRole,
+      ipAddress
+    });
+  } catch (stockErr) {
+    console.warn('[Order Service] Warning: Failed to release stock on order cancel:', stockErr.message);
+  }
 
   await logAuditEvent({
     actorId: userId,

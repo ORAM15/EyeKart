@@ -301,6 +301,22 @@ CREATE INDEX IF NOT EXISTS idx_rx_reviews_reviewer ON prescription_reviews(revie
 -- Add reserved_stock to products if not exists
 ALTER TABLE products ADD COLUMN IF NOT EXISTS reserved_stock INTEGER NOT NULL DEFAULT 0;
 
+-- 17b. Inventory Reservations table (Phase 6.4 & Phase 4)
+CREATE TABLE IF NOT EXISTS inventory_reservations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  order_id UUID REFERENCES orders(id) ON DELETE CASCADE,
+  sku VARCHAR(64) NOT NULL REFERENCES products(sku),
+  qty INTEGER NOT NULL CHECK (qty > 0),
+  status VARCHAR(32) NOT NULL DEFAULT 'RESERVED',
+  created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_inv_res_order ON inventory_reservations(order_id);
+CREATE INDEX IF NOT EXISTS idx_inv_res_sku ON inventory_reservations(sku);
+CREATE INDEX IF NOT EXISTS idx_inv_res_status ON inventory_reservations(status);
+CREATE INDEX IF NOT EXISTS idx_payment_attempts_order_status ON payment_attempts(order_id, status);
+
 -- 18. Fulfillments table (Phase 6.4)
 CREATE TABLE IF NOT EXISTS fulfillments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

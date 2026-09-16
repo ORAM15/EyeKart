@@ -7,6 +7,7 @@ const { query, getClient } = require('../db/pool');
 const { logAuditEvent } = require('./auditService');
 const { PAYMENT_STATES } = require('./payment/PaymentProvider');
 const notificationService = require('./notification/notificationService');
+const { allocateStock, releaseStock } = require('./inventoryService');
 
 const MAX_WEBHOOK_AGE_SECONDS = 300; // 5 minutes
 
@@ -288,6 +289,17 @@ class WebhookService {
 
         await client.query('COMMIT');
 
+        // Allocate physical inventory from reserved stock (idempotent row-locked operation)
+        try {
+          await allocateStock({
+            orderId: attempt.authoritative_order_id,
+            actorId: attempt.order_user_id,
+            ipAddress: ip
+          });
+        } catch (allocErr) {
+          console.error('[Webhook Ingress] Error allocating stock on payment success:', allocErr.message);
+        }
+
         // Audit Event
         await logAuditEvent({
           actorId: attempt.order_user_id,
@@ -354,6 +366,19 @@ class WebhookService {
         );
 
         await client.query('COMMIT');
+
+        // Release reserved stock if payment was cancelled or expired
+        if (targetStatus === PAYMENT_STATES.CANCELLED || targetStatus === PAYMENT_STATES.EXPIRED) {
+          try {
+            await releaseStock({
+              orderId: attempt.authoritative_order_id,
+              actorId: attempt.order_user_id,
+              ipAddress: ip
+            });
+          } catch (relErr) {
+            console.warn('[Webhook Ingress] Warning: Failed to release stock on payment cancel/expiry:', relErr.message);
+          }
+        }
 
         await logAuditEvent({
           actorId: attempt.order_user_id,
