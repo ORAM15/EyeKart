@@ -132,16 +132,46 @@ function validateConfig(cfg) {
         throw new Error('[Storage Fatal] S3_REGION must be defined when running in production mode with S3 storage.');
       }
     }
+
+    // 4. CORS configuration
+    const origins = targetConfig.cors?.origin;
+    if (!origins || !Array.isArray(origins) || origins.length === 0 || origins.every(o => !o || !o.trim())) {
+      throw new Error('[Security Fatal] CORS_ORIGIN must be explicitly configured in production mode.');
+    }
+    const hasLocalhost = origins.some(o => o.includes('localhost') || o.includes('127.0.0.1'));
+    const allowLocalCorsInProd = process.env.ALLOW_LOCAL_CORS_IN_PROD === 'true';
+    if (hasLocalhost && !allowLocalCorsInProd) {
+      throw new Error('[Security Fatal] CORS_ORIGIN cannot contain localhost/127.0.0.1 in production mode. Specify authentic production origins (e.g. https://eyekart.co.ke).');
+    }
   }
   return true;
 }
+
+const serverPort = parseInt(process.env.PORT || '3001', 10);
+const serverHost = process.env.HOST || (isProd ? '0.0.0.0' : '127.0.0.1');
 
 const config = {
   env: process.env.NODE_ENV || 'development',
   isTest,
   isProd,
-  port: parseInt(process.env.PORT || '3001', 10),
-  host: process.env.HOST || '127.0.0.1',
+  port: serverPort,
+  host: serverHost,
+  server: {
+    port: serverPort,
+    host: serverHost,
+    trustProxy: (function() {
+      const tp = (process.env.TRUST_PROXY || '').trim().toLowerCase();
+      if (tp === 'true' || tp === '1') return true;
+      if (tp === 'false' || tp === '0') return false;
+      if (tp) return tp;
+      return isProd;
+    })(),
+    shutdownTimeoutMs: parseInt(process.env.SHUTDOWN_TIMEOUT_MS || '10000', 10)
+  },
+  rateLimit: {
+    maxRequests: parseInt(process.env.AUTH_RATE_LIMIT_MAX || '5', 10),
+    windowMs: parseInt(process.env.AUTH_RATE_LIMIT_WINDOW_MS || '60000', 10)
+  },
   db: {
     connectionString: process.env.DATABASE_URL || process.env.DB_URL || null,
     host: isTest ? (process.env.TEST_DB_HOST || '127.0.0.1') : (process.env.DB_HOST || '127.0.0.1'),
@@ -160,7 +190,7 @@ const config = {
     ttlHours: parseInt(process.env.SESSION_TTL_HOURS || '24', 10)
   },
   cors: {
-    origin: (process.env.CORS_ORIGIN || 'http://127.0.0.1:3000,http://localhost:3000').split(',').map(s => s.trim())
+    origin: (process.env.CORS_ORIGIN || 'http://127.0.0.1:3000,http://localhost:3000').split(',').map(s => s.trim()).filter(Boolean)
   },
   integrations: {
     mpesa: {

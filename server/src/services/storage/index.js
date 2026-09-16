@@ -12,8 +12,9 @@ const config = require('../../config/env');
  * In development, defaults to LocalStorageProvider.
  * In production, enforces S3StorageProvider and strictly forbids silent local fallback.
  */
-function getStorageProvider(overrideName) {
-  const providerType = (overrideName || config.integrations?.storage?.provider || process.env.STORAGE_PROVIDER || (config.isProd ? 'S3' : 'LOCAL')).toUpperCase();
+function getStorageProvider(override) {
+  const rawProvider = typeof override === 'string' ? override : (override?.provider || config.integrations?.storage?.provider || process.env.STORAGE_PROVIDER || (config.isProd ? 'S3' : 'LOCAL'));
+  const providerType = String(rawProvider || 'LOCAL').toUpperCase();
 
   if (providerType === 'S3') {
     const s3Config = config.integrations?.storage?.s3 || {};

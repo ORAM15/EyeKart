@@ -29,24 +29,44 @@ const webhookRoutes = require('./routes/webhooks');
 const storageRoutes = require('./routes/storage');
 
 function buildApp(opts = {}) {
+  const defaultLogger = config.isProd ? {
+    level: 'info',
+    redact: ['req.headers.authorization', 'req.headers.cookie', '*.password', '*.secret', '*.token']
+  } : (config.env === 'development');
+
   const app = Fastify({
-    logger: opts.logger !== undefined ? opts.logger : (config.env === 'development'),
-    bodyLimit: 15728640, // 15MB request body limit for secure document uploads (Phase 6.6)
+    logger: opts.logger !== undefined ? opts.logger : defaultLogger,
+    trustProxy: config.server?.trustProxy ?? false,
+    requestIdHeader: 'x-request-id',
+    bodyLimit: 15728640, // 15MB request body limit for secure document uploads
     ...opts
   });
 
-  // 1. Security Headers Hook (Rule 13)
+  // 1. Security Headers Hook & Request Correlation
   app.addHook('onSend', async (request, reply, payload) => {
     reply.header('X-Content-Type-Options', 'nosniff');
     reply.header('X-Frame-Options', 'SAMEORIGIN');
     reply.header('X-XSS-Protection', '1; mode=block');
     reply.header('Referrer-Policy', 'strict-origin-when-cross-origin');
+    reply.header('Permissions-Policy', 'camera=(self), microphone=(), geolocation=()');
+    if (request.id) {
+      reply.header('x-request-id', request.id);
+    }
     return payload;
   });
 
-  // 2. CORS Plugin
+  // 2. CORS Plugin with Strict Origin Validation
   app.register(cors, {
-    origin: config.cors.origin,
+    origin: (origin, cb) => {
+      // Allow non-browser requests (same-origin, curl, server-to-server)
+      if (!origin) return cb(null, true);
+
+      const allowed = config.cors?.origin || [];
+      if (allowed.includes(origin) || allowed.includes('*')) {
+        return cb(null, true);
+      }
+      return cb(new Error(`Origin '${origin}' not permitted by EyeKart CORS policy.`), false);
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
   });

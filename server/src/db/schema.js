@@ -508,3 +508,15 @@ module.exports = {
   runMigrations,
   dropAllTables
 };
+
+if (require.main === module) {
+  runMigrations()
+    .then(() => {
+      console.info('[EyeKart Migration CLI] Schema migration completed successfully.');
+      process.exit(0);
+    })
+    .catch((err) => {
+      console.error('[EyeKart Migration CLI] Schema migration failed:', err.message);
+      process.exit(1);
+    });
+}
