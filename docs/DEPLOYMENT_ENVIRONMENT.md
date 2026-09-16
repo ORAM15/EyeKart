@@ -5,21 +5,15 @@
 
 ---
 
-## 1. Overview & Architecture Topologies
+## 1. Selected Production Deployment Topology
 
-EyeKart supports two conventional production deployment topologies:
-
-### Topology A: Unified Reverse-Proxy Origin (Recommended)
-- A reverse proxy (e.g. Nginx, AWS ALB, Cloudflare) handles SSL termination on `https://eyekart.co.ke`.
-- `/api/*`, `/health`, `/ready` are reverse-proxied to Fastify on `http://127.0.0.1:3001`.
-- Static frontend panels and assets are served directly via reverse proxy or CDN.
-- `eyekart-api-adapter.js` automatically uses relative paths (`''`), eliminating cross-origin CORS overhead and sharing secure cookies seamlessly.
-
-### Topology B: Decoupled Origin Architecture
-- Backend is deployed on an API subdomain (e.g. `https://api.eyekart.co.ke`).
-- Frontend is deployed on a CDN or static web host (e.g. `https://eyekart.co.ke`).
-- `window.EYEKART_CONFIG = { API_BASE: 'https://api.eyekart.co.ke' }` is injected into frontend runtime.
-- Fastify strictly validates incoming `Origin` against `CORS_ORIGIN`.
+EyeKart implements a **Unified Origin Web Service Topology**:
+- **Application Host**: A unified Node.js 20 LTS container or web service running Fastify.
+- **Frontend + API Integration**: Fastify mounts `@fastify/static` to serve the static frontend assets (`/assets/*`, `/Stitch/*`, and root `/` routing to the Grand Optical Homepage) on the exact same origin and port as the API (`/api/*`, `/health`, `/ready`).
+- **Same-Origin Benefits**: Eliminates public CORS exposure for browser clients, enables secure same-origin HTTP-only cookies without third-party cookie partitioning issues, and reduces operational infrastructure to a single service.
+- **Managed Database**: Cloud PostgreSQL with TLS/SSL encryption and strict certificate validation.
+- **Object Storage**: AWS S3 or Cloudflare R2 configured via `STORAGE_PROVIDER=S3` with private bucket permissions and expiring presigned URLs for medical prescriptions.
+- **Edge / Reverse Proxy**: Platform-managed HTTPS termination (Render, AWS ALB, or Cloudflare Edge CDN) providing automated SSL certificates, HTTP/2, and DDoS protection.
 
 ---
 
@@ -145,3 +139,24 @@ node server/src/db/seed.js
 # 4. Start Production Server
 NODE_ENV=production node server/src/server.js
 ```
+
+---
+
+## 5. Current Production Deployment
+
+- **Platform**: Prepared for Container / Render / Railway PaaS (`Dockerfile` & `render.yaml` generated)
+- **Application URL**: `BLOCKED — NOT YET DEPLOYED` (Awaiting live cloud host provisioning by project owner)
+- **Database Provider / Type**: Managed PostgreSQL 15/16 with SSL (`BLOCKED` — requires `DATABASE_URL`)
+- **Object Storage Provider**: AWS S3 or Cloudflare R2 (`BLOCKED` — requires `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`)
+- **Deployment Date**: Pending infrastructure provisioning
+- **Health Endpoint**: `/health` (and `/api/health`)
+- **Readiness Endpoint**: `/ready` (and `/api/ready`)
+- **Known Limitations & Exact Blockers**:
+  1. **Cloud Compute Host**: No active AWS ECS, Render, or Railway instance has been provisioned under project owner credentials.
+  2. **Managed Database**: No external PostgreSQL instance URI (`DATABASE_URL`) provided.
+  3. **Cloud Object Storage**: No live AWS S3 or Cloudflare R2 bucket credentials provided.
+  4. **Production Domain & TLS**: No custom domain (`eyekart.co.ke`) DNS records mapped to cloud host.
+- **Action Required by Project Owner**:
+  - Deploy repository to Render using `render.yaml` or to AWS ECS using `Dockerfile`.
+  - Provide production secrets in platform dashboard: `DATABASE_URL`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `SESSION_SECRET`, `COOKIE_SECRET`, `CORS_ORIGIN`.
+

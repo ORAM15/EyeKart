@@ -1,10 +1,9 @@
-/**
- * EyeKart Production Fastify Application Builder
- * Phase 6.1 Backend Foundation
- */
+const path = require('path');
+const fs = require('fs');
 const Fastify = require('fastify');
 const cors = require('@fastify/cors');
 const cookie = require('@fastify/cookie');
+const fastifyStatic = require('@fastify/static');
 const config = require('./config/env');
 const { authenticate } = require('./middleware/auth');
 const { errorHandler } = require('./middleware/errorHandler');
@@ -115,6 +114,70 @@ function buildApp(opts = {}) {
   app.register(appointmentRoutes);
   app.register(webhookRoutes);
   app.register(storageRoutes);
+
+  // 7. Static Asset Serving (Frontend Unified Same-Origin Deployment)
+  const projectRoot = path.resolve(__dirname, '../../');
+  const assetsDir = path.join(projectRoot, 'assets');
+  const stitchDir = path.join(projectRoot, 'Stitch');
+
+  if (fs.existsSync(assetsDir)) {
+    app.register(fastifyStatic, {
+      root: assetsDir,
+      prefix: '/assets/',
+      decorateReply: true
+    });
+  }
+
+  if (fs.existsSync(stitchDir)) {
+    app.register(fastifyStatic, {
+      root: stitchDir,
+      prefix: '/Stitch/',
+      decorateReply: false
+    });
+  }
+
+  // Alias /Stitch/assets/ -> /assets/ to match legacy relative panel paths
+  if (fs.existsSync(assetsDir)) {
+    app.register(fastifyStatic, {
+      root: assetsDir,
+      prefix: '/Stitch/assets/',
+      decorateReply: false
+    });
+  }
+
+  // Root & Homepage Routes
+  const homepagePanelRelPath = 'stitch_eyekart_optical_commerce_platform/eyekart_grand_optical_homepage/code.html';
+  const homepageFullPath = path.join(stitchDir, homepagePanelRelPath);
+
+  app.get('/', async (req, reply) => {
+    if (fs.existsSync(homepageFullPath)) {
+      return reply.sendFile(homepagePanelRelPath, stitchDir);
+    }
+    const rootIndex = path.join(projectRoot, 'index.html');
+    if (fs.existsSync(rootIndex)) {
+      return reply.sendFile('index.html', projectRoot);
+    }
+    return reply.status(200).send({ message: 'EyeKart API Ready' });
+  });
+
+  app.get('/index.html', async (req, reply) => {
+    if (fs.existsSync(homepageFullPath)) {
+      return reply.sendFile(homepagePanelRelPath, stitchDir);
+    }
+    const rootIndex = path.join(projectRoot, 'index.html');
+    if (fs.existsSync(rootIndex)) {
+      return reply.sendFile('index.html', projectRoot);
+    }
+    return reply.status(200).send({ message: 'EyeKart API Ready' });
+  });
+
+  const faviconPath = path.join(projectRoot, 'favicon.ico');
+  app.get('/favicon.ico', async (req, reply) => {
+    if (fs.existsSync(faviconPath)) {
+      return reply.sendFile('favicon.ico', projectRoot);
+    }
+    return reply.status(204).send();
+  });
 
   return app;
 }
