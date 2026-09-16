@@ -7,11 +7,48 @@
 (function (global) {
   'use strict';
 
-  const DEFAULT_API_BASE = 'http://127.0.0.1:3001';
+  /**
+   * Dynamically resolves the API base URL.
+   * Priority:
+   * 1. Explicit window.EYEKART_CONFIG.API_BASE or window.__EYEKART_API_BASE__
+   * 2. Local development fallback: if window.location is localhost or 127.0.0.1 on port 3000, use port 3001
+   * 3. Same-origin / production fallback: relative path '' (e.g. /api/...)
+   */
+  function resolveDefaultApiBase(win) {
+    const targetWin = win || (typeof window !== 'undefined' ? window : null);
+    if (!targetWin) {
+      return '';
+    }
+
+    if (targetWin.EYEKART_CONFIG && typeof targetWin.EYEKART_CONFIG.API_BASE === 'string') {
+      return targetWin.EYEKART_CONFIG.API_BASE;
+    }
+
+    if (typeof targetWin.__EYEKART_API_BASE__ === 'string') {
+      return targetWin.__EYEKART_API_BASE__;
+    }
+
+    if (targetWin.location) {
+      const hostname = targetWin.location.hostname;
+      const port = targetWin.location.port;
+
+      // Local development workflow: Python serve.py serves frontend on 3000, Fastify serves backend on 3001
+      if ((hostname === 'localhost' || hostname === '127.0.0.1') && port === '3000') {
+        const protocol = targetWin.location.protocol || 'http:';
+        return `${protocol}//${hostname}:3001`;
+      }
+
+      // Production / Staging / Same-origin reverse proxy:
+      // Return empty string to allow standard relative API requests (e.g. /api/health)
+      return '';
+    }
+
+    return '';
+  }
 
   class EyeKartApiAdapter {
-    constructor(baseUrl = DEFAULT_API_BASE) {
-      this.baseUrl = baseUrl;
+    constructor(baseUrl) {
+      this.baseUrl = typeof baseUrl === 'string' ? baseUrl : resolveDefaultApiBase();
       this.isConnected = false;
       this.activeToken = null;
     }
@@ -539,11 +576,26 @@
     }
   }
 
-  // Export globally
-  global.EyeKartApiAdapter = new EyeKartApiAdapter();
+  EyeKartApiAdapter.resolveDefaultApiBase = resolveDefaultApiBase;
+
+  // Export globally as default instance
+  const apiAdapterInstance = new EyeKartApiAdapter();
+  apiAdapterInstance.EyeKartApiAdapter = EyeKartApiAdapter;
+  apiAdapterInstance.resolveDefaultApiBase = resolveDefaultApiBase;
+
+  global.EyeKartApiAdapter = apiAdapterInstance;
+  global.EyeKartApiAdapterClass = EyeKartApiAdapter;
 
   // Attach to EyeKartStore if store is initialized
   if (global.EyeKartStore) {
     global.EyeKartStore.apiAdapter = global.EyeKartApiAdapter;
+  }
+
+  // Node.js CommonJS compatibility for test suites
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+      EyeKartApiAdapter,
+      resolveDefaultApiBase
+    };
   }
 })(typeof window !== 'undefined' ? window : global);

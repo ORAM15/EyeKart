@@ -964,4 +964,16 @@ async function seed() {
   };
 }
 
+if (require.main === module) {
+  seed()
+    .then((result) => {
+      console.info('[EyeKart Seed CLI] Finished successfully:', result);
+      process.exit(0);
+    })
+    .catch((err) => {
+      console.error('[EyeKart Seed CLI] Execution error:', err);
+      process.exit(1);
+    });
+}
+
 module.exports = { seed };

@@ -26,7 +26,18 @@ async function start() {
   // 2. Run Migrations & Seed
   try {
     await runMigrations();
-    await seed();
+
+    // Automatic seeding is restricted to non-production environments
+    // To seed in production, run explicitly via CLI: node server/src/db/seed.js or pass --seed flag
+    const explicitSeedFlag = process.argv.includes('--seed');
+    if (!config.isProd || explicitSeedFlag) {
+      if (config.isProd && explicitSeedFlag) {
+        console.warn('[DB Warning] Explicit --seed flag detected in production mode. Executing database seeding...');
+      }
+      await seed();
+    } else {
+      console.info('[DB Production] Production mode active: Automatic database seeding skipped.');
+    }
   } catch (err) {
     console.error('[DB Fatal] Migration or Seeding failed:', err.message);
     process.exit(1);

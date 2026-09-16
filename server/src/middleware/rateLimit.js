@@ -42,9 +42,6 @@ const authLimiter = new RateLimiter(5, 60000); // 5 requests per 60 seconds
 setInterval(() => authLimiter.cleanup(), 60000).unref();
 
 function rateLimitAuth(req, reply, done) {
-  if (req.headers['x-test-bypass'] === 'eyekart_internal_test') {
-    return done();
-  }
   const ip = req.ip || req.headers['x-forwarded-for'] || '127.0.0.1';
   if (!authLimiter.isAllowed(ip)) {
     reply.status(429).send({

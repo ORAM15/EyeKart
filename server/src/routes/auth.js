@@ -10,6 +10,7 @@ const { hashPassword, verifyPassword, createSession, invalidateSession, sanitize
 const { logAuditEvent } = require('../services/auditService');
 const { requireAuth } = require('../middleware/auth');
 const { rateLimitAuth } = require('../middleware/rateLimit');
+const config = require('../config/env');
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -99,7 +100,7 @@ async function authRoutes(fastify, options) {
     reply.setCookie('eyekart_session', session.rawToken, {
       path: '/',
       httpOnly: true,
-      secure: false, // Set true in production over HTTPS
+      secure: config.isProd,
       sameSite: 'lax',
       expires: session.expiresAt
     });
@@ -192,7 +193,7 @@ async function authRoutes(fastify, options) {
     reply.setCookie('eyekart_session', session.rawToken, {
       path: '/',
       httpOnly: true,
-      secure: false,
+      secure: config.isProd,
       sameSite: 'lax',
       expires: session.expiresAt
     });

@@ -9,6 +9,42 @@ const dotenv = require('dotenv');
 dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 
 const isTest = process.env.NODE_ENV === 'test';
+const isProd = process.env.NODE_ENV === 'production';
+
+const DEV_SESSION_SECRET = 'dev_session_secret_32_characters_minimum!';
+const DEV_COOKIE_SECRET = 'dev_cookie_secret_32_characters_minimum!';
+
+/**
+ * Validates configuration for production readiness.
+ * Throws a fatal Error if required secrets are missing, insecure, or too short in production.
+ */
+function validateConfig(cfg) {
+  const targetConfig = cfg || config;
+  if (targetConfig.isProd) {
+    const sessionSecret = targetConfig.session?.secret;
+    if (!sessionSecret || typeof sessionSecret !== 'string' || !sessionSecret.trim()) {
+      throw new Error('[Security Fatal] SESSION_SECRET must be defined when running in production mode.');
+    }
+    if (sessionSecret === DEV_SESSION_SECRET || sessionSecret.includes('dev_session_secret')) {
+      throw new Error('[Security Fatal] SESSION_SECRET cannot use insecure development default in production mode.');
+    }
+    if (sessionSecret.trim().length < 32) {
+      throw new Error(`[Security Fatal] SESSION_SECRET must be at least 32 characters in production (got ${sessionSecret.trim().length}).`);
+    }
+
+    const cookieSecret = targetConfig.session?.cookieSecret;
+    if (!cookieSecret || typeof cookieSecret !== 'string' || !cookieSecret.trim()) {
+      throw new Error('[Security Fatal] COOKIE_SECRET must be defined when running in production mode.');
+    }
+    if (cookieSecret === DEV_COOKIE_SECRET || cookieSecret.includes('dev_cookie_secret')) {
+      throw new Error('[Security Fatal] COOKIE_SECRET cannot use insecure development default in production mode.');
+    }
+    if (cookieSecret.trim().length < 32) {
+      throw new Error(`[Security Fatal] COOKIE_SECRET must be at least 32 characters in production (got ${cookieSecret.trim().length}).`);
+    }
+  }
+  return true;
+}
 
 const config = {
   env: process.env.NODE_ENV || 'development',
@@ -65,5 +101,12 @@ const config = {
     }
   }
 };
+
+// Fail fast on startup in production if secrets are invalid or absent
+validateConfig(config);
+
+config.validateConfig = validateConfig;
+config.DEV_SESSION_SECRET = DEV_SESSION_SECRET;
+config.DEV_COOKIE_SECRET = DEV_COOKIE_SECRET;
 
 module.exports = config;
