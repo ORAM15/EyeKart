@@ -1,9 +1,9 @@
 /**
- * EyeKart Phase 6.2 Order Service
- * Manages order creation from authoritative quotes, immutable snapshots, IDOR security, and cancellation.
+ * EyeKart Phase 5 Order Service
+ * Manages atomic order creation from authoritative quotes, immutable historical product snapshots,
+ * strict state machine transitions, IDOR security, and state-aware cancellations.
  */
-const crypto = require('crypto');
-const { query } = require('../db/pool');
+const { query, getPool } = require('../db/pool');
 const { getQuoteById, generateCheckoutQuote } = require('./checkoutService');
 const { clearCart } = require('./cartService');
 const { logAuditEvent } = require('./auditService');
@@ -16,16 +16,18 @@ const ORDER_STATES = {
   PAID: 'PAID',
   PROCESSING: 'PROCESSING',
   CANCELLED: 'CANCELLED',
-  COMPLETED: 'COMPLETED'
+  COMPLETED: 'COMPLETED',
+  EXPIRED: 'EXPIRED'
 };
 
 const LEGAL_ORDER_TRANSITIONS = {
-  CREATED: ['PAYMENT_PENDING', 'CANCELLED'],
-  PAYMENT_PENDING: ['PAID', 'CREATED', 'CANCELLED'],
+  CREATED: ['PAYMENT_PENDING', 'CANCELLED', 'EXPIRED'],
+  PAYMENT_PENDING: ['PAID', 'CANCELLED', 'EXPIRED'],
   PAID: ['PROCESSING', 'CANCELLED'],
   PROCESSING: ['COMPLETED', 'CANCELLED'],
   CANCELLED: [], // Terminal
-  COMPLETED: []  // Terminal
+  COMPLETED: [], // Terminal
+  EXPIRED: []    // Terminal
 };
 
 function isValidOrderTransition(fromState, toState) {
@@ -49,7 +51,7 @@ async function generateUniqueOrderNumber() {
 }
 
 /**
- * Create order from an authoritative quote
+ * Create order from an authoritative quote inside an atomic transaction
  */
 async function createOrderFromQuote({
   userId,
@@ -79,12 +81,26 @@ async function createOrderFromQuote({
     }
   }
 
-  // 2. Validate input requirements
-  if (!deliveryAddress || typeof deliveryAddress !== 'string' || deliveryAddress.trim().length < 5) {
-    const err = new Error('A complete delivery address is required.');
+  // 2. Validate and normalize delivery address
+  let formattedAddress = deliveryAddress;
+  if (typeof deliveryAddress === 'object' && deliveryAddress !== null) {
+    formattedAddress = [
+      deliveryAddress.street,
+      deliveryAddress.estate,
+      deliveryAddress.landmark,
+      deliveryAddress.county
+    ].filter(Boolean).join(', ');
+  }
+  if (!formattedAddress || typeof formattedAddress !== 'string' || formattedAddress.trim().length < 5) {
+    const err = new Error('A complete delivery address is required (minimum 5 characters).');
     err.statusCode = 400;
     err.code = 'INVALID_DELIVERY_ADDRESS';
     throw err;
+  }
+
+  let formattedGate = gateProtocol;
+  if (typeof gateProtocol === 'object' && gateProtocol !== null) {
+    formattedGate = JSON.stringify(gateProtocol);
   }
 
   // 3. Resolve Authoritative Quote
@@ -93,7 +109,7 @@ async function createOrderFromQuote({
     quote = getQuoteById(quoteId);
   }
   if (!quote) {
-    // Generate fresh quote
+    // Generate fresh quote from cart or direct items
     quote = await generateCheckoutQuote({ userId, cartId, items });
   }
 
@@ -101,6 +117,14 @@ async function createOrderFromQuote({
     const err = new Error('Cannot create an order with zero items.');
     err.statusCode = 400;
     err.code = 'EMPTY_ORDER_ITEMS';
+    throw err;
+  }
+
+  // Currency validation: EyeKart strictly operates in KES
+  if (quote.currency && quote.currency.toUpperCase() !== 'KES') {
+    const err = new Error(`EyeKart only supports orders in 'KES' currency. Provided: '${quote.currency}'.`);
+    err.statusCode = 400;
+    err.code = 'INVALID_CURRENCY';
     throw err;
   }
 
@@ -115,7 +139,6 @@ async function createOrderFromQuote({
   const initialPrescriptionStatus = requiresPrescriptionReview ? 'PENDING_OPTOMETRIST_REVIEW' : 'NOT_APPLICABLE';
   const orderNumber = await generateUniqueOrderNumber();
 
-  // Initial tracking payload
   const initialTracking = {
     stage: "CONFIRMED",
     stageNumber: 1,
@@ -129,108 +152,136 @@ async function createOrderFromQuote({
     routeText: "Packaging at Westlands Atelier"
   };
 
-  // 5. Insert Order
-  const orderRes = await query(
-    `INSERT INTO orders (
-      order_number, user_id, cart_id, status, payment_status, currency,
-      subtotal, vat, delivery_fee, total, delivery_address, gate_protocol,
-      customer_snapshot, requires_prescription_review, prescription_status,
-      prescription_snapshot, tracking
-    ) VALUES ($1, $2, $3, 'CREATED', 'NOT_STARTED', $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
-    RETURNING *`,
-    [
-      orderNumber,
-      userId,
-      cartId || null,
-      quote.currency || 'KES',
-      quote.subtotal,
-      quote.vat,
-      quote.deliveryFee,
-      quote.total,
-      deliveryAddress.trim(),
-      gateProtocol ? gateProtocol.trim() : null,
-      JSON.stringify(customerSnapshot),
-      requiresPrescriptionReview,
-      initialPrescriptionStatus,
-      prescriptionSnapshot ? JSON.stringify(prescriptionSnapshot) : null,
-      JSON.stringify(initialTracking)
-    ]
-  );
-  const order = orderRes.rows[0];
+  // 5. ATOMIC TRANSACTION: Order Insertion + Items + Stock Reservation + Cart Conversion
+  const pool = getPool();
+  const client = await pool.connect();
 
-  // 6. Insert Order Items (Immutable Snapshots)
-  const savedItems = [];
-  for (const it of quote.items) {
-    const itemRes = await query(
-      `INSERT INTO order_items (
-        order_id, sku, name, variant, qty, frame_price, lens_price, total_price, lens_config, product_snapshot
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+  try {
+    await client.query('BEGIN');
+
+    // 5a. Insert Order record
+    const orderRes = await client.query(
+      `INSERT INTO orders (
+        order_number, user_id, cart_id, status, payment_status, currency,
+        subtotal, vat, delivery_fee, total, delivery_address, gate_protocol,
+        customer_snapshot, requires_prescription_review, prescription_status,
+        prescription_snapshot, tracking
+      ) VALUES ($1, $2, $3, 'CREATED', 'NOT_STARTED', 'KES', $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
       RETURNING *`,
       [
-        order.id,
-        it.sku,
-        it.name,
-        it.variant || 'Standard',
-        it.qty || 1,
-        it.framePrice !== undefined ? it.framePrice : (it.authoritativeFramePrice || 0),
-        it.lensPrice !== undefined ? it.lensPrice : (it.authoritativeLensPrice || 0),
-        it.totalPrice !== undefined ? it.totalPrice : (it.authoritativeItemTotal || 0),
-        it.lensConfig ? JSON.stringify(it.lensConfig) : null,
-        JSON.stringify(it.productSnapshot || {})
+        orderNumber,
+        userId,
+        cartId || null,
+        quote.subtotal,
+        quote.vat,
+        quote.deliveryFee,
+        quote.total,
+        formattedAddress.trim(),
+        formattedGate ? formattedGate.trim() : null,
+        JSON.stringify(customerSnapshot),
+        requiresPrescriptionReview,
+        initialPrescriptionStatus,
+        prescriptionSnapshot ? JSON.stringify(prescriptionSnapshot) : null,
+        JSON.stringify(initialTracking)
       ]
     );
-    savedItems.push(itemRes.rows[0]);
-  }
+    const order = orderRes.rows[0];
 
-  // 7. Atomically Reserve Inventory for Order Items
-  await reserveStock({
-    orderId: order.id,
-    items: quote.items.map(it => ({ sku: it.sku, qty: it.qty || 1 })),
-    actorId: userId,
-    actorRole,
-    ipAddress
-  });
+    // 5b. Fetch real product details from database and insert immutable order items
+    const savedItems = [];
+    for (const it of quote.items) {
+      const prodRes = await client.query(`SELECT * FROM products WHERE sku = $1`, [it.sku]);
+      const product = prodRes.rows[0];
+      const productSnapshot = product ? {
+        sku: product.sku,
+        name: product.name,
+        brand: product.brand,
+        category_id: product.category_id,
+        shape: product.shape,
+        material: product.material,
+        dimensions: product.dimensions,
+        base_price: Number(product.base_price),
+        compare_at_price: product.compare_at_price ? Number(product.compare_at_price) : null,
+        gallery: product.gallery
+      } : (it.productSnapshot || {});
 
-  // 8. Clear Cart if cartId provided
-  if (cartId) {
-    await clearCart(cartId);
-    await query(`UPDATE carts SET status = 'CONVERTED', updated_at = CURRENT_TIMESTAMP WHERE id = $1`, [cartId]);
-  }
-
-  // 8. Log Audit Event
-  await logAuditEvent({
-    actorId: userId,
-    actorRole,
-    ipAddress,
-    action: 'ORDER_CREATED',
-    entity: 'Order',
-    entityId: order.id,
-    metadata: {
-      orderNumber: order.order_number,
-      total: order.total,
-      currency: order.currency,
-      itemCount: savedItems.length
+      const itemRes = await client.query(
+        `INSERT INTO order_items (
+          order_id, sku, name, variant, qty, frame_price, lens_price, total_price, lens_config, product_snapshot
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        RETURNING *`,
+        [
+          order.id,
+          it.sku,
+          it.name,
+          it.variant || 'Standard',
+          it.qty || 1,
+          it.framePrice !== undefined ? it.framePrice : (it.authoritativeFramePrice || 0),
+          it.lensPrice !== undefined ? it.lensPrice : (it.authoritativeLensPrice || 0),
+          it.totalPrice !== undefined ? it.totalPrice : (it.authoritativeItemTotal || 0),
+          it.lensConfig ? JSON.stringify(it.lensConfig) : null,
+          JSON.stringify(productSnapshot)
+        ]
+      );
+      savedItems.push(itemRes.rows[0]);
     }
-  });
 
-  const fullOrder = {
-    ...order,
-    items: savedItems
-  };
+    // 5c. Atomically reserve inventory within the same transaction
+    await reserveStock({
+      orderId: order.id,
+      items: quote.items.map(it => ({ sku: it.sku, qty: it.qty || 1 })),
+      client, // Participating in the atomic transaction
+      actorId: userId,
+      actorRole,
+      ipAddress
+    });
 
-  // 9. Save Idempotency
-  if (idempotencyKey) {
-    await saveIdempotency(idempotencyKey, userId, '/api/orders', { quoteId, deliveryAddress }, 201, fullOrder);
+    // 5d. Clear cart and mark converted if cartId was provided
+    if (cartId) {
+      await client.query(`DELETE FROM cart_items WHERE cart_id = $1`, [cartId]);
+      await client.query(`UPDATE carts SET status = 'CONVERTED', updated_at = CURRENT_TIMESTAMP WHERE id = $1`, [cartId]);
+    }
+
+    await client.query('COMMIT');
+
+    const fullOrder = {
+      ...order,
+      items: savedItems
+    };
+
+    // 6. Audit log & Idempotency persistence
+    await logAuditEvent({
+      actorId: userId,
+      actorRole,
+      ipAddress,
+      action: 'ORDER_CREATED',
+      entity: 'Order',
+      entityId: order.id,
+      metadata: {
+        orderNumber: order.order_number,
+        total: order.total,
+        currency: order.currency,
+        itemCount: savedItems.length
+      }
+    });
+
+    if (idempotencyKey) {
+      await saveIdempotency(idempotencyKey, userId, '/api/orders', { quoteId, deliveryAddress }, 201, fullOrder);
+    }
+
+    return fullOrder;
+  } catch (err) {
+    await client.query('ROLLBACK').catch(() => {});
+    throw err;
+  } finally {
+    client.release();
   }
-
-  return fullOrder;
 }
 
 /**
- * Retrieve a specific order with IDOR protection
+ * Retrieve a specific order with strict IDOR access control
  */
 async function getOrderById(orderId, userId, userRole) {
-  // Support lookup by UUID id or human order_number (e.g. EK-NBI-XXXXX)
   const orderRes = await query(
     `SELECT * FROM orders WHERE id::text = $1 OR order_number = $1`,
     [orderId]
@@ -245,8 +296,9 @@ async function getOrderById(orderId, userId, userRole) {
 
   const order = orderRes.rows[0];
 
-  // IDOR Protection: Must be order owner OR an ADMIN
-  if (order.user_id !== userId && userRole !== 'ADMIN') {
+  // IDOR Protection: Must be the order owner OR a privileged role
+  const isPrivileged = (userRole === 'ADMIN' || userRole === 'STORE_STAFF' || userRole === 'LAB_TECH' || userRole === 'OPTOMETRIST');
+  if (order.user_id !== userId && !isPrivileged) {
     const err = new Error('You do not have permission to access this order.');
     err.statusCode = 403;
     err.code = 'UNAUTHORIZED_ORDER_ACCESS';
@@ -264,7 +316,7 @@ async function getOrderById(orderId, userId, userRole) {
 }
 
 /**
- * List orders for the authenticated customer
+ * List orders for the authenticated customer (Strictly scoped to requesting customer)
  */
 async function listCustomerOrders(userId, { limit = 20, offset = 0 } = {}) {
   const ordersRes = await query(
@@ -284,12 +336,72 @@ async function listCustomerOrders(userId, { limit = 20, offset = 0 } = {}) {
 }
 
 /**
- * Cancel order with strict state machine validation
+ * List all orders across the platform (Admin & Operations oversight)
+ */
+async function listAllOrders({ limit = 20, offset = 0, status = null, paymentStatus = null, search = null } = {}) {
+  const whereClauses = [];
+  const params = [];
+
+  if (status) {
+    params.push(status);
+    whereClauses.push(`o.status = $${params.length}`);
+  }
+
+  if (paymentStatus) {
+    params.push(paymentStatus);
+    whereClauses.push(`o.payment_status = $${params.length}`);
+  }
+
+  if (search) {
+    params.push(`%${search}%`);
+    whereClauses.push(`(o.order_number ILIKE $${params.length} OR u.email ILIKE $${params.length} OR u.phone ILIKE $${params.length})`);
+  }
+
+  const whereStr = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
+
+  const countRes = await query(
+    `SELECT COUNT(DISTINCT o.id) as total FROM orders o JOIN users u ON o.user_id = u.id ${whereStr}`,
+    params
+  );
+  const total = parseInt(countRes.rows[0]?.total || 0, 10);
+
+  params.push(limit);
+  const limitIndex = params.length;
+  params.push(offset);
+  const offsetIndex = params.length;
+
+  const ordersRes = await query(
+    `SELECT o.*, 
+            u.full_name as customer_name,
+            u.email as customer_email,
+            u.phone as customer_phone,
+            COUNT(oi.id) as item_count,
+            COALESCE(json_agg(oi.*) FILTER (WHERE oi.id IS NOT NULL), '[]') as items
+     FROM orders o
+     JOIN users u ON o.user_id = u.id
+     LEFT JOIN order_items oi ON o.id = oi.order_id
+     ${whereStr}
+     GROUP BY o.id, u.full_name, u.email, u.phone
+     ORDER BY o.created_at DESC
+     LIMIT $${limitIndex} OFFSET $${offsetIndex}`,
+    params
+  );
+
+  return {
+    orders: ordersRes.rows,
+    total,
+    limit,
+    offset
+  };
+}
+
+/**
+ * Cancel order with strict state machine validation and inventory release
  */
 async function cancelOrder(orderId, userId, userRole, reason = null, ipAddress = null) {
   const order = await getOrderById(orderId, userId, userRole);
 
-  // Validate State Machine: Cannot cancel COMPLETED or already CANCELLED orders
+  // Terminal state guards
   if (order.status === ORDER_STATES.COMPLETED) {
     const err = new Error('Completed orders cannot be cancelled.');
     err.statusCode = 400;
@@ -304,16 +416,38 @@ async function cancelOrder(orderId, userId, userRole, reason = null, ipAddress =
     throw err;
   }
 
+  if (order.status === ORDER_STATES.EXPIRED) {
+    const err = new Error('Expired orders cannot be cancelled.');
+    err.statusCode = 400;
+    err.code = 'ORDER_ALREADY_EXPIRED';
+    throw err;
+  }
+
+  // Processing state guard: Customers cannot unilaterally cancel custom orders undergoing lab surfacing
+  if (order.status === ORDER_STATES.PROCESSING && userRole !== 'ADMIN') {
+    const err = new Error('Orders currently undergoing laboratory surfacing cannot be self-cancelled. Please contact the Westlands Atelier.');
+    err.statusCode = 400;
+    err.code = 'CANNOT_CANCEL_PROCESSING_ORDER';
+    throw err;
+  }
+
+  if (!isValidOrderTransition(order.status, ORDER_STATES.CANCELLED)) {
+    const err = new Error(`Illegal order state transition from '${order.status}' to 'CANCELLED'.`);
+    err.statusCode = 400;
+    err.code = 'ILLEGAL_ORDER_STATE_TRANSITION';
+    throw err;
+  }
+
   const cancelReason = reason || 'Customer requested order cancellation prior to laboratory processing.';
   const cancelTime = new Date();
 
-  // If payment was SUCCESS, flag demo refund notice
+  // If payment was SUCCESS, note refund queue status (safely clarifying that live automated refunds require live M-PESA API credentials)
   let refundMetadata = null;
   if (order.payment_status === 'SUCCESS') {
     refundMetadata = {
-      refundStatus: 'REFUND_PENDING_DEMO',
-      refundNote: '[DEMO PAYMENT] Simulated refund queued. Live financial rail requires production Safaricom integration.',
-      refundAmount: order.total
+      refundStatus: 'REFUND_PENDING_MANUAL',
+      refundNote: 'Simulated refund record queued. Live financial reversal requires provisioned Safaricom Daraja B2C credentials.',
+      refundAmount: Number(order.total)
     };
   }
 
@@ -328,7 +462,7 @@ async function cancelOrder(orderId, userId, userRole, reason = null, ipAddress =
     [cancelTime, cancelReason, order.id]
   );
 
-  // Release any reserved inventory back to active catalog
+  // Release reserved inventory or restock physical units
   try {
     await releaseStock({
       orderId: order.id,
@@ -361,37 +495,77 @@ async function cancelOrder(orderId, userId, userRole, reason = null, ipAddress =
 }
 
 /**
- * Admin order status update
+ * Privileged order status update with state machine validation and row-level locking
  */
 async function updateOrderStatus(orderId, newStatus, userRole, stageInfo = null) {
-  if (userRole !== 'ADMIN' && userRole !== 'OPTOMETRIST' && userRole !== 'STORE_STAFF') {
-    const err = new Error('Privilege required to update order status.');
+  // Optometrists review prescriptions; only ADMIN and STORE_STAFF update operational order status
+  if (userRole !== 'ADMIN' && userRole !== 'STORE_STAFF') {
+    const err = new Error('Privilege required to update operational order status.');
     err.statusCode = 403;
     err.code = 'UNAUTHORIZED_ORDER_UPDATE';
     throw err;
   }
 
-  const orderRes = await query(`SELECT * FROM orders WHERE id::text = $1 OR order_number = $1`, [orderId]);
-  if (orderRes.rows.length === 0) {
-    const err = new Error('Order not found.');
-    err.statusCode = 404;
+  const pool = getPool();
+  const client = await pool.connect();
+
+  try {
+    await client.query('BEGIN');
+
+    const orderRes = await client.query(
+      `SELECT * FROM orders WHERE id::text = $1 OR order_number = $1 FOR UPDATE`,
+      [orderId]
+    );
+
+    if (orderRes.rows.length === 0) {
+      await client.query('ROLLBACK');
+      const err = new Error('Order not found.');
+      err.statusCode = 404;
+      err.code = 'ORDER_NOT_FOUND';
+      throw err;
+    }
+
+    const order = orderRes.rows[0];
+
+    // Legal state transition verification
+    if (!isValidOrderTransition(order.status, newStatus)) {
+      await client.query('ROLLBACK');
+      const err = new Error(`Illegal order state transition from '${order.status}' to '${newStatus}'.`);
+      err.statusCode = 400;
+      err.code = 'ILLEGAL_ORDER_STATE_TRANSITION';
+      throw err;
+    }
+
+    // Prerequisite: An order cannot move to COMPLETED if it was not PAID or PROCESSING
+    if (newStatus === ORDER_STATES.COMPLETED) {
+      const isPaid = (order.payment_status === 'SUCCESS' || order.status === 'PAID' || order.status === 'PROCESSING');
+      if (!isPaid) {
+        await client.query('ROLLBACK');
+        const err = new Error('Cannot complete an unpaid order. Payment must be confirmed.');
+        err.statusCode = 400;
+        err.code = 'UNPAID_ORDER_COMPLETION_BLOCKED';
+        throw err;
+      }
+    }
+
+    const updatedRes = await client.query(
+      `UPDATE orders SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *`,
+      [newStatus, order.id]
+    );
+
+    // If cancelled via updateOrderStatus, release stock
+    if (newStatus === ORDER_STATES.CANCELLED) {
+      await releaseStock({ orderId: order.id, actorRole: userRole });
+    }
+
+    await client.query('COMMIT');
+    return updatedRes.rows[0];
+  } catch (err) {
+    await client.query('ROLLBACK').catch(() => {});
     throw err;
+  } finally {
+    client.release();
   }
-
-  const order = orderRes.rows[0];
-  if (!isValidOrderTransition(order.status, newStatus)) {
-    const err = new Error(`Illegal order state transition from '${order.status}' to '${newStatus}'.`);
-    err.statusCode = 400;
-    err.code = 'ILLEGAL_ORDER_STATE_TRANSITION';
-    throw err;
-  }
-
-  const updatedRes = await query(
-    `UPDATE orders SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *`,
-    [newStatus, order.id]
-  );
-
-  return updatedRes.rows[0];
 }
 
 module.exports = {
@@ -401,6 +575,7 @@ module.exports = {
   createOrderFromQuote,
   getOrderById,
   listCustomerOrders,
+  listAllOrders,
   cancelOrder,
   updateOrderStatus
 };

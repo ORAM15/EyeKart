@@ -1,7 +1,7 @@
 /**
- * EyeKart Phase 6.3 Optical Fulfillment Gating Service
- * Evaluates whether an optical order is cleared for laboratory surfacing, edging,
- * and assembly based on authoritative prescription review status.
+ * EyeKart Phase 5 Optical Fulfillment Gating Service
+ * Evaluates whether an optical order is authoritatively cleared for laboratory surfacing,
+ * edging, and assembly based on payment verification and licensed optometrist prescription review.
  */
 const { query } = require('../db/pool');
 
@@ -27,7 +27,7 @@ async function checkOrderFulfillmentEligibility(orderId, userId = null, userRole
   const order = orderRes.rows[0];
 
   // IDOR Protection: Customers may only query their own order fulfillment status
-  const isPrivileged = (userRole === 'ADMIN' || userRole === 'OPTOMETRIST' || userRole === 'STAFF');
+  const isPrivileged = (userRole === 'ADMIN' || userRole === 'OPTOMETRIST' || userRole === 'STORE_STAFF' || userRole === 'LAB_TECH');
   if (!isPrivileged && userId && order.user_id !== userId) {
     const err = new Error('Access denied. You do not have permission to view fulfillment details for this order.');
     err.statusCode = 403;
@@ -35,7 +35,41 @@ async function checkOrderFulfillmentEligibility(orderId, userId = null, userRole
     throw err;
   }
 
-  // 1. Frame-only orders (no prescription required)
+  // 1. Cancelled Order Check
+  if (order.status === 'CANCELLED') {
+    return {
+      orderId: order.id,
+      orderNumber: order.order_number,
+      fulfillmentEligible: false,
+      status: 'BLOCKED_ORDER_CANCELLED',
+      blockingReason: 'Order has been cancelled. Fulfillment is aborted.'
+    };
+  }
+
+  // 2. Expired Order Check
+  if (order.status === 'EXPIRED') {
+    return {
+      orderId: order.id,
+      orderNumber: order.order_number,
+      fulfillmentEligible: false,
+      status: 'BLOCKED_ORDER_EXPIRED',
+      blockingReason: 'Order has expired without payment confirmation.'
+    };
+  }
+
+  // 3. Payment Gate Check: Unpaid orders are strictly blocked from fulfillment
+  const isPaid = (order.payment_status === 'SUCCESS' || order.status === 'PAID' || order.status === 'PROCESSING' || order.status === 'COMPLETED');
+  if (!isPaid) {
+    return {
+      orderId: order.id,
+      orderNumber: order.order_number,
+      fulfillmentEligible: false,
+      status: 'BLOCKED_UNPAID',
+      blockingReason: 'Order payment is pending. Verified payment is strictly required before fulfillment clearance.'
+    };
+  }
+
+  // 4. Frame-only orders (no prescription review required)
   if (!order.requires_prescription_review) {
     return {
       orderId: order.id,
@@ -45,11 +79,11 @@ async function checkOrderFulfillmentEligibility(orderId, userId = null, userRole
       fulfillmentEligible: true,
       status: 'ELIGIBLE_FRAME_ONLY',
       clearedAt: order.created_at,
-      notes: 'Frame-only order (plano / demo lenses). Bypasses optical prescription gating.'
+      notes: 'Frame-only order (plano / demo lenses). Bypasses optical prescription review and cleared for assembly.'
     };
   }
 
-  // 2. Prescription required orders
+  // 5. Prescription-dependent orders: Clinical gate
   const rxStatus = order.prescription_status;
 
   if (rxStatus === 'APPROVED') {
@@ -72,7 +106,7 @@ async function checkOrderFulfillmentEligibility(orderId, userId = null, userRole
       prescriptionStatus: 'REJECTED',
       fulfillmentEligible: false,
       status: 'BLOCKED_CLINICAL_REJECTION',
-      blockingReason: 'Prescription rejected by optometrist. Review notes required before fulfillment.'
+      blockingReason: 'Prescription rejected by licensed optometrist. Clinical review notes must be resolved before fulfillment.'
     };
   }
 
@@ -88,7 +122,7 @@ async function checkOrderFulfillmentEligibility(orderId, userId = null, userRole
     };
   }
 
-  // Default: Pending review / unverified
+  // Default: Pending optometrist review
   return {
     orderId: order.id,
     orderNumber: order.order_number,

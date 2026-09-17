@@ -361,7 +361,7 @@ class WebhookService {
           `UPDATE orders
            SET payment_status = $1,
                updated_at = CURRENT_TIMESTAMP
-           WHERE id = $2`,
+           WHERE id = $2 AND payment_status != 'SUCCESS'`,
           [targetStatus === PAYMENT_STATES.CANCELLED ? 'CANCELLED' : 'FAILED', attempt.authoritative_order_id]
         );
 

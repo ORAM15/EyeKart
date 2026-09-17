@@ -1,7 +1,7 @@
 /**
- * EyeKart Phase 6.4 Inventory Reservation Service
+ * EyeKart Phase 5 Inventory Reservation & Allocation Service
  * Manages atomic inventory reservations, available stock calculations,
- * and transactional stock allocation to prevent overselling and negative stock.
+ * transactional stock allocation, and restock releases on cancellation.
  */
 const { query, getPool } = require('../db/pool');
 const { logAuditEvent } = require('./auditService');
@@ -38,28 +38,39 @@ async function getInventory(sku) {
 }
 
 /**
- * Atomically reserve stock for an order's line items within a transaction
+ * Atomically reserve stock for an order's line items within a transaction.
+ * Accepts an optional callerClient to participate in an outer transaction boundary.
  */
-async function reserveStock({ orderId, items, actorId = null, actorRole = 'SYSTEM', ipAddress = null }) {
+async function reserveStock({ orderId, items, client: callerClient = null, actorId = null, actorRole = 'SYSTEM', ipAddress = null }) {
   if (!items || !Array.isArray(items) || items.length === 0) {
     return { success: true, reservations: [] };
   }
 
   const pool = getPool();
-  const client = await pool.connect();
+  const client = callerClient || await pool.connect();
+  const isOwnClient = !callerClient;
   const reservations = [];
 
   try {
-    await client.query('BEGIN');
+    if (isOwnClient) {
+      await client.query('BEGIN');
+    }
 
     for (const item of items) {
       const sku = item.sku;
       const qty = parseInt(item.qty || 1, 10);
 
       if (isNaN(qty) || qty <= 0) {
-        const err = new Error(`Invalid reservation quantity for SKU '${sku}'.`);
+        const err = new Error(`Invalid reservation quantity for SKU '${sku}'. Must be a positive integer.`);
         err.statusCode = 400;
         err.code = 'INVALID_QUANTITY';
+        throw err;
+      }
+
+      if (qty > 100) {
+        const err = new Error(`Quantity for SKU '${sku}' exceeds maximum allowable limit of 100.`);
+        err.statusCode = 400;
+        err.code = 'EXCESSIVE_QUANTITY';
         throw err;
       }
 
@@ -107,12 +118,18 @@ async function reserveStock({ orderId, items, actorId = null, actorRole = 'SYSTE
       reservations.push(resRow.rows[0]);
     }
 
-    await client.query('COMMIT');
+    if (isOwnClient) {
+      await client.query('COMMIT');
+    }
   } catch (err) {
-    await client.query('ROLLBACK');
+    if (isOwnClient) {
+      await client.query('ROLLBACK').catch(() => {});
+    }
     throw err;
   } finally {
-    client.release();
+    if (isOwnClient) {
+      client.release();
+    }
   }
 
   // Audit event
@@ -134,7 +151,7 @@ async function reserveStock({ orderId, items, actorId = null, actorRole = 'SYSTE
 }
 
 /**
- * Release reserved stock (e.g. upon order cancellation)
+ * Release reserved or restock allocated stock (e.g. upon order cancellation or expiry)
  */
 async function releaseStock({ orderId, actorId = null, actorRole = 'SYSTEM', ipAddress = null }) {
   const pool = getPool();
@@ -144,6 +161,7 @@ async function releaseStock({ orderId, actorId = null, actorRole = 'SYSTEM', ipA
   try {
     await client.query('BEGIN');
 
+    // 1. Release active RESERVED stock (restores reserved_stock counter)
     const activeRes = await client.query(
       `SELECT * FROM inventory_reservations WHERE order_id = $1 AND status = 'RESERVED' FOR UPDATE`,
       [orderId]
@@ -166,9 +184,32 @@ async function releaseStock({ orderId, actorId = null, actorRole = 'SYSTEM', ipA
       released.push(updated.rows[0]);
     }
 
+    // 2. Restock ALLOCATED items (if a paid order was cancelled prior to dispatch)
+    const allocatedRes = await client.query(
+      `SELECT * FROM inventory_reservations WHERE order_id = $1 AND status = 'ALLOCATED' FOR UPDATE`,
+      [orderId]
+    );
+
+    for (const r of allocatedRes.rows) {
+      await client.query(
+        `UPDATE products 
+         SET stock = stock + $1, updated_at = CURRENT_TIMESTAMP 
+         WHERE sku = $2`,
+        [r.qty, r.sku]
+      );
+
+      const updated = await client.query(
+        `UPDATE inventory_reservations 
+         SET status = 'RELEASED', updated_at = CURRENT_TIMESTAMP 
+         WHERE id = $1 RETURNING *`,
+        [r.id]
+      );
+      released.push(updated.rows[0]);
+    }
+
     await client.query('COMMIT');
   } catch (err) {
-    await client.query('ROLLBACK');
+    await client.query('ROLLBACK').catch(() => {});
     throw err;
   } finally {
     client.release();
@@ -190,7 +231,8 @@ async function releaseStock({ orderId, actorId = null, actorRole = 'SYSTEM', ipA
 }
 
 /**
- * Permanently allocate and deduct physical inventory (e.g. upon dispatch / fulfillment)
+ * Permanently allocate and deduct physical inventory (e.g. upon payment verification / lab dispatch)
+ * Strictly idempotent: subsequent invocations find 0 RESERVED rows and do not double-decrement.
  */
 async function allocateStock({ orderId, actorId = null, actorRole = 'SYSTEM', ipAddress = null }) {
   const pool = getPool();
@@ -226,7 +268,7 @@ async function allocateStock({ orderId, actorId = null, actorRole = 'SYSTEM', ip
 
     await client.query('COMMIT');
   } catch (err) {
-    await client.query('ROLLBACK');
+    await client.query('ROLLBACK').catch(() => {});
     throw err;
   } finally {
     client.release();

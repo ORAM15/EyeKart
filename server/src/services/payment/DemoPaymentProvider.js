@@ -326,7 +326,7 @@ class DemoPaymentProvider extends PaymentProvider {
         await client.query(
           `UPDATE orders 
            SET payment_status = 'FAILED', updated_at = CURRENT_TIMESTAMP
-           WHERE id = $1`,
+           WHERE id = $1 AND payment_status != 'SUCCESS'`,
           [currentAttempt.authoritative_order_id]
         );
 
@@ -345,7 +345,7 @@ class DemoPaymentProvider extends PaymentProvider {
         await client.query(
           `UPDATE orders 
            SET payment_status = $1, updated_at = CURRENT_TIMESTAMP
-           WHERE id = $2`,
+           WHERE id = $2 AND payment_status != 'SUCCESS'`,
           [targetState, currentAttempt.authoritative_order_id]
         );
 
