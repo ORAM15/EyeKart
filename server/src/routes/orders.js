@@ -22,7 +22,9 @@ async function orderRoutes(fastify, options) {
       deliveryAddress, 
       gateProtocol, 
       customerSnapshot, 
-      prescriptionSnapshot 
+      prescriptionSnapshot,
+      prescriptionId,
+      linkedRxId 
     } = req.body || {};
 
     const order = await createOrderFromQuote({
@@ -39,6 +41,7 @@ async function orderRoutes(fastify, options) {
         phone: customerSnapshot?.phone || req.user.phone
       },
       prescriptionSnapshot,
+      prescriptionId: prescriptionId || linkedRxId,
       idempotencyKey,
       actorRole: req.user.role,
       ipAddress: req.ip

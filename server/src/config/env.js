@@ -169,7 +169,7 @@ const config = {
     shutdownTimeoutMs: parseInt(process.env.SHUTDOWN_TIMEOUT_MS || '10000', 10)
   },
   rateLimit: {
-    maxRequests: parseInt(process.env.AUTH_RATE_LIMIT_MAX || '5', 10),
+    maxRequests: parseInt(process.env.AUTH_RATE_LIMIT_MAX || (isProd ? '5' : '100'), 10),
     windowMs: parseInt(process.env.AUTH_RATE_LIMIT_WINDOW_MS || '60000', 10)
   },
   db: {

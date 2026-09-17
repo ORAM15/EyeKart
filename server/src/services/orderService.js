@@ -62,6 +62,7 @@ async function createOrderFromQuote({
   gateProtocol = null,
   customerSnapshot = {},
   prescriptionSnapshot = null,
+  prescriptionId = null,
   idempotencyKey = null,
   actorRole = 'CUSTOMER',
   ipAddress = null
@@ -128,15 +129,59 @@ async function createOrderFromQuote({
     throw err;
   }
 
-  // 4. Determine Clinical Review Requirement
-  const requiresPrescriptionReview = (prescriptionSnapshot !== null && prescriptionSnapshot !== undefined) || quote.items.some(it => {
-    const cfg = it.lensConfig || it.lens_config;
-    if (!cfg) return false;
-    const mode = String(cfg.prescriptionMode || cfg.prescription_mode || '').toLowerCase();
-    return mode && mode !== 'no_rx' && mode !== 'plano';
-  });
+  // 3b. Validate and link Prescription if provided
+  let targetPrescriptionId = prescriptionId;
+  if (!targetPrescriptionId && prescriptionSnapshot && (prescriptionSnapshot.id || prescriptionSnapshot.prescriptionId)) {
+    targetPrescriptionId = prescriptionSnapshot.id || prescriptionSnapshot.prescriptionId;
+  }
+  if (!targetPrescriptionId && quote.items) {
+    for (const it of quote.items) {
+      const cfg = it.lensConfig || it.lens_config;
+      if (cfg && (cfg.prescriptionId || cfg.linkedRxId)) {
+        targetPrescriptionId = cfg.prescriptionId || cfg.linkedRxId;
+        break;
+      }
+    }
+  }
 
-  const initialPrescriptionStatus = requiresPrescriptionReview ? 'PENDING_OPTOMETRIST_REVIEW' : 'NOT_APPLICABLE';
+  let linkedPrescription = null;
+  if (targetPrescriptionId) {
+    const rxCheck = await query(`SELECT * FROM prescriptions WHERE id::text = $1`, [targetPrescriptionId]);
+    if (rxCheck.rows.length === 0) {
+      const err = new Error('Referenced prescription not found.');
+      err.statusCode = 404;
+      err.code = 'PRESCRIPTION_NOT_FOUND';
+      throw err;
+    }
+    linkedPrescription = rxCheck.rows[0];
+    if (actorRole !== 'ADMIN' && linkedPrescription.user_id !== userId) {
+      const err = new Error('Access denied. Cannot associate an order with another customer\'s prescription.');
+      err.statusCode = 403;
+      err.code = 'FORBIDDEN_PRESCRIPTION_ACCESS';
+      throw err;
+    }
+  }
+
+  // 4. Determine Clinical Review Requirement
+  const requiresPrescriptionReview = Boolean(
+    linkedPrescription ||
+    (prescriptionSnapshot !== null && prescriptionSnapshot !== undefined) ||
+    quote.items.some(it => {
+      const cfg = it.lensConfig || it.lens_config;
+      if (!cfg) return false;
+      const mode = String(cfg.prescriptionMode || cfg.prescription_mode || '').toLowerCase();
+      return mode && mode !== 'no_rx' && mode !== 'plano';
+    })
+  );
+
+  let initialPrescriptionStatus = 'NOT_APPLICABLE';
+  if (requiresPrescriptionReview) {
+    if (linkedPrescription && linkedPrescription.status === 'APPROVED') {
+      initialPrescriptionStatus = 'APPROVED';
+    } else {
+      initialPrescriptionStatus = 'PENDING_OPTOMETRIST_REVIEW';
+    }
+  }
   const orderNumber = await generateUniqueOrderNumber();
 
   const initialTracking = {
@@ -240,6 +285,14 @@ async function createOrderFromQuote({
     if (cartId) {
       await client.query(`DELETE FROM cart_items WHERE cart_id = $1`, [cartId]);
       await client.query(`UPDATE carts SET status = 'CONVERTED', updated_at = CURRENT_TIMESTAMP WHERE id = $1`, [cartId]);
+    }
+
+    // 5e. Atomically link prescription to order if applicable
+    if (targetPrescriptionId) {
+      await client.query(
+        `UPDATE prescriptions SET order_id = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 AND order_id IS NULL`,
+        [order.id, targetPrescriptionId]
+      );
     }
 
     await client.query('COMMIT');

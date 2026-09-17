@@ -71,7 +71,7 @@ class RateLimiter {
 }
 
 // Global authentication limiter instance using environment configuration
-const defaultMax = config.rateLimit?.maxRequests || 5;
+const defaultMax = config.rateLimit?.maxRequests || (config.isProd ? 5 : 100);
 const defaultWindow = config.rateLimit?.windowMs || 60000;
 const authLimiter = new RateLimiter(defaultMax, defaultWindow);
 

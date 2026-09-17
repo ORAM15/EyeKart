@@ -5,8 +5,16 @@
  * POST /api/auth/logout
  * GET /api/me
  */
+const { 
+  hashPassword, 
+  verifyPassword, 
+  createSession, 
+  invalidateSession, 
+  sanitizeUser,
+  updateUserProfile,
+  changeUserPassword
+} = require('../services/authService');
 const { query } = require('../db/pool');
-const { hashPassword, verifyPassword, createSession, invalidateSession, sanitizeUser } = require('../services/authService');
 const { logAuditEvent } = require('../services/auditService');
 const { requireAuth } = require('../middleware/auth');
 const { rateLimitAuth } = require('../middleware/rateLimit');
@@ -251,6 +259,46 @@ async function authRoutes(fastify, options) {
     return reply.send({
       success: true,
       user: req.user
+    });
+  });
+
+  // 5. Update Profile (Strict Privilege Escalation Prevention)
+  fastify.patch('/api/me', { preHandler: requireAuth }, async (req, reply) => {
+    const updated = await updateUserProfile(req.user.id, req.body || {}, req.ip);
+
+    await logAuditEvent({
+      actorId: req.user.id,
+      actorRole: req.user.role,
+      ipAddress: req.ip,
+      action: 'USER_PROFILE_UPDATED',
+      entity: 'User',
+      entityId: req.user.id
+    });
+
+    return reply.send({
+      success: true,
+      message: 'Profile updated successfully.',
+      user: updated
+    });
+  });
+
+  // 6. Change Password (Requires current password verification)
+  fastify.post('/api/auth/change-password', { preHandler: requireAuth }, async (req, reply) => {
+    const { currentPassword, newPassword } = req.body || {};
+    const result = await changeUserPassword(req.user.id, currentPassword, newPassword, req.ip);
+
+    await logAuditEvent({
+      actorId: req.user.id,
+      actorRole: req.user.role,
+      ipAddress: req.ip,
+      action: 'PASSWORD_CHANGED',
+      entity: 'User',
+      entityId: req.user.id
+    });
+
+    return reply.send({
+      success: true,
+      message: result.message
     });
   });
 }

@@ -158,6 +158,7 @@ async function createPrescription({
   source = 'MANUAL_ENTRY',
   values = {},
   patientNote = null,
+  documentId = null,
   autoSubmit = false,
   ipAddress = null
 }) {
@@ -188,15 +189,32 @@ async function createPrescription({
     }
   }
 
+  // If documentId is provided, verify ownership
+  if (documentId) {
+    const docCheck = await query(`SELECT user_id FROM stored_documents WHERE id::text = $1`, [documentId]);
+    if (docCheck.rows.length === 0) {
+      const err = new Error('Referenced medical document does not exist.');
+      err.statusCode = 404;
+      err.code = 'DOCUMENT_NOT_FOUND';
+      throw err;
+    }
+    if (docCheck.rows[0].user_id !== userId) {
+      const err = new Error('Cannot attach a medical document belonging to another customer.');
+      err.statusCode = 403;
+      err.code = 'FORBIDDEN_DOCUMENT_ACCESS';
+      throw err;
+    }
+  }
+
   const initialStatus = autoSubmit ? RX_STATES.PENDING_OPTOMETRIST_REVIEW : RX_STATES.DRAFT;
 
   // Insert master prescription record
   const rxRes = await query(
     `INSERT INTO prescriptions (
-      user_id, order_id, current_revision, status, prescription_mode, source, notes
-    ) VALUES ($1, $2, 1, $3, $4, $5, $6)
+      user_id, order_id, current_revision, status, prescription_mode, source, notes, document_id
+    ) VALUES ($1, $2, 1, $3, $4, $5, $6, $7)
     RETURNING *`,
-    [userId, orderId || null, initialStatus, prescriptionMode, source, patientNote || null]
+    [userId, orderId || null, initialStatus, prescriptionMode, source, patientNote || null, documentId || null]
   );
   const rx = rxRes.rows[0];
 
@@ -491,12 +509,165 @@ async function listUserPrescriptions(userId) {
   return rxRes.rows;
 }
 
+/**
+ * Update a draft prescription (Allowed ONLY when status is DRAFT)
+ */
+async function updateDraftPrescription({
+  prescriptionId,
+  userId,
+  userRole = 'CUSTOMER',
+  values = {},
+  patientNote = null,
+  documentId = null,
+  ipAddress = null
+}) {
+  const rxRes = await query(`SELECT * FROM prescriptions WHERE id = $1`, [prescriptionId]);
+  if (rxRes.rows.length === 0) {
+    const err = new Error('Prescription not found.');
+    err.statusCode = 404;
+    err.code = 'PRESCRIPTION_NOT_FOUND';
+    throw err;
+  }
+  const rx = rxRes.rows[0];
+
+  if (userRole !== 'ADMIN' && rx.user_id !== userId) {
+    const err = new Error('Access denied. You do not own this prescription.');
+    err.statusCode = 403;
+    err.code = 'FORBIDDEN_PRESCRIPTION_ACCESS';
+    throw err;
+  }
+
+  // Approved, Submitted, or Under-Review prescriptions are IMMUTABLE
+  if (rx.status !== RX_STATES.DRAFT) {
+    const err = new Error(`Only draft prescriptions can be modified. Prescriptions in '${rx.status}' are immutable.`);
+    err.statusCode = 400;
+    err.code = 'CANNOT_MUTATE_NON_DRAFT_PRESCRIPTION';
+    throw err;
+  }
+
+  const validatedValues = validateRefractiveValues(values);
+
+  let cleanDocId = rx.document_id;
+  if (documentId !== undefined) {
+    if (documentId !== null) {
+      const docCheck = await query(`SELECT user_id FROM stored_documents WHERE id::text = $1`, [documentId]);
+      if (docCheck.rows.length === 0) {
+        const err = new Error('Referenced medical document does not exist.');
+        err.statusCode = 404;
+        err.code = 'DOCUMENT_NOT_FOUND';
+        throw err;
+      }
+      if (docCheck.rows[0].user_id !== userId) {
+        const err = new Error('Cannot attach a medical document belonging to another customer.');
+        err.statusCode = 403;
+        err.code = 'FORBIDDEN_DOCUMENT_ACCESS';
+        throw err;
+      }
+      cleanDocId = documentId;
+    } else {
+      cleanDocId = null;
+    }
+  }
+
+  // Update Revision 1
+  const revRes = await query(
+    `UPDATE prescription_revisions
+     SET od_sph = $1, od_cyl = $2, od_axis = $3, od_add = $4,
+         os_sph = $5, os_cyl = $6, os_axis = $7, os_add = $8,
+         pd = $9, patient_note = COALESCE($10, patient_note)
+     WHERE prescription_id = $11 AND revision_number = 1
+     RETURNING *`,
+    [
+      validatedValues.od_sph,
+      validatedValues.od_cyl,
+      validatedValues.od_axis,
+      validatedValues.od_add,
+      validatedValues.os_sph,
+      validatedValues.os_cyl,
+      validatedValues.os_axis,
+      validatedValues.os_add,
+      validatedValues.pd,
+      patientNote,
+      rx.id
+    ]
+  );
+  const updatedRev = revRes.rows[0];
+
+  const updatedRxRes = await query(
+    `UPDATE prescriptions
+     SET notes = COALESCE($1, notes),
+         document_id = $2,
+         updated_at = CURRENT_TIMESTAMP
+     WHERE id = $3
+     RETURNING *`,
+    [patientNote, cleanDocId, rx.id]
+  );
+  const updatedRx = updatedRxRes.rows[0];
+
+  await logAuditEvent({
+    actorId: userId,
+    actorRole: userRole,
+    ipAddress,
+    action: 'PRESCRIPTION_DRAFT_UPDATED',
+    entity: 'Prescription',
+    entityId: rx.id
+  });
+
+  return {
+    ...updatedRx,
+    currentRevision: updatedRev
+  };
+}
+
+/**
+ * Delete a draft prescription (Only permitted in DRAFT state)
+ */
+async function deleteDraftPrescription({ prescriptionId, userId, userRole = 'CUSTOMER', ipAddress = null }) {
+  const rxRes = await query(`SELECT * FROM prescriptions WHERE id = $1`, [prescriptionId]);
+  if (rxRes.rows.length === 0) {
+    const err = new Error('Prescription not found.');
+    err.statusCode = 404;
+    err.code = 'PRESCRIPTION_NOT_FOUND';
+    throw err;
+  }
+  const rx = rxRes.rows[0];
+
+  if (userRole !== 'ADMIN' && rx.user_id !== userId) {
+    const err = new Error('Access denied. You do not own this prescription.');
+    err.statusCode = 403;
+    err.code = 'FORBIDDEN_PRESCRIPTION_ACCESS';
+    throw err;
+  }
+
+  if (rx.status !== RX_STATES.DRAFT) {
+    const err = new Error(`Only draft prescriptions can be deleted. Prescriptions in status '${rx.status}' cannot be deleted.`);
+    err.statusCode = 400;
+    err.code = 'CANNOT_DELETE_ACTIVE_PRESCRIPTION';
+    throw err;
+  }
+
+  await query(`DELETE FROM prescriptions WHERE id = $1`, [rx.id]);
+
+  await logAuditEvent({
+    actorId: userId,
+    actorRole: userRole,
+    ipAddress,
+    action: 'PRESCRIPTION_DRAFT_DELETED',
+    entity: 'Prescription',
+    entityId: rx.id
+  });
+
+  return { success: true, message: 'Draft prescription deleted successfully.' };
+}
+
 module.exports = {
   RX_STATES,
   LEGAL_RX_TRANSITIONS,
   isValidRxTransition,
   validateRefractiveValues,
   createPrescription,
+  updateDraftPrescription,
+  deleteDraftPrescription,
   submitPrescription,
   respondToClarification,
   getPrescriptionById,

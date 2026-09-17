@@ -470,7 +470,7 @@ CREATE INDEX IF NOT EXISTS idx_stored_documents_purpose ON stored_documents(purp
 async function runMigrations() {
   console.info('[EyeKart Migration] Initializing Phase 6.6 Database Schema...');
 
-  // Phase 6.6 idempotent column additions for existing databases before indices
+  // Phase 6.6 & Phase 6 idempotent column additions for existing databases before indices
   try {
     await query(`
       ALTER TABLE payment_attempts ADD COLUMN IF NOT EXISTS checkout_request_id VARCHAR(64);
@@ -478,9 +478,12 @@ async function runMigrations() {
       ALTER TABLE payment_attempts ADD COLUMN IF NOT EXISTS mpesa_receipt_number VARCHAR(64);
       ALTER TABLE payment_attempts ADD COLUMN IF NOT EXISTS phone_number VARCHAR(32);
       ALTER TABLE payment_attempts ADD COLUMN IF NOT EXISTS callback_received_at TIMESTAMPTZ;
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS default_shipping_address TEXT;
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS preferences JSONB DEFAULT '{}'::jsonb;
+      ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS document_id UUID REFERENCES stored_documents(id) ON DELETE SET NULL;
     `);
   } catch (err) {
-    // If payment_attempts doesn't exist yet, SCHEMA_SQL will create it
+    // If tables don't exist yet, SCHEMA_SQL will create them
   }
 
   await query(SCHEMA_SQL);

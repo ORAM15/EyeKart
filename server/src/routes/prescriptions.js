@@ -5,6 +5,8 @@
  */
 const { 
   createPrescription, 
+  updateDraftPrescription,
+  deleteDraftPrescription,
   submitPrescription, 
   respondToClarification, 
   getPrescriptionById, 
@@ -21,7 +23,8 @@ async function prescriptionRoutes(fastify, options) {
       source, 
       values, 
       patientNote, 
-      autoSubmit 
+      autoSubmit,
+      documentId 
     } = req.body || {};
 
     const rx = await createPrescription({
@@ -32,6 +35,7 @@ async function prescriptionRoutes(fastify, options) {
       values,
       patientNote,
       autoSubmit: Boolean(autoSubmit),
+      documentId,
       ipAddress: req.ip
     });
 
@@ -99,7 +103,42 @@ async function prescriptionRoutes(fastify, options) {
     });
   });
 
-  // 6. Block arbitrary PATCH status mutations & reviewer spoofing
+  // 6. PUT /api/prescriptions/:id - Update draft prescription values/notes/document
+  fastify.put('/api/prescriptions/:id', { preHandler: requireAuth }, async (req, reply) => {
+    const { id } = req.params;
+    const { values, patientNote, documentId } = req.body || {};
+
+    const updatedRx = await updateDraftPrescription({
+      prescriptionId: id,
+      userId: req.user.id,
+      userRole: req.user.role,
+      values,
+      patientNote,
+      documentId,
+      ipAddress: req.ip
+    });
+
+    return reply.send({
+      success: true,
+      message: 'Draft prescription updated successfully.',
+      prescription: updatedRx
+    });
+  });
+
+  // 7. DELETE /api/prescriptions/:id - Delete draft prescription
+  fastify.delete('/api/prescriptions/:id', { preHandler: requireAuth }, async (req, reply) => {
+    const { id } = req.params;
+    const result = await deleteDraftPrescription({
+      prescriptionId: id,
+      userId: req.user.id,
+      userRole: req.user.role,
+      ipAddress: req.ip
+    });
+
+    return reply.send(result);
+  });
+
+  // 8. Block arbitrary PATCH status mutations & reviewer spoofing
   fastify.patch('/api/prescriptions/:id', { preHandler: requireAuth }, async (req, reply) => {
     const body = req.body || {};
     if (body.status !== undefined) {
