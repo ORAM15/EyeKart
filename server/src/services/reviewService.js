@@ -6,6 +6,7 @@
 const { query } = require('../db/pool');
 const { logAuditEvent } = require('./auditService');
 const { RX_STATES } = require('./prescriptionService');
+const notificationService = require('./notification/notificationService');
 
 /**
  * Enforce optometrist role verification
@@ -165,6 +166,25 @@ async function approvePrescription({
     }
   });
 
+  // Notify customer of clinical approval
+  try {
+    const userRes = await query(`SELECT phone, email FROM users WHERE id = $1`, [rx.user_id]);
+    const u = userRes.rows[0];
+    const recipient = u?.phone || u?.email;
+    const channel = u?.phone ? 'SMS' : 'EMAIL';
+    if (recipient) {
+      notificationService.sendTransactionalNotification({
+        userId: rx.user_id,
+        recipient,
+        channel,
+        templateId: 'PRESCRIPTION_APPROVED',
+        payload: { prescriptionId: rx.id, reviewerName },
+        resourceId: rx.id,
+        ipAddress
+      }).catch(() => {});
+    }
+  } catch {}
+
   return {
     prescription: updatedRx,
     review
@@ -270,6 +290,25 @@ async function rejectPrescription({
     }
   });
 
+  // Notify customer of clinical rejection
+  try {
+    const userRes = await query(`SELECT phone, email FROM users WHERE id = $1`, [rx.user_id]);
+    const u = userRes.rows[0];
+    const recipient = u?.phone || u?.email;
+    const channel = u?.phone ? 'SMS' : 'EMAIL';
+    if (recipient) {
+      notificationService.sendTransactionalNotification({
+        userId: rx.user_id,
+        recipient,
+        channel,
+        templateId: 'PRESCRIPTION_REJECTED',
+        payload: { prescriptionId: rx.id, notes: notes.trim() },
+        resourceId: rx.id,
+        ipAddress
+      }).catch(() => {});
+    }
+  } catch {}
+
   return {
     prescription: updatedRx,
     review
@@ -367,6 +406,25 @@ async function requestClarification({
       orderId: rx.order_id
     }
   });
+
+  // Notify customer of clinical clarification request
+  try {
+    const userRes = await query(`SELECT phone, email FROM users WHERE id = $1`, [rx.user_id]);
+    const u = userRes.rows[0];
+    const recipient = u?.phone || u?.email;
+    const channel = u?.phone ? 'SMS' : 'EMAIL';
+    if (recipient) {
+      notificationService.sendTransactionalNotification({
+        userId: rx.user_id,
+        recipient,
+        channel,
+        templateId: 'PRESCRIPTION_CLARIFICATION_REQUIRED',
+        payload: { prescriptionId: rx.id, notes: notes.trim() },
+        resourceId: rx.id,
+        ipAddress
+      }).catch(() => {});
+    }
+  } catch {}
 
   return {
     prescription: updatedRx,

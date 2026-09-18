@@ -6,6 +6,7 @@
 const { query } = require('../db/pool');
 const { logAuditEvent } = require('./auditService');
 const { allocateStock, releaseStock } = require('./inventoryService');
+const notificationService = require('./notification/notificationService');
 
 const FULFILLMENT_STATES = {
   PENDING: 'PENDING',
@@ -196,6 +197,24 @@ async function createFulfillment({
     }
   });
 
+  // Notify customer of fulfillment initiation
+  try {
+    const cs = typeof order.customer_snapshot === 'string' ? JSON.parse(order.customer_snapshot) : order.customer_snapshot;
+    const recipient = cs?.phone || cs?.email;
+    const channel = cs?.phone ? 'SMS' : 'EMAIL';
+    if (recipient) {
+      notificationService.sendTransactionalNotification({
+        userId: order.user_id,
+        recipient,
+        channel,
+        templateId: 'FULFILLMENT_CREATED',
+        payload: { orderNumber: order.order_number, trackingNumber },
+        resourceId: fulfillment.id,
+        ipAddress
+      }).catch(() => {});
+    }
+  } catch {}
+
   return fulfillment;
 }
 
@@ -338,6 +357,31 @@ async function transitionFulfillment({
       actorName
     }
   });
+
+  // Notify customer on dispatch or delivery
+  if (targetState === FULFILLMENT_STATES.DISPATCHED || targetState === FULFILLMENT_STATES.DELIVERED) {
+    try {
+      const cs = typeof order.customer_snapshot === 'string' ? JSON.parse(order.customer_snapshot) : order.customer_snapshot;
+      const recipient = cs?.phone || cs?.email;
+      const channel = cs?.phone ? 'SMS' : 'EMAIL';
+      const templateId = targetState === FULFILLMENT_STATES.DISPATCHED ? 'ORDER_SHIPPED' : 'ORDER_DELIVERED';
+      if (recipient) {
+        notificationService.sendTransactionalNotification({
+          userId: order.user_id,
+          recipient,
+          channel,
+          templateId,
+          payload: {
+            orderNumber: order.order_number,
+            trackingNumber: fulfillment.tracking_number,
+            carrier: fulfillment.carrier
+          },
+          resourceId: fulfillment.id,
+          ipAddress
+        }).catch(() => {});
+      }
+    } catch {}
+  }
 
   return updatedFulfillment;
 }

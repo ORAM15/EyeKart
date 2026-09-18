@@ -5,6 +5,7 @@
 const crypto = require('crypto');
 const { query } = require('../db/pool');
 const config = require('../config/env');
+const notificationService = require('./notification/notificationService');
 
 const SCRYPT_PARAMS = {
   N: 16384,
@@ -329,6 +330,25 @@ async function changeUserPassword(userId, currentPassword, newPassword, ipAddres
     `UPDATE users SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2`,
     [newHash, userId]
   );
+
+  // Security notification: password changed
+  try {
+    const userRes = await query(`SELECT phone, email FROM users WHERE id = $1`, [userId]);
+    const u = userRes.rows[0];
+    const recipient = u?.email || u?.phone;
+    const channel = u?.email ? 'EMAIL' : 'SMS';
+    if (recipient) {
+      notificationService.sendTransactionalNotification({
+        userId,
+        recipient,
+        channel,
+        templateId: 'PASSWORD_CHANGED',
+        payload: { timestamp: new Date().toISOString() },
+        resourceId: userId,
+        ipAddress
+      }).catch(() => {});
+    }
+  } catch {}
 
   return { success: true, message: 'Password changed successfully.' };
 }

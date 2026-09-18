@@ -9,6 +9,7 @@ const { clearCart } = require('./cartService');
 const { logAuditEvent } = require('./auditService');
 const { checkIdempotency, saveIdempotency } = require('./idempotencyService');
 const { reserveStock, releaseStock, allocateStock } = require('./inventoryService');
+const notificationService = require('./notification/notificationService');
 
 const ORDER_STATES = {
   CREATED: 'CREATED',
@@ -295,7 +296,45 @@ async function createOrderFromQuote({
       );
     }
 
+    // 5f. Transactional Outbox: Enqueue ORDER_CREATED notification within same DB transaction
+    const snap = customerSnapshot || {};
+    const recipientPhone = snap.phone || null;
+    const recipientEmail = snap.email || null;
+
+    if (recipientPhone) {
+      await notificationService.enqueueOutbox({
+        client,
+        userId,
+        recipient: recipientPhone,
+        channel: 'SMS',
+        templateId: 'ORDER_CREATED',
+        payload: { orderNumber: order.order_number, total: order.total },
+        resourceId: order.id
+      }).catch(notifErr => {
+        console.warn('[OrderService] Outbox SMS enqueue warning:', notifErr.message);
+      });
+    }
+
+    if (recipientEmail) {
+      await notificationService.enqueueOutbox({
+        client,
+        userId,
+        recipient: recipientEmail,
+        channel: 'EMAIL',
+        templateId: 'ORDER_CREATED',
+        payload: { orderNumber: order.order_number, total: order.total },
+        resourceId: order.id
+      }).catch(notifErr => {
+        console.warn('[OrderService] Outbox Email enqueue warning:', notifErr.message);
+      });
+    }
+
     await client.query('COMMIT');
+
+    // Post-commit: trigger async outbox processing
+    notificationService.processOutbox().catch(procErr => {
+      console.warn('[OrderService] Post-commit outbox processing warning:', procErr.message);
+    });
 
     const fullOrder = {
       ...order,
@@ -551,6 +590,24 @@ async function cancelOrder(orderId, userId, userRole, reason = null, ipAddress =
     }
   });
 
+  // Transactional notification on order cancellation
+  if (order.customer_snapshot) {
+    const cs = typeof order.customer_snapshot === 'string' ? JSON.parse(order.customer_snapshot) : order.customer_snapshot;
+    const recipient = cs.phone || cs.email;
+    const channel = cs.phone ? 'SMS' : 'EMAIL';
+    if (recipient) {
+      notificationService.sendTransactionalNotification({
+        userId: order.user_id,
+        recipient,
+        channel,
+        templateId: 'ORDER_CANCELLED',
+        payload: { orderNumber: order.order_number, reason: cancelReason },
+        resourceId: order.id,
+        ipAddress
+      }).catch(err => console.warn('[OrderService] Cancel notification warning:', err.message));
+    }
+  }
+
   return {
     ...updatedRes.rows[0],
     refundMetadata
@@ -665,7 +722,33 @@ async function updateOrderStatus(orderId, newStatus, userRole, stageInfo = null,
       await allocateStock({ orderId: order.id, actorId, actorRole: userRole, ipAddress });
     }
 
+    // Enqueue outbox notification for status changes
+    if (order.customer_snapshot) {
+      const cs = typeof order.customer_snapshot === 'string' ? JSON.parse(order.customer_snapshot) : order.customer_snapshot;
+      const recipient = cs.phone || cs.email;
+      const channel = cs.phone ? 'SMS' : 'EMAIL';
+      const templateId = newStatus === ORDER_STATES.PROCESSING ? 'ORDER_PROCESSING'
+                       : newStatus === ORDER_STATES.CANCELLED ? 'ORDER_CANCELLED'
+                       : null;
+      if (recipient && templateId) {
+        await notificationService.enqueueOutbox({
+          client,
+          userId: order.user_id,
+          recipient,
+          channel,
+          templateId,
+          payload: { orderNumber: order.order_number, reason },
+          resourceId: order.id
+        }).catch(notifErr => {
+          console.warn('[OrderService] updateOrderStatus outbox warning:', notifErr.message);
+        });
+      }
+    }
+
     await client.query('COMMIT');
+
+    // Post-commit outbox processing
+    notificationService.processOutbox().catch(() => {});
 
     await logAuditEvent({
       actorId,

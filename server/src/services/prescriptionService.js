@@ -5,6 +5,7 @@
  */
 const { query } = require('../db/pool');
 const { logAuditEvent } = require('./auditService');
+const notificationService = require('./notification/notificationService');
 
 const RX_STATES = {
   DRAFT: 'DRAFT',
@@ -338,6 +339,25 @@ async function submitPrescription({ prescriptionId, userId, userRole = 'CUSTOMER
       toStatus: RX_STATES.PENDING_OPTOMETRIST_REVIEW
     }
   });
+
+  // Notify customer of prescription submission
+  try {
+    const userRes = await query(`SELECT phone, email FROM users WHERE id = $1`, [userId]);
+    const u = userRes.rows[0];
+    const recipient = u?.phone || u?.email;
+    const channel = u?.phone ? 'SMS' : 'EMAIL';
+    if (recipient) {
+      notificationService.sendTransactionalNotification({
+        userId,
+        recipient,
+        channel,
+        templateId: 'PRESCRIPTION_SUBMITTED',
+        payload: { prescriptionId: rx.id },
+        resourceId: rx.id,
+        ipAddress
+      }).catch(() => {});
+    }
+  } catch {}
 
   return updatedRx;
 }

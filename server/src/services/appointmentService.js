@@ -5,6 +5,7 @@
  */
 const { query, getPool } = require('../db/pool');
 const { logAuditEvent } = require('./auditService');
+const notificationService = require('./notification/notificationService');
 
 const APPOINTMENT_STATES = {
   BOOKED: 'BOOKED',
@@ -210,6 +211,13 @@ async function bookAppointment({
       }
     });
 
+    // Notify patient of booking
+    try {
+      const clinicRes = await query(`SELECT name FROM clinics WHERE id = $1`, [slot.clinic_id]);
+      const clinic = clinicRes.rows[0];
+      await notificationService.notifyAppointmentBooked({ appointment, clinic });
+    } catch {}
+
     return appointment;
   } catch (err) {
     await client.query('ROLLBACK');
@@ -302,6 +310,26 @@ async function cancelAppointment({
         reason
       }
     });
+
+    // Notify patient of cancellation
+    try {
+      const recipient = apt.patient_phone || apt.patient_email;
+      const channel = apt.patient_phone ? 'SMS' : 'EMAIL';
+      if (recipient) {
+        notificationService.sendTransactionalNotification({
+          userId: apt.user_id,
+          recipient,
+          channel,
+          templateId: 'APPOINTMENT_CANCELLED',
+          payload: {
+            bookingReference: apt.booking_reference,
+            reason
+          },
+          resourceId: apt.id,
+          ipAddress
+        }).catch(() => {});
+      }
+    } catch {}
 
     return updatedApt;
   } catch (err) {

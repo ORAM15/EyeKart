@@ -26,6 +26,7 @@ const inventoryRoutes = require('./routes/inventory');
 const appointmentRoutes = require('./routes/appointments');
 const webhookRoutes = require('./routes/webhooks');
 const storageRoutes = require('./routes/storage');
+const notificationRoutes = require('./routes/notifications');
 
 function buildApp(opts = {}) {
   const defaultLogger = config.isProd ? {
@@ -114,6 +115,7 @@ function buildApp(opts = {}) {
   app.register(appointmentRoutes);
   app.register(webhookRoutes);
   app.register(storageRoutes);
+  app.register(notificationRoutes);
 
   // 7. Static Asset Serving (Frontend Unified Same-Origin Deployment)
   const projectRoot = path.resolve(__dirname, '../../');

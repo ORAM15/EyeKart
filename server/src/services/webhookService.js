@@ -396,6 +396,22 @@ class WebhookService {
           }
         });
 
+        // Trigger payment failure or expiration notification
+        const recipientPhone = callback.phoneNumber || attempt.phone_number;
+        if (recipientPhone) {
+          notificationService.sendTransactionalNotification({
+            userId: attempt.order_user_id,
+            recipient: recipientPhone,
+            channel: 'SMS',
+            templateId: targetStatus === PAYMENT_STATES.EXPIRED ? 'PAYMENT_EXPIRED' : 'PAYMENT_FAILED',
+            payload: {
+              orderNumber: attempt.order_number,
+              reason: callback.resultDesc || 'Payment was not completed'
+            },
+            resourceId: attempt.id
+          }).catch(err => console.warn('[Webhook Ingress] Failure notification warning:', err.message));
+        }
+
         return {
           processed: true,
           success: false,

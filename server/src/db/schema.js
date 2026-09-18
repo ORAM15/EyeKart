@@ -465,6 +465,63 @@ CREATE TABLE IF NOT EXISTS stored_documents (
 
 CREATE INDEX IF NOT EXISTS idx_stored_documents_user ON stored_documents(user_id);
 CREATE INDEX IF NOT EXISTS idx_stored_documents_purpose ON stored_documents(purpose);
+
+-- 24. Notifications table (Phase 8 Notifications, Communication & Event Delivery)
+CREATE TABLE IF NOT EXISTS notifications (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  recipient VARCHAR(255) NOT NULL,
+  channel VARCHAR(32) NOT NULL,
+  event_type VARCHAR(64) NOT NULL,
+  template_id VARCHAR(64) NOT NULL,
+  payload JSONB NOT NULL DEFAULT '{}'::jsonb,
+  status VARCHAR(32) NOT NULL DEFAULT 'PENDING',
+  provider VARCHAR(64) NOT NULL DEFAULT 'TEST',
+  provider_message_id VARCHAR(128),
+  attempt_count INTEGER NOT NULL DEFAULT 0,
+  max_attempts INTEGER NOT NULL DEFAULT 3,
+  next_retry_at TIMESTAMPTZ,
+  error_details JSONB,
+  idempotency_key VARCHAR(255) UNIQUE NOT NULL,
+  sent_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_status ON notifications(status);
+CREATE INDEX IF NOT EXISTS idx_notifications_idemp ON notifications(idempotency_key);
+CREATE INDEX IF NOT EXISTS idx_notifications_event ON notifications(event_type);
+CREATE INDEX IF NOT EXISTS idx_notifications_created ON notifications(created_at DESC);
+
+-- 25. Notification Outbox table (Phase 8 Transactional Outbox Pattern)
+CREATE TABLE IF NOT EXISTS notification_outbox (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  notification_id UUID NOT NULL REFERENCES notifications(id) ON DELETE CASCADE,
+  status VARCHAR(32) NOT NULL DEFAULT 'PENDING',
+  event_type VARCHAR(64) NOT NULL,
+  retry_count INTEGER NOT NULL DEFAULT 0,
+  last_error TEXT,
+  created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+  processed_at TIMESTAMPTZ
+);
+
+CREATE INDEX IF NOT EXISTS idx_outbox_status ON notification_outbox(status);
+CREATE INDEX IF NOT EXISTS idx_outbox_created ON notification_outbox(created_at ASC);
+
+-- 26. Notification Preferences table (Phase 8 Customer Communication Controls)
+CREATE TABLE IF NOT EXISTS notification_preferences (
+  user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  transactional_email BOOLEAN NOT NULL DEFAULT TRUE,
+  transactional_sms BOOLEAN NOT NULL DEFAULT TRUE,
+  marketing_email BOOLEAN NOT NULL DEFAULT FALSE,
+  marketing_sms BOOLEAN NOT NULL DEFAULT FALSE,
+  whatsapp BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT chk_pref_transactional_email_true CHECK (transactional_email = TRUE),
+  CONSTRAINT chk_pref_transactional_sms_true CHECK (transactional_sms = TRUE)
+);
 `;
 
 async function runMigrations() {
@@ -494,6 +551,12 @@ async function runMigrations() {
         IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'chk_inv_res_qty_pos') THEN
           ALTER TABLE inventory_reservations ADD CONSTRAINT chk_inv_res_qty_pos CHECK (qty > 0);
         END IF;
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'chk_pref_transactional_email_true') THEN
+          ALTER TABLE notification_preferences ADD CONSTRAINT chk_pref_transactional_email_true CHECK (transactional_email = TRUE);
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'chk_pref_transactional_sms_true') THEN
+          ALTER TABLE notification_preferences ADD CONSTRAINT chk_pref_transactional_sms_true CHECK (transactional_sms = TRUE);
+        END IF;
       END $$;
 
       CREATE INDEX IF NOT EXISTS idx_audit_action_date ON audit_logs(action, created_at DESC);
@@ -511,6 +574,9 @@ async function runMigrations() {
 async function dropAllTables() {
   console.warn('[EyeKart Migration] Dropping all tables (Test/Reset mode)...');
   await query(`
+    DROP TABLE IF EXISTS notification_outbox CASCADE;
+    DROP TABLE IF EXISTS notifications CASCADE;
+    DROP TABLE IF EXISTS notification_preferences CASCADE;
     DROP TABLE IF EXISTS stored_documents CASCADE;
     DROP TABLE IF EXISTS appointments CASCADE;
     DROP TABLE IF EXISTS appointment_slots CASCADE;

@@ -18,6 +18,7 @@ const { query } = require('../db/pool');
 const { logAuditEvent } = require('../services/auditService');
 const { requireAuth } = require('../middleware/auth');
 const { rateLimitAuth } = require('../middleware/rateLimit');
+const notificationService = require('../services/notification/notificationService');
 const config = require('../config/env');
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -124,6 +125,21 @@ async function authRoutes(fastify, options) {
       entityId: newUser.id,
       metadata: { email: cleanEmail }
     });
+
+    // Transactional welcome notification
+    try {
+      const recipient = cleanPhone || cleanEmail;
+      const channel = cleanPhone ? 'SMS' : 'EMAIL';
+      notificationService.sendTransactionalNotification({
+        userId: newUser.id,
+        recipient,
+        channel,
+        templateId: 'ACCOUNT_CREATED',
+        payload: { fullName: newUser.full_name },
+        resourceId: newUser.id,
+        ipAddress: req.ip
+      }).catch(() => {});
+    } catch {}
 
     return reply.status(201).send({
       success: true,

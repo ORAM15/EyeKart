@@ -7,6 +7,7 @@ const { query, getClient } = require('../../db/pool');
 const { logAuditEvent } = require('../auditService');
 const { releaseStock } = require('../inventoryService');
 const { PAYMENT_STATES } = require('./PaymentProvider');
+const notificationService = require('../notification/notificationService');
 
 /**
  * Retrieve status of a payment attempt with IDOR access control
@@ -132,13 +133,41 @@ async function expirePendingPayments(ttlMinutes = 30) {
         metadata: { attemptId: row.id, ttlMinutes }
       });
 
-      expiredAttempts.push(row.id);
+      expiredAttempts.push({
+        id: row.id,
+        orderId: row.order_id,
+        userId: row.order_user_id,
+        orderNumber: row.order_number
+      });
     }
 
     await client.query('COMMIT');
+
+    // Trigger async payment expiration notification
+    for (const exp of expiredAttempts) {
+      (async () => {
+        try {
+          const userRes = await query(`SELECT phone, email FROM users WHERE id = $1`, [exp.userId]);
+          const user = userRes.rows[0];
+          const recipient = user?.phone || user?.email;
+          const channel = user?.phone ? 'SMS' : 'EMAIL';
+          if (recipient) {
+            await notificationService.sendTransactionalNotification({
+              userId: exp.userId,
+              recipient,
+              channel,
+              templateId: 'PAYMENT_EXPIRED',
+              payload: { orderNumber: exp.orderNumber },
+              resourceId: exp.id
+            });
+          }
+        } catch {}
+      })();
+    }
+
     return {
       expiredCount: expiredAttempts.length,
-      expiredAttemptIds: expiredAttempts
+      expiredAttemptIds: expiredAttempts.map(e => e.id)
     };
   } catch (err) {
     await client.query('ROLLBACK').catch(() => {});
