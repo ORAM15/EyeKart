@@ -470,7 +470,7 @@ CREATE INDEX IF NOT EXISTS idx_stored_documents_purpose ON stored_documents(purp
 async function runMigrations() {
   console.info('[EyeKart Migration] Initializing Phase 6.6 Database Schema...');
 
-  // Phase 6.6 & Phase 6 idempotent column additions for existing databases before indices
+  // Phase 6 & Phase 7 idempotent column & constraint additions for existing databases before indices
   try {
     await query(`
       ALTER TABLE payment_attempts ADD COLUMN IF NOT EXISTS checkout_request_id VARCHAR(64);
@@ -481,6 +481,22 @@ async function runMigrations() {
       ALTER TABLE users ADD COLUMN IF NOT EXISTS default_shipping_address TEXT;
       ALTER TABLE users ADD COLUMN IF NOT EXISTS preferences JSONB DEFAULT '{}'::jsonb;
       ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS document_id UUID REFERENCES stored_documents(id) ON DELETE SET NULL;
+      ALTER TABLE products ADD COLUMN IF NOT EXISTS reserved_stock INTEGER NOT NULL DEFAULT 0;
+
+      DO $$
+      BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'chk_products_reserved_stock') THEN
+          ALTER TABLE products ADD CONSTRAINT chk_products_reserved_stock CHECK (reserved_stock >= 0);
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'chk_products_stock_nonneg') THEN
+          ALTER TABLE products ADD CONSTRAINT chk_products_stock_nonneg CHECK (stock >= 0);
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'chk_inv_res_qty_pos') THEN
+          ALTER TABLE inventory_reservations ADD CONSTRAINT chk_inv_res_qty_pos CHECK (qty > 0);
+        END IF;
+      END $$;
+
+      CREATE INDEX IF NOT EXISTS idx_audit_action_date ON audit_logs(action, created_at DESC);
     `);
   } catch (err) {
     // If tables don't exist yet, SCHEMA_SQL will create them

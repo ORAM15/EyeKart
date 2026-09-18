@@ -74,6 +74,19 @@ async function reserveStock({ orderId, items, client: callerClient = null, actor
         throw err;
       }
 
+      // Check for existing active reservation for this order and SKU (Idempotency)
+      if (orderId) {
+        const existingRes = await client.query(
+          `SELECT * FROM inventory_reservations
+           WHERE order_id = $1 AND sku = $2 AND status = 'RESERVED'`,
+          [orderId, sku]
+        );
+        if (existingRes.rows.length > 0) {
+          reservations.push(existingRes.rows[0]);
+          continue;
+        }
+      }
+
       // Lock row to prevent race conditions & overselling
       const prodRes = await client.query(
         `SELECT sku, name, stock, COALESCE(reserved_stock, 0) AS reserved_stock 
@@ -289,9 +302,155 @@ async function allocateStock({ orderId, actorId = null, actorRole = 'SYSTEM', ip
   return { success: true, allocated };
 }
 
+/**
+ * Administrative stock adjustment with row-level locking, invariant enforcement, and audit trail
+ */
+async function adjustStock({ sku, delta = null, newStock = null, reason = null, actorId = null, actorRole = 'ADMIN', ipAddress = null }) {
+  if (actorRole !== 'ADMIN') {
+    const err = new Error('Access denied. Only Administrators can perform stock adjustments.');
+    err.statusCode = 403;
+    err.code = 'UNAUTHORIZED_INVENTORY_ADJUSTMENT';
+    throw err;
+  }
+
+  if (!sku || typeof sku !== 'string') {
+    const err = new Error('A valid product SKU is required.');
+    err.statusCode = 400;
+    err.code = 'INVALID_SKU';
+    throw err;
+  }
+  const cleanSku = sku.trim().toUpperCase();
+
+  if (!reason || typeof reason !== 'string' || reason.trim().length < 3) {
+    const err = new Error('A clear operational reason (minimum 3 characters) is required for stock adjustments.');
+    err.statusCode = 400;
+    err.code = 'MISSING_ADJUSTMENT_REASON';
+    throw err;
+  }
+
+  if (delta !== null && delta !== undefined) {
+    if (typeof delta !== 'number' || !Number.isInteger(delta)) {
+      const err = new Error('Stock delta must be an integer.');
+      err.statusCode = 400;
+      err.code = 'INVALID_STOCK_DELTA';
+      throw err;
+    }
+  } else if (newStock !== null && newStock !== undefined) {
+    if (typeof newStock !== 'number' || !Number.isInteger(newStock)) {
+      const err = new Error('New stock value must be an integer.');
+      err.statusCode = 400;
+      err.code = 'INVALID_STOCK_VALUE';
+      throw err;
+    }
+  } else {
+    const err = new Error('Either delta or newStock must be provided for stock adjustment.');
+    err.statusCode = 400;
+    err.code = 'MISSING_STOCK_INPUT';
+    throw err;
+  }
+
+  const pool = getPool();
+  const client = await pool.connect();
+
+  try {
+    await client.query('BEGIN');
+
+    // Row lock product to serialize adjustments and prevent race conditions
+    const prodRes = await client.query(
+      `SELECT sku, name, stock, COALESCE(reserved_stock, 0) AS reserved_stock
+       FROM products WHERE sku = $1 FOR UPDATE`,
+      [cleanSku]
+    );
+
+    if (prodRes.rows.length === 0) {
+      await client.query('ROLLBACK');
+      const err = new Error(`Product with SKU '${cleanSku}' not found.`);
+      err.statusCode = 404;
+      err.code = 'PRODUCT_NOT_FOUND';
+      throw err;
+    }
+
+    const currentStock = parseInt(prodRes.rows[0].stock, 10);
+    const reservedStock = parseInt(prodRes.rows[0].reserved_stock, 10);
+
+    let targetStock = currentStock;
+    if (delta !== null && delta !== undefined) {
+      targetStock = currentStock + delta;
+    } else {
+      targetStock = newStock;
+    }
+
+    // Invariant 1: Resulting stock cannot be negative
+    if (targetStock < 0) {
+      await client.query('ROLLBACK');
+      const err = new Error(`Stock adjustment would result in negative inventory (${targetStock}). Current stock is ${currentStock}.`);
+      err.statusCode = 400;
+      err.code = 'NEGATIVE_STOCK_PROHIBITED';
+      throw err;
+    }
+
+    // Invariant 2: Resulting physical stock cannot drop below active reserved stock
+    if (targetStock < reservedStock) {
+      await client.query('ROLLBACK');
+      const err = new Error(`Stock adjustment (${targetStock}) cannot be less than active reserved stock (${reservedStock}). Cannot oversell reserved orders.`);
+      err.statusCode = 400;
+      err.code = 'STOCK_BELOW_RESERVED_PROHIBITED';
+      throw err;
+    }
+
+    await client.query(
+      `UPDATE products
+       SET stock = $1, updated_at = CURRENT_TIMESTAMP
+       WHERE sku = $2`,
+      [targetStock, cleanSku]
+    );
+
+    await client.query('COMMIT');
+
+    const availableStock = targetStock - reservedStock;
+
+    // Operational audit trail
+    await logAuditEvent({
+      actorId,
+      actorRole,
+      ipAddress,
+      action: 'INVENTORY_ADJUSTED',
+      entity: 'Product',
+      entityId: cleanSku,
+      metadata: {
+        sku: cleanSku,
+        previousStock: currentStock,
+        newStock: targetStock,
+        delta: targetStock - currentStock,
+        reservedStock,
+        availableStock,
+        reason: reason.trim()
+      }
+    });
+
+    return {
+      success: true,
+      sku: cleanSku,
+      name: prodRes.rows[0].name,
+      previousStock: currentStock,
+      newStock: targetStock,
+      delta: targetStock - currentStock,
+      reservedStock,
+      availableStock,
+      reason: reason.trim()
+    };
+  } catch (err) {
+    await client.query('ROLLBACK').catch(() => {});
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
 module.exports = {
   getInventory,
   reserveStock,
   releaseStock,
-  allocateStock
+  allocateStock,
+  adjustStock
 };

@@ -116,6 +116,14 @@ async function createFulfillment({
     throw err;
   }
 
+  // 2b. INACTIVE ORDER GATE: Cancelled or expired orders cannot enter fulfillment
+  if (order.status === 'CANCELLED' || order.status === 'EXPIRED') {
+    const err = new Error(`Cannot initiate fulfillment for a ${order.status.toLowerCase()} order.`);
+    err.statusCode = 400;
+    err.code = 'INACTIVE_ORDER_FULFILLMENT_BLOCKED';
+    throw err;
+  }
+
   // 3. PAYMENT GATE: Unpaid orders CANNOT enter fulfillment
   const isPaid = (order.payment_status === 'SUCCESS' || order.status === 'PAID');
   if (!isPaid) {
@@ -234,6 +242,16 @@ async function transitionFulfillment({
     const err = new Error(`Illegal fulfillment state transition from '${fulfillment.status}' to '${targetState}'.`);
     err.statusCode = 400;
     err.code = 'ILLEGAL_FULFILLMENT_TRANSITION';
+    throw err;
+  }
+
+  // 3b. Verify underlying order is active (unless transitioning to CANCELLED)
+  const orderRes = await query(`SELECT * FROM orders WHERE id = $1`, [fulfillment.order_id]);
+  const order = orderRes.rows[0];
+  if (order && (order.status === 'CANCELLED' || order.status === 'EXPIRED') && targetState !== FULFILLMENT_STATES.CANCELLED) {
+    const err = new Error(`Cannot advance fulfillment for a ${order.status.toLowerCase()} order.`);
+    err.statusCode = 400;
+    err.code = 'INACTIVE_ORDER_FULFILLMENT_BLOCKED';
     throw err;
   }
 

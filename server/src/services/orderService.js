@@ -8,7 +8,7 @@ const { getQuoteById, generateCheckoutQuote } = require('./checkoutService');
 const { clearCart } = require('./cartService');
 const { logAuditEvent } = require('./auditService');
 const { checkIdempotency, saveIdempotency } = require('./idempotencyService');
-const { reserveStock, releaseStock } = require('./inventoryService');
+const { reserveStock, releaseStock, allocateStock } = require('./inventoryService');
 
 const ORDER_STATES = {
   CREATED: 'CREATED',
@@ -392,6 +392,16 @@ async function listCustomerOrders(userId, { limit = 20, offset = 0 } = {}) {
  * List all orders across the platform (Admin & Operations oversight)
  */
 async function listAllOrders({ limit = 20, offset = 0, status = null, paymentStatus = null, search = null } = {}) {
+  const cleanLimit = Math.min(Math.max(1, parseInt(limit || 20, 10)), 100);
+  const cleanOffset = Math.max(0, parseInt(offset || 0, 10));
+
+  if (status && !Object.values(ORDER_STATES).includes(status)) {
+    const err = new Error(`Invalid status filter: '${status}'. Allowed values: ${Object.values(ORDER_STATES).join(', ')}`);
+    err.statusCode = 400;
+    err.code = 'INVALID_ORDER_STATUS_FILTER';
+    throw err;
+  }
+
   const whereClauses = [];
   const params = [];
 
@@ -405,8 +415,8 @@ async function listAllOrders({ limit = 20, offset = 0, status = null, paymentSta
     whereClauses.push(`o.payment_status = $${params.length}`);
   }
 
-  if (search) {
-    params.push(`%${search}%`);
+  if (search && search.trim()) {
+    params.push(`%${search.trim()}%`);
     whereClauses.push(`(o.order_number ILIKE $${params.length} OR u.email ILIKE $${params.length} OR u.phone ILIKE $${params.length})`);
   }
 
@@ -418,9 +428,9 @@ async function listAllOrders({ limit = 20, offset = 0, status = null, paymentSta
   );
   const total = parseInt(countRes.rows[0]?.total || 0, 10);
 
-  params.push(limit);
+  params.push(cleanLimit);
   const limitIndex = params.length;
-  params.push(offset);
+  params.push(cleanOffset);
   const offsetIndex = params.length;
 
   const ordersRes = await query(
@@ -443,8 +453,8 @@ async function listAllOrders({ limit = 20, offset = 0, status = null, paymentSta
   return {
     orders: ordersRes.rows,
     total,
-    limit,
-    offset
+    limit: cleanLimit,
+    offset: cleanOffset
   };
 }
 
@@ -550,12 +560,19 @@ async function cancelOrder(orderId, userId, userRole, reason = null, ipAddress =
 /**
  * Privileged order status update with state machine validation and row-level locking
  */
-async function updateOrderStatus(orderId, newStatus, userRole, stageInfo = null) {
+async function updateOrderStatus(orderId, newStatus, userRole, stageInfo = null, actorId = null, ipAddress = null, reason = null) {
   // Optometrists review prescriptions; only ADMIN and STORE_STAFF update operational order status
   if (userRole !== 'ADMIN' && userRole !== 'STORE_STAFF') {
     const err = new Error('Privilege required to update operational order status.');
     err.statusCode = 403;
     err.code = 'UNAUTHORIZED_ORDER_UPDATE';
+    throw err;
+  }
+
+  if (!Object.values(ORDER_STATES).includes(newStatus)) {
+    const err = new Error(`Invalid target order status: '${newStatus}'.`);
+    err.statusCode = 400;
+    err.code = 'INVALID_ORDER_STATUS';
     throw err;
   }
 
@@ -580,6 +597,15 @@ async function updateOrderStatus(orderId, newStatus, userRole, stageInfo = null)
 
     const order = orderRes.rows[0];
 
+    // Terminal state protection: Cannot transition OUT of COMPLETED, CANCELLED, or EXPIRED
+    if ([ORDER_STATES.COMPLETED, ORDER_STATES.CANCELLED, ORDER_STATES.EXPIRED].includes(order.status) && order.status !== newStatus) {
+      await client.query('ROLLBACK');
+      const err = new Error(`Cannot transition order from terminal state '${order.status}'.`);
+      err.statusCode = 400;
+      err.code = 'TERMINAL_STATE_IMMUTABLE';
+      throw err;
+    }
+
     // Legal state transition verification
     if (!isValidOrderTransition(order.status, newStatus)) {
       await client.query('ROLLBACK');
@@ -589,7 +615,26 @@ async function updateOrderStatus(orderId, newStatus, userRole, stageInfo = null)
       throw err;
     }
 
-    // Prerequisite: An order cannot move to COMPLETED if it was not PAID or PROCESSING
+    // Gating for PROCESSING:
+    if (newStatus === ORDER_STATES.PROCESSING) {
+      const isPaid = (order.payment_status === 'SUCCESS' || order.status === 'PAID');
+      if (!isPaid) {
+        await client.query('ROLLBACK');
+        const err = new Error('Cannot move unpaid order to PROCESSING. Payment must be confirmed.');
+        err.statusCode = 400;
+        err.code = 'UNPAID_ORDER_PROCESSING_BLOCKED';
+        throw err;
+      }
+      if (order.requires_prescription_review && order.prescription_status !== 'APPROVED') {
+        await client.query('ROLLBACK');
+        const err = new Error(`Optical order cannot move to PROCESSING without approved prescription. Current prescription status is '${order.prescription_status}'.`);
+        err.statusCode = 400;
+        err.code = 'OPTICAL_GATE_BLOCKED';
+        throw err;
+      }
+    }
+
+    // Gating for COMPLETED:
     if (newStatus === ORDER_STATES.COMPLETED) {
       const isPaid = (order.payment_status === 'SUCCESS' || order.status === 'PAID' || order.status === 'PROCESSING');
       if (!isPaid) {
@@ -597,6 +642,13 @@ async function updateOrderStatus(orderId, newStatus, userRole, stageInfo = null)
         const err = new Error('Cannot complete an unpaid order. Payment must be confirmed.');
         err.statusCode = 400;
         err.code = 'UNPAID_ORDER_COMPLETION_BLOCKED';
+        throw err;
+      }
+      if (order.requires_prescription_review && order.prescription_status !== 'APPROVED') {
+        await client.query('ROLLBACK');
+        const err = new Error(`Cannot complete optical order without approved prescription. Current prescription status is '${order.prescription_status}'.`);
+        err.statusCode = 400;
+        err.code = 'OPTICAL_GATE_BLOCKED';
         throw err;
       }
     }
@@ -608,10 +660,28 @@ async function updateOrderStatus(orderId, newStatus, userRole, stageInfo = null)
 
     // If cancelled via updateOrderStatus, release stock
     if (newStatus === ORDER_STATES.CANCELLED) {
-      await releaseStock({ orderId: order.id, actorRole: userRole });
+      await releaseStock({ orderId: order.id, actorId, actorRole: userRole, ipAddress });
+    } else if (newStatus === ORDER_STATES.COMPLETED) {
+      await allocateStock({ orderId: order.id, actorId, actorRole: userRole, ipAddress });
     }
 
     await client.query('COMMIT');
+
+    await logAuditEvent({
+      actorId,
+      actorRole: userRole,
+      ipAddress,
+      action: 'ORDER_STATUS_UPDATED',
+      entity: 'Order',
+      entityId: order.id,
+      metadata: {
+        previousStatus: order.status,
+        newStatus,
+        orderNumber: order.order_number,
+        reason
+      }
+    });
+
     return updatedRes.rows[0];
   } catch (err) {
     await client.query('ROLLBACK').catch(() => {});
