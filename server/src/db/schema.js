@@ -409,13 +409,14 @@ CREATE TABLE IF NOT EXISTS appointment_slots (
   timezone VARCHAR(32) NOT NULL DEFAULT 'Africa/Nairobi',
   is_available BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT uq_clinic_slot UNIQUE (clinic_id, start_time)
+  CONSTRAINT uq_clinic_slot UNIQUE (clinic_id, start_time),
+  CONSTRAINT chk_slot_time_order CHECK (end_time > start_time)
 );
 
 CREATE INDEX IF NOT EXISTS idx_slots_clinic ON appointment_slots(clinic_id);
 CREATE INDEX IF NOT EXISTS idx_slots_available ON appointment_slots(is_available, start_time);
 
--- 24. Appointments table (Phase 6.4)
+-- 24. Appointments table (Phase 6.4 / Phase 9 Hardening)
 CREATE TABLE IF NOT EXISTS appointments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   booking_reference VARCHAR(64) UNIQUE NOT NULL,
@@ -436,15 +437,23 @@ CREATE TABLE IF NOT EXISTS appointments (
   notes TEXT,
   cancellation_reason TEXT,
   cancelled_at TIMESTAMPTZ,
+  confirmed_at TIMESTAMPTZ,
+  completed_at TIMESTAMPTZ,
+  reminder_sent_at TIMESTAMPTZ,
+  idempotency_key VARCHAR(128),
   rescheduled_from_id UUID REFERENCES appointments(id) ON DELETE SET NULL,
   created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+  updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT chk_appointment_status CHECK (status IN ('BOOKED', 'CONFIRMED', 'COMPLETED', 'CANCELLED', 'NO_SHOW', 'RESCHEDULED', 'EXPIRED')),
+  CONSTRAINT chk_appointment_time_order CHECK (end_time > start_time)
 );
 
 CREATE INDEX IF NOT EXISTS idx_appointments_user ON appointments(user_id);
 CREATE INDEX IF NOT EXISTS idx_appointments_clinic ON appointments(clinic_id);
 CREATE INDEX IF NOT EXISTS idx_appointments_status ON appointments(status);
 CREATE INDEX IF NOT EXISTS idx_appointments_ref ON appointments(booking_reference);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_active_appointment_slot ON appointments(slot_id) WHERE slot_id IS NOT NULL AND status IN ('BOOKED', 'CONFIRMED');
+CREATE UNIQUE INDEX IF NOT EXISTS uq_appointments_idemp ON appointments(idempotency_key) WHERE idempotency_key IS NOT NULL;
 
 -- 23. Stored Documents table (Phase 6.6 Secure Storage Abstraction)
 CREATE TABLE IF NOT EXISTS stored_documents (
@@ -558,6 +567,28 @@ async function runMigrations() {
           ALTER TABLE notification_preferences ADD CONSTRAINT chk_pref_transactional_sms_true CHECK (transactional_sms = TRUE);
         END IF;
       END $$;
+
+      -- Phase 9 Appointments & Scheduling Hardening
+      ALTER TABLE appointments ADD COLUMN IF NOT EXISTS confirmed_at TIMESTAMPTZ;
+      ALTER TABLE appointments ADD COLUMN IF NOT EXISTS completed_at TIMESTAMPTZ;
+      ALTER TABLE appointments ADD COLUMN IF NOT EXISTS reminder_sent_at TIMESTAMPTZ;
+      ALTER TABLE appointments ADD COLUMN IF NOT EXISTS idempotency_key VARCHAR(128);
+
+      DO $$
+      BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'chk_appointment_status') THEN
+          ALTER TABLE appointments ADD CONSTRAINT chk_appointment_status CHECK (status IN ('BOOKED', 'CONFIRMED', 'COMPLETED', 'CANCELLED', 'NO_SHOW', 'RESCHEDULED', 'EXPIRED'));
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'chk_appointment_time_order') THEN
+          ALTER TABLE appointments ADD CONSTRAINT chk_appointment_time_order CHECK (end_time > start_time);
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'chk_slot_time_order') THEN
+          ALTER TABLE appointment_slots ADD CONSTRAINT chk_slot_time_order CHECK (end_time > start_time);
+        END IF;
+      END $$;
+
+      CREATE UNIQUE INDEX IF NOT EXISTS uq_active_appointment_slot ON appointments(slot_id) WHERE slot_id IS NOT NULL AND status IN ('BOOKED', 'CONFIRMED');
+      CREATE UNIQUE INDEX IF NOT EXISTS uq_appointments_idemp ON appointments(idempotency_key) WHERE idempotency_key IS NOT NULL;
 
       CREATE INDEX IF NOT EXISTS idx_audit_action_date ON audit_logs(action, created_at DESC);
     `);
