@@ -566,6 +566,25 @@ async function runMigrations() {
         IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'chk_pref_transactional_sms_true') THEN
           ALTER TABLE notification_preferences ADD CONSTRAINT chk_pref_transactional_sms_true CHECK (transactional_sms = TRUE);
         END IF;
+        -- Phase 10 Catalog, Optical & Commerce Constraints
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'chk_cart_items_qty') THEN
+          ALTER TABLE cart_items ADD CONSTRAINT chk_cart_items_qty CHECK (qty > 0);
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'chk_order_items_qty') THEN
+          ALTER TABLE order_items ADD CONSTRAINT chk_order_items_qty CHECK (qty > 0);
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'chk_order_items_frame_price') THEN
+          ALTER TABLE order_items ADD CONSTRAINT chk_order_items_frame_price CHECK (frame_price >= 0);
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'chk_order_items_lens_price') THEN
+          ALTER TABLE order_items ADD CONSTRAINT chk_order_items_lens_price CHECK (lens_price >= 0);
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'chk_order_items_total_price') THEN
+          ALTER TABLE order_items ADD CONSTRAINT chk_order_items_total_price CHECK (total_price >= 0);
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'chk_products_price_nonneg') THEN
+          ALTER TABLE products ADD CONSTRAINT chk_products_price_nonneg CHECK (base_price >= 0);
+        END IF;
       END $$;
 
       -- Phase 9 Appointments & Scheduling Hardening

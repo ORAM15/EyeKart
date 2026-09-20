@@ -4,8 +4,9 @@
  * Validates SKU, variant, quantity, and recomputes all totals server-side.
  */
 const { query } = require('../db/pool');
-const { getProductBySku } = require('./catalogService');
+const { getProductBySku, getProductRecord } = require('./catalogService');
 const { calculateAuthoritativeQuote } = require('./pricingService');
+const { validateVariant, validateLensConfig } = require('./opticalConfigService');
 const { logAuditEvent } = require('./auditService');
 
 /**
@@ -152,13 +153,24 @@ async function addItemToCart(cartId, { sku, variant, qty = 1, lensConfig = null 
   }
 
   const cleanSku = sku.trim().toUpperCase();
-  const product = await getProductBySku(cleanSku);
-  if (!product) {
+
+  // Check product existence regardless of active status
+  const rawProduct = await getProductRecord(cleanSku, { includeInactive: true });
+  if (!rawProduct) {
     const err = new Error(`Product with SKU '${cleanSku}' not found in canonical catalog.`);
-    err.statusCode = 400;
+    err.statusCode = 404;
     err.code = 'PRODUCT_NOT_FOUND';
     throw err;
   }
+
+  if (!rawProduct.is_active) {
+    const err = new Error(`Product '${cleanSku}' is inactive and cannot be added to cart.`);
+    err.statusCode = 400;
+    err.code = 'PRODUCT_INACTIVE';
+    throw err;
+  }
+
+  const product = await getProductBySku(cleanSku);
 
   const parsedQty = parseInt(qty, 10);
   if (isNaN(parsedQty) || parsedQty < 1 || parsedQty > 100) {
@@ -168,7 +180,14 @@ async function addItemToCart(cartId, { sku, variant, qty = 1, lensConfig = null 
     throw err;
   }
 
-  const cleanVariant = (variant && typeof variant === 'string') ? variant.trim() : 'Standard';
+  // Validate variant against product variants
+  const validatedVariant = validateVariant(product, variant);
+  const cleanVariant = validatedVariant.name || 'Standard';
+
+  // Validate lens configuration if provided
+  if (lensConfig) {
+    validateLensConfig(product, lensConfig);
+  }
 
   // Check if identical item (sku + variant + same lensConfig) exists
   const existingItems = await query(

@@ -89,7 +89,7 @@ async function reserveStock({ orderId, items, client: callerClient = null, actor
 
       // Lock row to prevent race conditions & overselling
       const prodRes = await client.query(
-        `SELECT sku, name, stock, COALESCE(reserved_stock, 0) AS reserved_stock 
+        `SELECT sku, name, stock, is_active, COALESCE(reserved_stock, 0) AS reserved_stock
          FROM products WHERE sku = $1 FOR UPDATE`,
         [sku]
       );
@@ -102,6 +102,13 @@ async function reserveStock({ orderId, items, client: callerClient = null, actor
       }
 
       const prod = prodRes.rows[0];
+      if (!prod.is_active) {
+        const err = new Error(`Product '${sku}' is inactive and cannot be reserved.`);
+        err.statusCode = 400;
+        err.code = 'PRODUCT_INACTIVE';
+        throw err;
+      }
+
       const stock = parseInt(prod.stock, 10);
       const reserved = parseInt(prod.reserved_stock, 10);
       const available = stock - reserved;

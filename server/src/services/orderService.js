@@ -9,6 +9,7 @@ const { clearCart } = require('./cartService');
 const { logAuditEvent } = require('./auditService');
 const { checkIdempotency, saveIdempotency } = require('./idempotencyService');
 const { reserveStock, releaseStock, allocateStock } = require('./inventoryService');
+const { validateRefractivePowers } = require('./opticalConfigService');
 const notificationService = require('./notification/notificationService');
 
 const ORDER_STATES = {
@@ -147,7 +148,12 @@ async function createOrderFromQuote({
 
   let linkedPrescription = null;
   if (targetPrescriptionId) {
-    const rxCheck = await query(`SELECT * FROM prescriptions WHERE id::text = $1`, [targetPrescriptionId]);
+    const rxCheck = await query(`
+      SELECT p.*, r.od_sph, r.od_cyl, r.od_axis, r.od_add, r.os_sph, r.os_cyl, r.os_axis, r.os_add, r.pd
+      FROM prescriptions p
+      LEFT JOIN prescription_revisions r ON p.id = r.prescription_id AND p.current_revision = r.revision_number
+      WHERE p.id::text = $1
+    `, [targetPrescriptionId]);
     if (rxCheck.rows.length === 0) {
       const err = new Error('Referenced prescription not found.');
       err.statusCode = 404;
@@ -161,12 +167,51 @@ async function createOrderFromQuote({
       err.code = 'FORBIDDEN_PRESCRIPTION_ACCESS';
       throw err;
     }
+    if (linkedPrescription.status === 'REJECTED') {
+      const err = new Error('Cannot checkout with a rejected prescription. Please submit a valid prescription or book an eye test.');
+      err.statusCode = 400;
+      err.code = 'PRESCRIPTION_REJECTED';
+      throw err;
+    }
+    if (linkedPrescription.status === 'ARCHIVED') {
+      const err = new Error('Cannot checkout with an archived prescription.');
+      err.statusCode = 400;
+      err.code = 'PRESCRIPTION_ARCHIVED';
+      throw err;
+    }
+
+    // Validate prescription refractive limits against all items in the quote
+    for (const it of quote.items) {
+      const prodRes = await query(`SELECT prescription_compatibility FROM products WHERE sku = $1`, [it.sku]);
+      if (prodRes.rows.length > 0 && prodRes.rows[0].prescription_compatibility) {
+        validateRefractivePowers(prodRes.rows[0].prescription_compatibility, linkedPrescription);
+      }
+    }
+  }
+
+  // Build authoritative immutable clinical snapshot if prescription is linked
+  let finalPrescriptionSnapshot = prescriptionSnapshot;
+  if (!finalPrescriptionSnapshot && linkedPrescription) {
+    finalPrescriptionSnapshot = {
+      prescriptionId: linkedPrescription.id,
+      revision: linkedPrescription.current_revision || 1,
+      status: linkedPrescription.status,
+      od_sph: linkedPrescription.od_sph,
+      od_cyl: linkedPrescription.od_cyl,
+      od_axis: linkedPrescription.od_axis,
+      od_add: linkedPrescription.od_add,
+      os_sph: linkedPrescription.os_sph,
+      os_cyl: linkedPrescription.os_cyl,
+      os_axis: linkedPrescription.os_axis,
+      os_add: linkedPrescription.os_add,
+      pd: linkedPrescription.pd
+    };
   }
 
   // 4. Determine Clinical Review Requirement
   const requiresPrescriptionReview = Boolean(
     linkedPrescription ||
-    (prescriptionSnapshot !== null && prescriptionSnapshot !== undefined) ||
+    (finalPrescriptionSnapshot !== null && finalPrescriptionSnapshot !== undefined) ||
     quote.items.some(it => {
       const cfg = it.lensConfig || it.lens_config;
       if (!cfg) return false;
@@ -227,7 +272,7 @@ async function createOrderFromQuote({
         JSON.stringify(customerSnapshot),
         requiresPrescriptionReview,
         initialPrescriptionStatus,
-        prescriptionSnapshot ? JSON.stringify(prescriptionSnapshot) : null,
+        finalPrescriptionSnapshot ? JSON.stringify(finalPrescriptionSnapshot) : null,
         JSON.stringify(initialTracking)
       ]
     );
@@ -237,19 +282,35 @@ async function createOrderFromQuote({
     const savedItems = [];
     for (const it of quote.items) {
       const prodRes = await client.query(`SELECT * FROM products WHERE sku = $1`, [it.sku]);
+      if (prodRes.rows.length === 0) {
+        const err = new Error(`Product SKU '${it.sku}' not found.`);
+        err.statusCode = 404;
+        err.code = 'PRODUCT_NOT_FOUND';
+        throw err;
+      }
       const product = prodRes.rows[0];
-      const productSnapshot = product ? {
+      if (!product.is_active) {
+        const err = new Error(`Product '${it.sku}' is inactive and cannot be ordered.`);
+        err.statusCode = 400;
+        err.code = 'PRODUCT_INACTIVE';
+        throw err;
+      }
+
+      const productSnapshot = {
         sku: product.sku,
         name: product.name,
         brand: product.brand,
         category_id: product.category_id,
+        collection_id: product.collection_id,
         shape: product.shape,
         material: product.material,
         dimensions: product.dimensions,
+        weight: product.weight,
         base_price: Number(product.base_price),
         compare_at_price: product.compare_at_price ? Number(product.compare_at_price) : null,
-        gallery: product.gallery
-      } : (it.productSnapshot || {});
+        gallery: product.gallery,
+        prescription_compatibility: product.prescription_compatibility
+      };
 
       const itemRes = await client.query(
         `INSERT INTO order_items (

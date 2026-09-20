@@ -14,7 +14,7 @@ const { requireAuth, requireRole } = require('../middleware/auth');
 async function orderRoutes(fastify, options) {
   // 1. POST /api/orders - Create Order from Authoritative Quote
   fastify.post('/api/orders', { preHandler: requireAuth }, async (req, reply) => {
-    const idempotencyKey = req.headers['idempotency-key'] || req.body?.idempotencyKey || null;
+    const idempotencyKey = req.headers['idempotency-key'] || req.headers['x-idempotency-key'] || req.body?.idempotencyKey || null;
     const { 
       quoteId, 
       cartId, 

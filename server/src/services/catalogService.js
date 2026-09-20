@@ -182,6 +182,14 @@ async function updateProduct(sku, updates, { actorId, actorRole, ipAddress } = {
 
   const cleanSku = sku.trim().toUpperCase();
 
+  // Enforce SKU immutability once created
+  if (updates.sku !== undefined && updates.sku.trim().toUpperCase() !== cleanSku) {
+    const err = new Error(`Product SKU is immutable once created. Changing '${cleanSku}' to '${updates.sku}' is prohibited.`);
+    err.statusCode = 400;
+    err.code = 'SKU_IMMUTABLE';
+    throw err;
+  }
+
   // Check product exists
   const checkRes = await query(`SELECT * FROM products WHERE sku = $1`, [cleanSku]);
   if (checkRes.rows.length === 0) {
@@ -288,9 +296,23 @@ async function updateProduct(sku, updates, { actorId, actorRole, ipAddress } = {
   return updatedProduct;
 }
 
+/**
+ * Fetch raw product DB record with optional inactive filter
+ */
+async function getProductRecord(sku, { includeInactive = false } = {}) {
+  if (!sku || typeof sku !== 'string') return null;
+  const cleanSku = sku.trim().toUpperCase();
+  const queryStr = includeInactive
+    ? `SELECT * FROM products WHERE sku = $1`
+    : `SELECT * FROM products WHERE sku = $1 AND is_active = TRUE`;
+  const res = await query(queryStr, [cleanSku]);
+  return res.rows[0] || null;
+}
+
 module.exports = {
   getAllProducts,
   getProductBySku,
+  getProductRecord,
   getAllCategories,
   getAllCollections,
   getAdminProducts,

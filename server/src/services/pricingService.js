@@ -4,67 +4,74 @@
  * Strictly ignores and rejects client-submitted totals.
  */
 const { getProductBySku } = require('./catalogService');
+const {
+  validateVariant,
+  validateLensConfig,
+  LENS_TYPES,
+  LENS_INDICES,
+  COATINGS
+} = require('./opticalConfigService');
 
-const LENS_INDEX_PRICING = {
-  '1.50': 0,
-  '1.56': 2400,
-  '1.60': 4800,
-  '1.67': 8200,
-  '1.74': 14500
-};
+const LENS_INDEX_PRICING = Object.fromEntries(
+  Object.entries(LENS_INDICES).map(([k, v]) => [k, v.price])
+);
 
-const LENS_TYPE_PRICING = {
-  'Single Vision': 0,
-  'Digital Single Vision': 0,
-  'Blue Defense Plano': 1800,
-  'Office Near-Variable': 6500,
-  'Digital Free-Form Progressive': 12500
-};
+const LENS_TYPE_PRICING = Object.fromEntries(
+  Object.entries(LENS_TYPES).map(([k, v]) => [k, v.price])
+);
 
-const COATING_PRICING = {
-  'BlueShield 420nm': 1800,
-  'BlueShield UV420 High-Energy Filter': 1800,
-  'Anti-Glare AR': 1500,
-  'Crizal-Grade Hydrophobic Anti-Glare': 1500,
-  'Diamond Hard-Coat Scratch Armour': 1400
-};
+const COATING_PRICING = Object.fromEntries(
+  Object.entries(COATINGS).map(([k, v]) => [k, v.price])
+);
 
 /**
  * Calculate authoritative quote for a list of cart/order items
  */
 async function calculateAuthoritativeQuote(items = []) {
   if (!Array.isArray(items) || items.length === 0) {
-    throw new Error('Pricing calculation requires a non-empty array of items');
+    const err = new Error('Pricing calculation requires a non-empty array of items');
+    err.statusCode = 400;
+    err.code = 'EMPTY_ITEMS_ARRAY';
+    throw err;
   }
 
   let subtotal = 0;
   let computedItems = [];
 
   for (const item of items) {
-    if (!item.sku) throw new Error('Each item must specify a valid SKU');
+    if (!item.sku) {
+      const err = new Error('Each item must specify a valid SKU');
+      err.statusCode = 400;
+      err.code = 'INVALID_SKU';
+      throw err;
+    }
+
     const product = await getProductBySku(item.sku);
-    if (!product) throw new Error(`Product with SKU '${item.sku}' not found in canonical catalog`);
+    if (!product) {
+      const err = new Error(`Product with SKU '${item.sku}' not found in canonical catalog`);
+      err.statusCode = 400;
+      err.code = 'PRODUCT_NOT_FOUND';
+      throw err;
+    }
 
     const qty = parseInt(item.qty || 1, 10);
     if (isNaN(qty) || qty < 1 || qty > 100) {
-      throw new Error(`Invalid quantity for SKU '${item.sku}'`);
+      const err = new Error(`Invalid quantity for SKU '${item.sku}'`);
+      err.statusCode = 400;
+      err.code = 'INVALID_QUANTITY';
+      throw err;
     }
 
-    // Authoritative frame price
-    let framePrice = product.price;
+    // Validate variant and apply price delta
+    const validatedVariant = validateVariant(product, item.variant);
+    const framePrice = product.price + validatedVariant.priceDelta;
 
-    // Check variant delta if variant specified
-    if (item.variant) {
-      const matchedVariant = product.variants.find(v => v.name.toLowerCase() === String(item.variant).toLowerCase());
-      if (matchedVariant) {
-        framePrice += parseFloat(matchedVariant.priceDelta || 0);
-      }
-    }
-
-    // Authoritative lens price calculation
+    // Validate lens config if provided
     let lensPrice = 0;
     const cfg = item.lensConfig;
     if (cfg && typeof cfg === 'object') {
+      validateLensConfig(product, cfg);
+
       const indexFee = LENS_INDEX_PRICING[cfg.index] !== undefined ? LENS_INDEX_PRICING[cfg.index] : 0;
       const typeFee = LENS_TYPE_PRICING[cfg.lensType] !== undefined ? LENS_TYPE_PRICING[cfg.lensType] : 0;
       let coatingsFee = 0;
@@ -84,7 +91,7 @@ async function calculateAuthoritativeQuote(items = []) {
     computedItems.push({
       sku: product.sku,
       name: product.name,
-      variant: item.variant || 'Standard',
+      variant: validatedVariant.name || item.variant || 'Standard',
       qty,
       lensConfig: item.lensConfig || null,
       authoritativeFramePrice: framePrice,
@@ -109,7 +116,12 @@ async function calculateAuthoritativeQuote(items = []) {
     total,
     currency: 'KES',
     itemCount: computedItems.length,
-    items: computedItems
+    items: computedItems,
+    pricingSource: {
+      frame: 'VERIFIED_CANONICAL_CATALOG',
+      opticalConfiguration: 'CONFIGURATION_REQUIRED_ENGINEERING_DEFAULT',
+      taxEngine: 'STATUTORY_KENYA_VAT_16_INCLUSIVE'
+    }
   };
 }
 

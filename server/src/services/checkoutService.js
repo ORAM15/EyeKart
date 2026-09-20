@@ -74,7 +74,7 @@ async function generateCheckoutQuote({ userId = null, cartId = null, items = [],
   // Pre-validate inventory availability for all items
   for (const it of quoteItems) {
     const prodRes = await query(
-      `SELECT sku, name, stock, COALESCE(reserved_stock, 0) as reserved_stock 
+      `SELECT sku, name, stock, is_active, COALESCE(reserved_stock, 0) as reserved_stock
        FROM products WHERE sku = $1`,
       [it.sku]
     );
@@ -86,6 +86,13 @@ async function generateCheckoutQuote({ userId = null, cartId = null, items = [],
     }
 
     const prod = prodRes.rows[0];
+    if (!prod.is_active) {
+      const err = new Error(`Product '${it.sku}' is inactive and cannot be purchased.`);
+      err.statusCode = 400;
+      err.code = 'PRODUCT_INACTIVE';
+      throw err;
+    }
+
     const available = prod.stock - prod.reserved_stock;
     if (available < it.qty) {
       const err = new Error(`Insufficient inventory for SKU '${it.sku}'. Available: ${Math.max(0, available)}, Requested: ${it.qty}`);
