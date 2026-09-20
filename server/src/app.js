@@ -29,15 +29,46 @@ const storageRoutes = require('./routes/storage');
 const notificationRoutes = require('./routes/notifications');
 
 function buildApp(opts = {}) {
-  const defaultLogger = config.isProd ? {
-    level: 'info',
-    redact: ['req.headers.authorization', 'req.headers.cookie', '*.password', '*.secret', '*.token']
-  } : (config.env === 'development');
+  const redactPaths = [
+    'req.headers.authorization',
+    'req.headers.cookie',
+    'req.headers["x-api-key"]',
+    '*.password',
+    '*.password_hash',
+    '*.passwordHash',
+    '*.salt',
+    '*.secret',
+    '*.token',
+    '*.rawToken',
+    '*.apiKey',
+    '*.api_key',
+    '*.cvv',
+    '*.creditCard',
+    '*.credit_card',
+    '*.mpesaPasskey',
+    '*.consumerSecret',
+    '*.securityCredential'
+  ];
+
+  const defaultLogger = {
+    level: config.isProd ? 'info' : (config.env === 'development' ? 'debug' : 'info'),
+    redact: {
+      paths: redactPaths,
+      censor: '[REDACTED]'
+    }
+  };
 
   const app = Fastify({
     logger: opts.logger !== undefined ? opts.logger : defaultLogger,
     trustProxy: config.server?.trustProxy ?? false,
     requestIdHeader: 'x-request-id',
+    genReqId: (req) => {
+      const incoming = req.headers['x-correlation-id'] || req.headers['x-request-id'];
+      if (incoming && typeof incoming === 'string' && incoming.trim() !== '') {
+        return incoming.trim();
+      }
+      return `req-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 8)}`;
+    },
     bodyLimit: 15728640, // 15MB request body limit for secure document uploads
     ...opts
   });
@@ -51,8 +82,27 @@ function buildApp(opts = {}) {
     reply.header('Permissions-Policy', 'camera=(self), microphone=(), geolocation=()');
     if (request.id) {
       reply.header('x-request-id', request.id);
+      reply.header('x-correlation-id', request.id);
     }
     return payload;
+  });
+
+  // 1b. Request Lifecycle Structured Visibility
+  app.addHook('onResponse', async (request, reply) => {
+    if (request.url.startsWith('/api/') || request.url === '/health' || request.url === '/ready') {
+      const durationMs = Math.round(reply.elapsedTime);
+      const actorId = request.user?.id || 'ANONYMOUS';
+      const actorRole = request.user?.role || 'ANONYMOUS';
+      request.log.info({
+        correlationId: request.id,
+        method: request.method,
+        url: request.url,
+        statusCode: reply.statusCode,
+        durationMs,
+        actorId,
+        actorRole
+      }, `[Request Lifecycle] ${request.method} ${request.url} -> ${reply.statusCode} (${durationMs}ms)`);
+    }
   });
 
   // 2. CORS Plugin with Strict Origin Validation

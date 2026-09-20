@@ -437,6 +437,7 @@ async function runPhase6Tests() {
   console.log('\n================================================================');
   console.log(`PHASE 6 AUTOMATED VERIFICATION PASSED: ${passedChecks}/${totalChecks} assertions`);
   console.log('================================================================\n');
+  process.exit(0);
 }
 
 runPhase6Tests().catch((err) => {

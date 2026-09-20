@@ -3,6 +3,7 @@
  * Enforces server-side identity and RBAC; client role claims are NEVER trusted.
  */
 const { resolveSession } = require('../services/authService');
+const { logAuditEvent } = require('../services/auditService');
 
 /**
  * Hook to extract session token from cookie or Authorization header
@@ -67,6 +68,22 @@ function requireRole(requiredRole) {
 
     const allowed = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
     if (!allowed.includes(req.user.role)) {
+      await logAuditEvent({
+        actorId: req.user.id,
+        actorRole: req.user.role,
+        ipAddress: req.ip,
+        userAgent: req.headers['user-agent'],
+        action: 'AUTHORIZATION_FAILURE',
+        entity: 'Endpoint',
+        entityId: req.url,
+        correlationId: req.id,
+        metadata: {
+          path: req.url,
+          method: req.method,
+          requiredRole: allowed,
+          userRole: req.user.role
+        }
+      });
       return reply.status(403).send({
         success: false,
         error: `Access forbidden. Required role: ${allowed.join(', ')}`,
@@ -90,6 +107,22 @@ function requireAnyRole(allowedRoles = []) {
     }
 
     if (!allowedRoles.includes(req.user.role)) {
+      await logAuditEvent({
+        actorId: req.user.id,
+        actorRole: req.user.role,
+        ipAddress: req.ip,
+        userAgent: req.headers['user-agent'],
+        action: 'AUTHORIZATION_FAILURE',
+        entity: 'Endpoint',
+        entityId: req.url,
+        correlationId: req.id,
+        metadata: {
+          path: req.url,
+          method: req.method,
+          permittedRoles: allowedRoles,
+          userRole: req.user.role
+        }
+      });
       return reply.status(403).send({
         success: false,
         error: `Access forbidden. Permitted roles: ${allowedRoles.join(', ')}`,

@@ -81,10 +81,41 @@ async function closePool() {
   }
 }
 
+async function withTransaction(callback) {
+  const p = getPool();
+  const client = await p.connect();
+  try {
+    await client.query('BEGIN');
+    const result = await callback(client);
+    await client.query('COMMIT');
+    return result;
+  } catch (err) {
+    try {
+      await client.query('ROLLBACK');
+    } catch (rbErr) {
+      console.error('[EyeKart DB Rollback Error]:', rbErr.message);
+    }
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
+function getPoolMetrics() {
+  const p = getPool();
+  return {
+    totalCount: p.totalCount,
+    idleCount: p.idleCount,
+    waitingCount: p.waitingCount
+  };
+}
+
 module.exports = {
   getPool,
   getClient,
   query,
   checkConnection,
-  closePool
+  closePool,
+  withTransaction,
+  getPoolMetrics
 };

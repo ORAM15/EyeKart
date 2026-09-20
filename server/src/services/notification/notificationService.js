@@ -446,6 +446,23 @@ class NotificationService {
         }
       });
 
+      if (!isRetryable && currentAttempt >= maxAttempts) {
+        await logAuditEvent({
+          actorId: userId,
+          actorRole: 'SYSTEM',
+          ipAddress,
+          action: 'NOTIFICATION_EXHAUSTED',
+          entity: 'Notification',
+          entityId: notification.id,
+          metadata: {
+            channel,
+            templateId,
+            failureCategory: failureCat,
+            totalAttempts: currentAttempt
+          }
+        });
+      }
+
       return {
         success: false,
         status: NOTIFICATION_STATES.FAILED,
@@ -501,13 +518,14 @@ class NotificationService {
             [row.outbox_id]
           );
         } else {
+          const isExhausted = (row.retry_count + 1) >= 3;
           await client.query(
             `UPDATE notification_outbox
              SET status = CASE WHEN $2::boolean THEN 'PENDING' ELSE 'FAILED' END,
                  retry_count = retry_count + 1,
                  last_error = $3
              WHERE id = $1`,
-            [row.outbox_id, dispatchRes.isRetryable, dispatchRes.failureCategory || 'DISPATCH_ERROR']
+            [row.outbox_id, dispatchRes.isRetryable && !isExhausted, dispatchRes.failureCategory || 'DISPATCH_ERROR']
           );
         }
         processed.push({ outboxId: row.outbox_id, success: dispatchRes.success });
@@ -521,6 +539,31 @@ class NotificationService {
     } finally {
       client.release();
     }
+  }
+
+  /**
+   * Query aggregate metrics across the notification outbox (Admin / Monitoring)
+   */
+  async getOutboxMetrics() {
+    const res = await query(`
+      SELECT
+        status,
+        COUNT(*) as count
+      FROM notification_outbox
+      GROUP BY status
+    `);
+    const metrics = {
+      PENDING: 0,
+      PROCESSING: 0,
+      COMPLETED: 0,
+      FAILED: 0,
+      total: 0
+    };
+    for (const r of res.rows) {
+      metrics[r.status] = parseInt(r.count, 10);
+      metrics.total += parseInt(r.count, 10);
+    }
+    return metrics;
   }
 
   // =========================================================================
@@ -618,6 +661,33 @@ class NotificationService {
         resourceId: appointment.id
       }).catch(err => console.warn('[Notification] AppointmentBooked SMS warning:', err.message));
     }
+  }
+
+  /**
+   * Query outbox metrics (counts by status, pending count, oldest pending timestamp)
+   */
+  async getOutboxMetrics() {
+    const statusRes = await query(`
+      SELECT status, COUNT(*) as count
+      FROM notification_outbox
+      GROUP BY status
+    `);
+    const counts = { PENDING: 0, PROCESSING: 0, COMPLETED: 0, FAILED: 0 };
+    for (const row of statusRes.rows) {
+      if (counts[row.status] !== undefined) {
+        counts[row.status] = parseInt(row.count, 10);
+      }
+    }
+    const oldestRes = await query(`
+      SELECT MIN(created_at) as oldest_pending
+      FROM notification_outbox
+      WHERE status = 'PENDING'
+    `);
+    return {
+      counts,
+      oldestPending: oldestRes.rows[0]?.oldest_pending || null,
+      total: Object.values(counts).reduce((acc, c) => acc + c, 0)
+    };
   }
 }
 

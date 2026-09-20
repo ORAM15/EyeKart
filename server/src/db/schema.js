@@ -117,12 +117,15 @@ CREATE TABLE IF NOT EXISTS audit_logs (
   action VARCHAR(64) NOT NULL,
   entity VARCHAR(64) NOT NULL,
   entity_id VARCHAR(128),
+  correlation_id VARCHAR(64),
   metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
   created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX IF NOT EXISTS idx_audit_action ON audit_logs(action);
 CREATE INDEX IF NOT EXISTS idx_audit_entity ON audit_logs(entity, entity_id);
+CREATE INDEX IF NOT EXISTS idx_audit_correlation_id ON audit_logs(correlation_id);
+CREATE INDEX IF NOT EXISTS idx_audit_entity_time ON audit_logs(entity, created_at DESC);
 
 -- 9. Carts table (Phase 6.2)
 CREATE TABLE IF NOT EXISTS carts (
@@ -610,6 +613,11 @@ async function runMigrations() {
       CREATE UNIQUE INDEX IF NOT EXISTS uq_appointments_idemp ON appointments(idempotency_key) WHERE idempotency_key IS NOT NULL;
 
       CREATE INDEX IF NOT EXISTS idx_audit_action_date ON audit_logs(action, created_at DESC);
+
+      -- Phase 11 Production Observability & Audit Hardening
+      ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS correlation_id VARCHAR(64);
+      CREATE INDEX IF NOT EXISTS idx_audit_correlation_id ON audit_logs(correlation_id);
+      CREATE INDEX IF NOT EXISTS idx_audit_entity_time ON audit_logs(entity, created_at DESC);
     `);
   } catch (err) {
     // If tables don't exist yet, SCHEMA_SQL will create them

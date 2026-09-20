@@ -910,6 +910,8 @@ async function runPhase8Verification() {
 
   if (failed > 0) {
     process.exit(1);
+  } else {
+    process.exit(0);
   }
 }
 

@@ -61,6 +61,7 @@ async function authRoutes(fastify, options) {
         ipAddress: req.ip,
         action: 'PRIVILEGE_ESCALATION_ATTEMPT',
         entity: 'User',
+        correlationId: req.id,
         metadata: { attemptedRole: role, email: email.trim().toLowerCase() }
       });
       return reply.status(400).send({
@@ -123,6 +124,7 @@ async function authRoutes(fastify, options) {
       action: 'USER_REGISTERED',
       entity: 'User',
       entityId: newUser.id,
+      correlationId: req.id,
       metadata: { email: cleanEmail }
     });
 
@@ -175,6 +177,7 @@ async function authRoutes(fastify, options) {
         userAgent: req.headers['user-agent'],
         action: 'LOGIN_FAILED',
         entity: 'User',
+        correlationId: req.id,
         metadata: { reason: 'User not found', email: cleanEmail }
       });
       return reply.status(401).send({
@@ -203,6 +206,7 @@ async function authRoutes(fastify, options) {
         action: 'LOGIN_FAILED',
         entity: 'User',
         entityId: user.id,
+        correlationId: req.id,
         metadata: { reason: 'Invalid password' }
       });
       return reply.status(401).send({
@@ -230,6 +234,7 @@ async function authRoutes(fastify, options) {
       action: 'LOGIN_SUCCESS',
       entity: 'User',
       entityId: user.id,
+      correlationId: req.id,
       metadata: { role: user.role }
     });
 
@@ -261,7 +266,8 @@ async function authRoutes(fastify, options) {
       userAgent: req.headers['user-agent'],
       action: 'LOGOUT',
       entity: 'User',
-      entityId: req.user.id
+      entityId: req.user.id,
+      correlationId: req.id
     });
 
     return reply.send({
@@ -286,9 +292,11 @@ async function authRoutes(fastify, options) {
       actorId: req.user.id,
       actorRole: req.user.role,
       ipAddress: req.ip,
+      userAgent: req.headers['user-agent'],
       action: 'USER_PROFILE_UPDATED',
       entity: 'User',
-      entityId: req.user.id
+      entityId: req.user.id,
+      correlationId: req.id
     });
 
     return reply.send({
@@ -301,21 +309,38 @@ async function authRoutes(fastify, options) {
   // 6. Change Password (Requires current password verification)
   fastify.post('/api/auth/change-password', { preHandler: requireAuth }, async (req, reply) => {
     const { currentPassword, newPassword } = req.body || {};
-    const result = await changeUserPassword(req.user.id, currentPassword, newPassword, req.ip);
+    try {
+      const result = await changeUserPassword(req.user.id, currentPassword, newPassword, req.ip);
 
-    await logAuditEvent({
-      actorId: req.user.id,
-      actorRole: req.user.role,
-      ipAddress: req.ip,
-      action: 'PASSWORD_CHANGED',
-      entity: 'User',
-      entityId: req.user.id
-    });
+      await logAuditEvent({
+        actorId: req.user.id,
+        actorRole: req.user.role,
+        ipAddress: req.ip,
+        userAgent: req.headers['user-agent'],
+        action: 'PASSWORD_CHANGED',
+        entity: 'User',
+        entityId: req.user.id,
+        correlationId: req.id
+      });
 
-    return reply.send({
-      success: true,
-      message: result.message
-    });
+      return reply.send({
+        success: true,
+        message: result.message
+      });
+    } catch (err) {
+      await logAuditEvent({
+        actorId: req.user.id,
+        actorRole: req.user.role,
+        ipAddress: req.ip,
+        userAgent: req.headers['user-agent'],
+        action: 'PASSWORD_CHANGE_FAILED',
+        entity: 'User',
+        entityId: req.user.id,
+        correlationId: req.id,
+        metadata: { reason: err.code || 'PASSWORD_CHANGE_ERROR' }
+      });
+      throw err;
+    }
   });
 }
 

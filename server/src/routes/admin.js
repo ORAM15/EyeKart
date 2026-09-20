@@ -4,10 +4,11 @@
  * Rejects non-admin roles and client-side role-claim tampering.
  */
 const { requireRole } = require('../middleware/auth');
-const { getRecentAuditLogs } = require('../services/auditService');
+const { getRecentAuditLogs, queryAuditLogs, getAuditLogStats } = require('../services/auditService');
 const { listAllOrders, getOrderById, updateOrderStatus, cancelOrder } = require('../services/orderService');
 const { getAdminProducts, updateProduct } = require('../services/catalogService');
 const { adjustStock } = require('../services/inventoryService');
+const notificationService = require('../services/notification/notificationService');
 const { query } = require('../db/pool');
 
 async function adminRoutes(fastify, options) {
@@ -15,16 +16,38 @@ async function adminRoutes(fastify, options) {
   // 1. AUDIT LOGGING & OVERSIGHT
   // ==========================================
   fastify.get('/api/admin/audit-logs', { preHandler: requireRole('ADMIN') }, async (req, reply) => {
+    const { action, entity, entityId, actorId, actorRole, correlationId, startDate, endDate } = req.query || {};
     const limit = Math.min(Math.max(1, parseInt(req.query.limit || '50', 10)), 100);
     const offset = Math.max(0, parseInt(req.query.offset || '0', 10));
 
-    const logs = await getRecentAuditLogs(limit, offset);
+    const result = await queryAuditLogs({
+      action,
+      entity,
+      entityId,
+      actorId,
+      actorRole,
+      correlationId,
+      startDate,
+      endDate,
+      limit,
+      offset
+    });
+
     return reply.send({
       success: true,
-      count: logs.length,
-      limit,
-      offset,
-      data: logs
+      count: result.rows.length,
+      total: result.total,
+      limit: result.limit,
+      offset: result.offset,
+      data: result.rows
+    });
+  });
+
+  fastify.get('/api/admin/audit-logs/stats', { preHandler: requireRole('ADMIN') }, async (req, reply) => {
+    const stats = await getAuditLogStats();
+    return reply.send({
+      success: true,
+      stats
     });
   });
 
@@ -214,6 +237,17 @@ async function adminRoutes(fastify, options) {
       total,
       limit,
       offset
+    });
+  });
+
+  // ==========================================
+  // 6. NOTIFICATION OUTBOX RELIABILITY MONITORING
+  // ==========================================
+  fastify.get('/api/admin/notifications/outbox', { preHandler: requireRole('ADMIN') }, async (req, reply) => {
+    const metrics = await notificationService.getOutboxMetrics();
+    return reply.send({
+      success: true,
+      outbox: metrics
     });
   });
 }
