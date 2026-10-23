@@ -40,6 +40,12 @@
         lastFpsUpdate: performance.now()
       };
 
+      // Head pose + tracking-loss state (Phase: 3D Universe upgrade)
+      this.framesWithoutFace = 0;
+      this.latestPoseMatrix = null;
+      this.pose = { yawRad: 0, pitchRad: 0, rollRad: 0, yawProxy: 0, source: 'none' };
+      this.trackingState = 'SEARCHING'; // 'SEARCHING' | 'TRACKING' | 'LOST'
+
       // Temporal Smoothing Matrix (Exponential Moving Average)
       this.smoothingAlpha = 0.35;
       this.smoothed = {
@@ -213,7 +219,9 @@
           runningMode: 'VIDEO',
           numFaces: 1,
           outputFaceBlendshapes: false,
-          outputFacialTransformationMatrixes: false
+          // Pose matrix ON (was: false). _updatePoseFromMatrix() consumes it for
+          // yaw/pitch-aware rendering; landmark proxies remain as fallback.
+          outputFacialTransformationMatrixes: true
         });
       } catch (gpuErr) {
         console.info('[EyeKart VTO] WebGL GPU delegate unavailable for MediaPipe, using CPU delegate.');
@@ -225,7 +233,7 @@
           runningMode: 'VIDEO',
           numFaces: 1,
           outputFaceBlendshapes: false,
-          outputFacialTransformationMatrixes: false
+          outputFacialTransformationMatrixes: true
         });
       }
 
@@ -343,6 +351,40 @@
       this.animFrameId = requestAnimationFrame(loop);
     }
 
+    /**
+     * Extract yaw/pitch/roll from MediaPipe's 4x4 facial transformation
+     * matrix (column-major). Euler YXZ convention. This is a rendering
+     * aid for perspective-aware overlay, not a clinical measurement.
+     */
+    _updatePoseFromMatrix(m) {
+      if (!m || m.length < 16) return;
+      const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+      this.pose.yawRad = clamp(Math.atan2(m[2], m[10]), -1.2, 1.2);
+      this.pose.pitchRad = clamp(Math.asin(Math.max(-1, Math.min(1, -m[6]))), -1.0, 1.0);
+      this.pose.rollRad = clamp(Math.atan2(m[4], m[5]), -1.2, 1.2);
+      this.pose.source = 'matrix';
+    }
+
+    /**
+     * Map a normalized landmark from camera-sensor space into the displayed
+     * (object-cover) video space of the overlay canvas. The video element
+     * uses object-cover, so the sensor image is scaled to fill and cropped;
+     * mapping landmarks naively (x * canvasWidth) produced a systematic
+     * offset on any aspect mismatch — the bigger the mismatch, the bigger
+     * the error (measured per-device by the EyeKart Baseline Kit).
+     * Portrait-fallback mode keeps the legacy mapping (different element).
+     */
+    _coverMap(pt) {
+      if (!pt || !this.isCameraActive || !this.videoEl || !this.videoEl.videoWidth || !this.overlayCanvas) return pt;
+      const vw = this.videoEl.videoWidth, vh = this.videoEl.videoHeight;
+      const cw = this.overlayCanvas.width, ch = this.overlayCanvas.height;
+      if (!vw || !vh || !cw || !ch) return pt;
+      const scale = Math.max(cw / vw, ch / vh);
+      const offX = (vw * scale - cw) / 2;
+      const offY = (vh * scale - ch) / 2;
+      return { x: (pt.x * vw * scale - offX) / cw, y: (pt.y * vh * scale - offY) / ch, z: pt.z };
+    }
+
     _processFrame(timestamp) {
       this.telemetry.frameCount++;
       if (timestamp - this.telemetry.lastFpsUpdate >= 1000) {
@@ -371,8 +413,29 @@
             if (results && results.faceLandmarks && results.faceLandmarks.length > 0) {
               this.telemetry.faceCount = results.faceLandmarks.length;
               this.latestLandmarks = results.faceLandmarks[0];
+              this.framesWithoutFace = 0;
+              if (this.trackingState === 'LOST') {
+                this.classification = 'REAL VTO — TRACKING RECOVERED';
+              }
+              this.trackingState = 'TRACKING';
+              if (results.facialTransformationMatrixes && results.facialTransformationMatrixes.length > 0) {
+                this.latestPoseMatrix = results.facialTransformationMatrixes[0].data;
+                this._updatePoseFromMatrix(this.latestPoseMatrix);
+              }
             } else {
               this.telemetry.faceCount = 0;
+              this.framesWithoutFace++;
+              // Tracking-loss recovery: after ~10 missed inferences, clear the
+              // stale frame instead of freezing the last glasses on screen
+              // (previous behaviour), and reset smoothing so re-acquisition
+              // starts from the real face position, not the stale one.
+              if (this.framesWithoutFace >= 10 && this.latestLandmarks) {
+                this.latestLandmarks = null;
+                this.latestPoseMatrix = null;
+                this.smoothed.initialized = false;
+                this.trackingState = 'LOST';
+                this.classification = 'TRACKING LOST — FACE NOT VISIBLE';
+              }
             }
           } catch (inferErr) {
             // Silently handle transient video frame drops
@@ -410,9 +473,10 @@
         const l = this.latestLandmarks;
 
         // Optical landmarks: Right pupil (468 or midpoint 33, 133), Left pupil (473 or midpoint 362, 263)
-        const rightEye = l[468] || { x: (l[33].x + l[133].x) / 2, y: (l[33].y + l[133].y) / 2 };
-        const leftEye = l[473] || { x: (l[362].x + l[263].x) / 2, y: (l[362].y + l[263].y) / 2 };
-        const nasion = l[168] || { x: (rightEye.x + leftEye.x) / 2, y: (rightEye.y + leftEye.y) / 2 };
+        // Mapped through _coverMap so they live in displayed-video space.
+        const rightEye = this._coverMap(l[468] || { x: (l[33].x + l[133].x) / 2, y: (l[33].y + l[133].y) / 2 });
+        const leftEye = this._coverMap(l[473] || { x: (l[362].x + l[263].x) / 2, y: (l[362].y + l[263].y) / 2 });
+        const nasion = this._coverMap(l[168] || { x: (rightEye.x + leftEye.x) / 2, y: (rightEye.y + leftEye.y) / 2 });
 
         // Real Measured Geometry
         const eyeMidX = (rightEye.x + leftEye.x) / 2;
@@ -421,6 +485,17 @@
         const dy = (leftEye.y - rightEye.y) * height;
         const interEyeDist = Math.hypot(dx, dy);
         const rollRad = Math.atan2(dy, dx);
+
+        // Landmark yaw proxy (fallback when no pose matrix): nose-tip offset
+        // from the eye midpoint, normalised by inter-eye distance. A proxy
+        // for rendering compensation — not a measured head angle.
+        const noseTip = this._coverMap(l[1] || nasion);
+        const eyeSpan = Math.max(1e-6, leftEye.x - rightEye.x);
+        this.pose.yawProxy = Math.max(-0.6, Math.min(0.6, (noseTip.x - eyeMidX) / eyeSpan));
+        if (this.pose.source !== 'matrix') {
+          this.pose.yawRad = this.pose.yawProxy * 1.15;
+          this.pose.rollRad = rollRad;
+        }
 
         // Temporal Smoothing (Exponential Moving Average)
         if (!this.smoothed.initialized) {
@@ -479,7 +554,8 @@
       };
 
       // Calculate anchor point in pixel space
-      const renderX = (this.isMirrored ? (1 - s.midX) : s.midX) * width;
+      const yawRad = this.pose ? this.pose.yawRad : 0;
+      const renderX = ((this.isMirrored ? (1 - s.midX) : s.midX) * width) + Math.sin(yawRad) * width * 0.012;
       const renderY = (s.midY * height) + (this.verticalOffsetMm * 3);
 
       // Frame scale proportional to measured inter-pupillary distance
@@ -487,11 +563,22 @@
       const baseDistPx = 0.173 * width;
       const scaleFactor = Math.max(0.4, Math.min(2.5, s.interEyeDist / baseDistPx));
 
-      const frameWidth = 190 * scaleFactor;
-      const frameHeight = (frame.lensHeight / frame.lensWidth) * (frameWidth * 0.44);
+      // Per-SKU calibrated geometry (was: hardcoded 190px width / 26px bridge
+      // for every frame). The legacy 190px base was tuned on a ~136mm frame;
+      // other SKUs now scale by their catalog frameTotalWidth, and the bridge
+      // uses the catalog bridge as a proportion of total width. This is
+      // RELATIVE calibration between SKUs — absolute fit still depends on
+      // the wearer's real PD, which is not measured here.
+      const totalWmm = frame.frameTotalWidth || (2 * (frame.lensWidth || 50) + (frame.bridge || 19) + 12);
+      const widthRatio = totalWmm / 136;
+      // Perspective foreshortening when the head turns: a real frame's
+      // projected width narrows roughly with cos(yaw).
+      const yawNarrow = Math.max(0.55, Math.cos(yawRad || 0));
+      const frameWidth = 190 * scaleFactor * widthRatio * yawNarrow;
+      const frameHeight = (frame.lensHeight / frame.lensWidth) * (frameWidth / yawNarrow * 0.44);
       const halfWidth = frameWidth / 2;
       const halfHeight = frameHeight / 2;
-      const bridgeWidth = 26 * scaleFactor;
+      const bridgeWidth = (190 * scaleFactor * widthRatio) * ((frame.bridge || 19) / totalWmm);
       const lensRadius = (halfWidth - bridgeWidth / 2) / 2;
 
       // Colorway finish palette
@@ -578,12 +665,19 @@
         ctx.stroke();
       }
 
-      // 4. Temple Hinges
+      // 4. Temple Hinges + temple-arm stubs. In 2D these can only suggest
+      // the temple going back toward the ear: length is proportional to the
+      // frame width, and the far segment angles away on the side the head
+      // is turning toward (yaw-aware), instead of the old fixed 12px ticks.
+      const stub = frameWidth * 0.11;
+      const templeDrop = stub * 0.35 * (1 + Math.abs(yawRad || 0));
       ctx.beginPath();
       ctx.moveTo(-halfWidth, -4 * scaleFactor);
-      ctx.lineTo(-halfWidth - (12 * scaleFactor), -2 * scaleFactor);
+      ctx.lineTo(-halfWidth - stub, -2 * scaleFactor);
+      ctx.lineTo(-halfWidth - stub * 1.35, -2 * scaleFactor + templeDrop * ((yawRad || 0) < 0 ? 1.6 : 0.7));
       ctx.moveTo(halfWidth, -4 * scaleFactor);
-      ctx.lineTo(halfWidth + (12 * scaleFactor), -2 * scaleFactor);
+      ctx.lineTo(halfWidth + stub, -2 * scaleFactor);
+      ctx.lineTo(halfWidth + stub * 1.35, -2 * scaleFactor + templeDrop * ((yawRad || 0) > 0 ? 1.6 : 0.7));
       ctx.stroke();
 
       // 5. Nose Pads

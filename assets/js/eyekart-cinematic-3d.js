@@ -345,6 +345,22 @@
       this.renderer.setSize(width, height);
       this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 
+      // WebGL context-loss recovery (previously none): keep the static hero
+      // fallback path viable and rebuild on restore instead of going blank.
+      if (!this.canvas.__eyekartCtxBound) {
+        this.canvas.__eyekartCtxBound = true;
+        this.canvas.addEventListener('webglcontextlost', (e) => {
+          e.preventDefault();
+          if (this.animFrameId) cancelAnimationFrame(this.animFrameId);
+          console.warn('[EyeKart 3D] WebGL context lost; will rebuild on restore.');
+        });
+        this.canvas.addEventListener('webglcontextrestored', () => {
+          console.info('[EyeKart 3D] WebGL context restored; rebuilding hero scene.');
+          this.isInitialized = false;
+          this.init();
+        });
+      }
+
       // Resize observer
       if (typeof ResizeObserver !== 'undefined') {
         const ro = new ResizeObserver(() => {
@@ -392,11 +408,64 @@
 
     _initEyewear() {
       const THREE = window.THREE;
-      // Default to Obsidian Black (0x202224)
+      // Default to Obsidian Black (0x202224) — procedural model mounts
+      // immediately so the hero is never blank, then the real GLB for the
+      // hero SKU (EK-902) replaces it when it loads (see _tryLoadHeroGLB).
       this.frameModel = ProceduralEyewearModel.create(THREE, 0x202224);
       this.frameModel.scale.set(1.4, 1.4, 1.4);
       this.frameModel.position.set(0, 0, 0);
       this.scene.add(this.frameModel);
+      this._tryLoadHeroGLB();
+    }
+
+    /**
+     * Upgrade the hero from the procedural stand-in to the real parametric
+     * GLB (assets/models/ek902.glb, generated from catalog dimensions by
+     * tools/generate-glb-assets.mjs). Same honesty pattern as the studio:
+     * HEAD-check first, validate meshes/bbox, keep the procedural model on
+     * any failure, and update the status badge to say which is on screen.
+     * The GLB is normalised to the procedural model's footprint (width
+     * 2.6 units x 1.4 hero scale) so the existing scroll choreography,
+     * which drives frameModel rotation/position, works unchanged.
+     */
+    async _tryLoadHeroGLB() {
+      const THREE = window.THREE;
+      try {
+        if (typeof THREE.GLTFLoader === 'undefined') {
+          await new Promise((res) => {
+            const s = document.createElement('script');
+            s.src = '/assets/vendor/GLTFLoader.js';
+            s.onload = () => res(true);
+            s.onerror = () => res(false);
+            document.head.appendChild(s);
+          });
+        }
+        if (typeof THREE.GLTFLoader === 'undefined') return;
+        const url = '/assets/models/ek902.glb';
+        const head = await fetch(url, { method: 'HEAD' });
+        if (!head.ok) return;
+        new THREE.GLTFLoader().load(url, (gltf) => {
+          let meshCount = 0;
+          gltf.scene.traverse((c) => { if (c.isMesh && c.geometry) meshCount++; });
+          const box = new THREE.Box3().setFromObject(gltf.scene);
+          if (!meshCount || box.isEmpty()) return;
+          const size = box.getSize(new THREE.Vector3());
+          const center = box.getCenter(new THREE.Vector3());
+          gltf.scene.position.sub(center);
+          const group = new THREE.Group();
+          group.add(gltf.scene);
+          const k = 3.64 / Math.max(size.x, 0.001);
+          group.scale.set(k, k, k);
+          if (this.frameModel) this.scene.remove(this.frameModel);
+          group.position.set(0, 0, 0);
+          this.frameModel = group;
+          this.scene.add(group);
+          this.heroUsesRealGLB = true;
+          const badge = document.getElementById('hero-3d-status-badge');
+          if (badge) badge.innerHTML = '<span class="material-symbols-outlined text-[13px] text-cyan-accent animate-pulse">view_in_ar</span><span>Interactive 3D • EK-902 Kibera Titanium</span>';
+          console.info('[EyeKart 3D] Hero upgraded to real GLB model (EK-902).');
+        }, undefined, () => { /* keep procedural model silently */ });
+      } catch (e) { /* keep procedural model */ }
     }
 
     _initOpticalAtmosphere() {
