@@ -65,6 +65,7 @@
 
       // Resolve frame from catalog
       const frameData = global.CatalogService ? global.CatalogService.getBySku(activeSku) : null;
+      this._frameData = frameData; // kept for WebGL context-loss recovery reload
       if (frameData && global.EyeKartStore) {
         global.EyeKartStore.setSelectedSku(frameData.sku);
         const variantMatches = frameData.variants && frameData.variants.some(v => v.name === activeVariant);
@@ -190,6 +191,26 @@
       this.renderer.setSize(width, height);
       this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 
+      // WebGL context-loss recovery (previously: none — a lost context left
+      // a permanently blank studio). Prevent the default (which kills the
+      // canvas), then rebuild the scene and reload the frame on restore.
+      if (!canvas.__eyekartCtxBound) {
+        canvas.__eyekartCtxBound = true;
+        canvas.addEventListener('webglcontextlost', (e) => {
+          e.preventDefault();
+          this.classification = 'WEBGL CONTEXT LOST — RECOVERING';
+          console.warn('[EyeKart 3D Studio] WebGL context lost; waiting for restore.');
+        });
+        canvas.addEventListener('webglcontextrestored', () => {
+          console.info('[EyeKart 3D Studio] WebGL context restored; rebuilding scene.');
+          const stage = document.getElementById('viewerStage');
+          if (stage) {
+            this._initThreeScene(stage);
+            this._loadFrameModel(this._frameData);
+          }
+        });
+      }
+
       // 4. Lighting Rig (Presets: Studio, Golden, Clinical)
       this.ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
       this.scene.add(this.ambientLight);
@@ -289,6 +310,21 @@
             // Real 3D model validated successfully!
             if (this.currentModel) this.scene.remove(this.currentModel);
             this.currentModel = gltf.scene;
+
+            // Colourway support for real GLB frames: the studio's variant
+            // buttons call currentModel.updateFinishColor() (previously only
+            // procedural models had one). Recolours the GLB's FrameMaterial.
+            const frameMats = [];
+            gltf.scene.traverse((child) => {
+              if (child.isMesh && child.material && child.material.name === 'FrameMaterial') frameMats.push(child.material);
+            });
+            if (frameMats.length) {
+              this.currentModel.updateFinishColor = (hex) => {
+                frameMats.forEach((m) => { if (m.color) m.color.setHex(hex); });
+              };
+              const activeVariantName = global.EyeKartStore ? global.EyeKartStore.getActiveVariant() : null;
+              if (activeVariantName) this.currentModel.updateFinishColor(this._resolveVariantHex(activeVariantName));
+            }
 
             // Center model
             const center = box.getCenter(new window.THREE.Vector3());
