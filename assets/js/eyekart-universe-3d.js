@@ -87,6 +87,7 @@
       this.mouse = { x: 0, y: 0 }; this.mouseSm = { x: 0, y: 0 };
       this.raf = null; this.lastChapter = -1;
       this.reducedMotion = false;
+      this.finishIdx = -1; this.finishTimer = 0; // hero colourway cycling
     }
 
     async init() {
@@ -260,8 +261,42 @@
         finalGroup.scale.set(1.15, 1.15, 1.15);
         finalGroup.visible = false;
       }
-      if (finalGroup) { this.models.set(sku, finalGroup); this.journeyGroup.add(finalGroup); }
+      if (finalGroup) {
+        // collect the frame materials so finishes can be cycled live
+        const mats = new Set();
+        finalGroup.traverse(c => {
+          if (c.isMesh && c.material && /FrameMaterial/.test(c.material.name || '')) mats.add(c.material);
+        });
+        finalGroup.userData.frameMats = Array.from(mats);
+        this.models.set(sku, finalGroup); this.journeyGroup.add(finalGroup);
+      }
       return finalGroup;
+    }
+
+    // Hero colourway story (Lens2Cart pattern): while the shopper is in
+    // the hero chapter, the EK-902 cycles through its real catalog
+    // finishes ~every 2.8s, and the on-page finish label stays in sync.
+    _cycleHeroFinish(ms) {
+      const heroSku = CHAPTER_PLAN[0].sku;
+      if (this.currentSku !== heroSku) return;
+      if (this.keyframes.length > 1 && this.scrollY > this.keyframes[1].at) return;
+      if (ms - this.finishTimer < 2800) return;
+      this.finishTimer = ms;
+      const svc = global.CatalogService;
+      const prod = svc && svc.getBySku ? svc.getBySku(heroSku) : null;
+      const variants = (prod && prod.variants) || [];
+      if (!variants.length) return;
+      this.finishIdx = (this.finishIdx + 1) % variants.length;
+      const v = variants[this.finishIdx];
+      const group = this.models.get(heroSku);
+      const mats = (group && group.userData.frameMats) || [];
+      if (!mats.length || !v.colorHex) return;
+      const THREE = global.THREE;
+      const c = new THREE.Color(v.colorHex);
+      if (c.convertSRGBToLinear) c.convertSRGBToLinear();
+      mats.forEach(m => { m.color.copy(c); m.needsUpdate = true; });
+      const label = document.getElementById('hero-finish-name');
+      if (label) label.textContent = v.name;
     }
 
     // ----------------------------------------------------------- chapters --
@@ -340,6 +375,7 @@
     _applyJourney(ms, snap) {
       const state = sampleJourney(this.keyframes, this.scrollY);
       if (!state) return;
+      this._cycleHeroFinish(ms || 0);
       const totalSpin = (this.scrollY / Math.max(1, this.maxScroll)) * Math.PI * 3; // 1.5 extra turns across the page
       const g = this.journeyGroup;
       g.position.set(state.x + this.mouseSm.x * 0.22, state.y - this.mouseSm.y * 0.14, state.z);
