@@ -245,6 +245,16 @@
         return;
       }
 
+      // Universe mode: when eyekart-universe-3d.js is loaded, the full-page
+      // scroll-driven stage owns ALL 3D on the homepage (hero included).
+      // This hero-only engine yields to avoid two WebGL stages fighting,
+      // but still provides its product-card tilt interaction.
+      if (global.__EYEKART_UNIVERSE__) {
+        this._bindProductCardTilt();
+        console.info('[EyeKart 3D] Hero engine yielding to EyeKart Universe (full-page scroll 3D).');
+        return;
+      }
+
       // Target hero container
       const heroFrameWrapper = document.getElementById('hero-frame-wrapper');
       if (!heroFrameWrapper) {
