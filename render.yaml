@@ -7,7 +7,7 @@ services:
   - type: web
     name: eyekart-web
     env: node
-    plan: standard
+    plan: free
     region: frankfurt # Low latency to East Africa (Kenya) peering
     buildCommand: cd server && npm ci --omit=dev
     startCommand: node server/src/server.js
@@ -49,6 +49,6 @@ databases:
   - name: eyekart-db
     databaseName: eyekart_prod
     user: eyekart_admin
-    plan: standard
+    plan: free
     region: frankfurt
     ipAllowList: [] # Only internal services can connect
