@@ -4,6 +4,7 @@
  */
 const LocalStorageProvider = require('./LocalStorageProvider');
 const S3StorageProvider = require('./S3StorageProvider');
+const DisabledStorageProvider = require('./DisabledStorageProvider');
 const ObjectStorageProvider = require('./ObjectStorageProvider');
 const config = require('../../config/env');
 
@@ -37,6 +38,12 @@ function getStorageProvider(override) {
     return s3Provider;
   }
 
+  if (providerType === 'DISABLED') {
+    // Explicit opt-in only: boot without object storage. Every storage
+    // operation fails loudly; nothing silently pretends an upload worked.
+    return new DisabledStorageProvider();
+  }
+
   if (providerType === 'LOCAL') {
     if (config.isProd) {
       const err = new Error('[Storage Fatal] LocalStorageProvider cannot be used in production mode. Configure STORAGE_PROVIDER=S3 with valid S3/R2 credentials.');
@@ -48,7 +55,7 @@ function getStorageProvider(override) {
     });
   }
 
-  const err = new Error(`[Storage Fatal] Unsupported storage provider '${providerType}'. Supported providers: 'LOCAL', 'S3'.`);
+  const err = new Error(`[Storage Fatal] Unsupported storage provider '${providerType}'. Supported providers: 'LOCAL', 'S3', 'DISABLED'.`);
   err.code = 'INVALID_STORAGE_PROVIDER';
   throw err;
 }
@@ -57,5 +64,6 @@ module.exports = {
   ObjectStorageProvider,
   LocalStorageProvider,
   S3StorageProvider,
+  DisabledStorageProvider,
   getStorageProvider
 };

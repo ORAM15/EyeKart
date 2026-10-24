@@ -117,6 +117,8 @@ function validateConfig(cfg) {
       throw new Error('[Storage Fatal] LocalStorageProvider is not permitted in production mode. Set STORAGE_PROVIDER=S3 and configure cloud object storage.');
     }
 
+    // DISABLED is an explicit opt-in (no silent fallback): production may
+    // boot without object storage; uploads fail loudly until S3 is set.
     if (storageProvider === 'S3') {
       const s3 = targetConfig.integrations?.storage?.s3 || {};
       if (!s3.bucket || !s3.bucket.trim()) {
