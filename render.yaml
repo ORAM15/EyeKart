@@ -28,6 +28,14 @@ services:
           property: connectionString
       - key: DB_SSL
         value: true
+      # Render's internal Postgres presents a self-signed certificate, so
+      # strict verification (rejectUnauthorized: true) kills boot with
+      # "[DB Fatal] self-signed certificate". The internal connection stays
+      # inside Render's private network; this flag is the codebase's own
+      # loudly-named bypass for exactly this case. Remove it if the DB
+      # moves to an externally-verifiable endpoint.
+      - key: DB_SSL_INSECURE_SKIP_VERIFY
+        value: 'true'
       - key: STORAGE_PROVIDER
         value: DISABLED # Preview mode: boots without an S3/R2 bucket; uploads fail loudly until S3 is configured
       - key: S3_REGION
