@@ -531,6 +531,35 @@
       }
 
       const cardsHtml = wishlist.map(sku => {
+        // Showcase saves: homepage cards that are not catalog SKUs. They
+        // store as SHOWCASE:NAME|PRICE and render exactly what was saved —
+        // never mapped to a catalog frame they are not.
+        if (typeof sku === 'string' && sku.indexOf('SHOWCASE:') === 0) {
+          const parts = sku.slice(9).split('|');
+          const dispName = (parts[0] || 'SHOWCASE FRAME').toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+          const dispPrice = parts[1] ? `KSh ${Number(parts[1]).toLocaleString('en-KE')}` : 'Price as shown';
+          return `
+          <div class="p-4 bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant/20 flex flex-col justify-between group hover:shadow-md transition-all">
+            <div>
+              <div class="flex items-center justify-between gap-2 mb-2">
+                <span class="px-2 py-0.5 bg-surface-container-high text-on-surface font-label-sm text-[10px] uppercase font-bold rounded">Showcase</span>
+                <button class="p-1 text-outline hover:text-error rounded-full transition-colors btn-remove-wishlist" data-sku="${sku}" title="Remove from Saved Frames">
+                  <span class="material-symbols-outlined text-[18px]">close</span>
+                </button>
+              </div>
+              <h4 class="font-title-md text-title-md text-primary font-bold line-clamp-1">${dispName}</h4>
+              <p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-1">Saved from the homepage showcase — not a catalog frame.</p>
+              <div class="mt-2 flex items-baseline justify-between">
+                <span class="font-data-metric text-data-metric text-primary">${dispPrice}</span>
+                <span class="font-label-sm text-[11px] text-outline">Showcase save</span>
+              </div>
+            </div>
+            <div class="mt-4 pt-3 border-t border-outline-variant/20 flex gap-2">
+              <a href="${global.EyeKartRouter ? global.EyeKartRouter.resolveTarget('catalog') : '#'}" data-path="catalog" class="flex-1 py-2 bg-primary hover:bg-graphite text-on-primary font-label-sm text-label-sm rounded transition-colors text-center">Browse the Catalog</a>
+            </div>
+          </div>
+        `;
+        }
         const frame = catalog ? catalog.getBySku(sku) : null;
         if (!frame) return '';
         const priceStr = catalog ? catalog.formatPriceKSh(frame.price) : `KSh ${Number(frame.price).toLocaleString('en-KE')}`;

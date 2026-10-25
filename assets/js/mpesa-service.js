@@ -214,7 +214,7 @@
       }
 
       if (global.EyeKartStore) {
-        global.EyeKartStore.showToast(`[DEMO SIMULATION] STK Push prompt sent to ${phone}. Authorize ${totalStr} on Safaricom SIM Toolkit.`, 'payments');
+        global.EyeKartStore.showToast(`[DEMO] No STK push sent — this checkout saves the order locally only.`, 'payments');
       }
 
       // Step 2: Transition to PENDING
@@ -260,7 +260,7 @@
               buttonLabel.textContent = 'Payment Received • Directing to Live Dispatch...';
             }
             if (simulatorStatus) {
-              simulatorStatus.textContent = 'M-PESA Ref Confirmed';
+              simulatorStatus.textContent = 'Payment pending — demo checkout, no M-PESA push sent';
               simulatorStatus.className = 'font-label-sm text-[11px] text-mpesa-green font-bold uppercase';
             }
             if (promptText) {
@@ -282,7 +282,7 @@
           userPhone: phone
         });
         this.lastCreatedOrder = order;
-        global.EyeKartStore.showToast(`[DEMO] M-PESA Receipt ${order.mpesaReceipt} Verified! Order #${order.orderId} Created.`, 'verified');
+        global.EyeKartStore.showToast(`[DEMO] Order #${order.orderId} saved locally. No M-PESA payment was made.`, 'verified');
 
         if (this.autoNavigate !== false) {
           setTimeout(() => {
@@ -312,6 +312,9 @@
       document.querySelectorAll('strong, span, p').forEach(el => {
         if (el.textContent && (el.textContent === 'QHK92837L1' || el.textContent === 'QKL902814MP' || el.textContent.includes('Receipt No: QHK') || el.textContent.includes('Receipt #QKL'))) {
           el.textContent = el.textContent.replace(/QHK92837L1|QKL902814MP/, order.mpesaReceipt);
+          // The receipt shown here is a local demo reference, not a real
+          // M-PESA receipt — label it as such wherever the page says Receipt.
+          el.textContent = el.textContent.replace(/Receipt No:\s*/i, 'Demo reference (no payment made): ').replace(/Receipt #\s*/i, 'Demo reference (no payment made): ');
         }
       });
 
@@ -389,7 +392,7 @@
           e.preventDefault();
           this.countdownSeconds = 102;
           this.setPaymentState('INITIATED');
-          if (global.EyeKartStore) global.EyeKartStore.showToast('[DEMO] STK Push re-transmitted to mobile device', 'refresh');
+          if (global.EyeKartStore) global.EyeKartStore.showToast('[DEMO] No STK push sent (demo only)', 'refresh');
         });
       }
 
