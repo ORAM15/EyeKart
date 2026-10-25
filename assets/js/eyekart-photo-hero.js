@@ -56,6 +56,16 @@
       var price = btn.getAttribute('data-price');
       if (nameEl && finish) nameEl.textContent = finish;
       if (priceEl && price) priceEl.textContent = price;
+      // Instant feedback: the featured card crossfades on every swap so
+      // the selection feels alive (the photo itself is not faked — there
+      // is one portrait, and the finish is a selection, not a recolour).
+      var thumb = document.getElementById('hero-frame-img');
+      var bar = thumb && thumb.parentElement;
+      if (bar) {
+        bar.classList.remove('ek-swap-pulse');
+        void bar.offsetWidth;
+        bar.classList.add('ek-swap-pulse');
+      }
       if (global.EyeKartStore && global.EyeKartStore.setActiveVariant && finish) {
         try { global.EyeKartStore.setActiveVariant(finish); } catch (e) {}
       }

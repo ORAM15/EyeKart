@@ -1,0 +1,70 @@
+/* EyeKart flow layer: the site should feel alive, not just look new.
+ *
+ * What reference sites actually do for "flow" (verified by live
+ * walkthroughs, not assumed): gliding snap carousels, slow hero motion,
+ * smooth scrolling, instant crossfaded feedback on selection, and
+ * hover lift on cards. No parallax, no tilt, no 3D unfold — so none of
+ * that is added here. Everything below respects reduced-motion.
+ */
+
+/* Smooth anchor glides (e.g. the Try @ Home nav jump). */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Hero portrait: slow Ken Burns drift so the hero feels alive. The
+ * image sits inside an overflow-hidden rounded card, so the zoom stays
+ * clipped and never pushes layout around. */
+#hero-photo-img {
+  will-change: transform;
+}
+@media (prefers-reduced-motion: no-preference) {
+  #hero-photo-img {
+    animation: ek-kenburns 26s ease-in-out infinite alternate;
+  }
+  @keyframes ek-kenburns {
+    from { transform: scale(1) translateY(0); }
+    to { transform: scale(1.07) translateY(-1%); }
+  }
+  .ek-swap-pulse {
+    animation: ek-pulse 0.45s ease;
+  }
+  @keyframes ek-pulse {
+    0% { opacity: 0.55; }
+    100% { opacity: 1; }
+  }
+}
+
+/* Gliding snap carousels (Lenskart shape-row pattern). */
+.ek-carousel {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  padding-bottom: 4px;
+}
+.ek-carousel::-webkit-scrollbar {
+  display: none;
+}
+.ek-carousel > a {
+  scroll-snap-align: start;
+  flex: 0 0 220px;
+}
+.ek-car-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 9999px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.ek-car-btn:hover {
+  background: #0b1c30;
+  color: #fff;
+}

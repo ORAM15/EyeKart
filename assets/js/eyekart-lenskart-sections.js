@@ -38,11 +38,16 @@
   }
 
   function sectionHtml(eyebrow, title, sub, inner) {
+    // Gliding snap carousel with arrow buttons (Lenskart shape-row
+    // pattern), replacing the static grid: rows should slide, not jump.
     return '<section class="w-full py-16 ek-warm"><div class="max-w-7xl mx-auto px-gutter">' +
-      '<p class="ek-eyebrow">' + eyebrow + '</p>' +
+      '<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px;">' +
+      '<div><p class="ek-eyebrow">' + eyebrow + '</p>' +
       '<h2 class="ek-display" style="font-size:clamp(32px,5vw,54px);font-weight:700;margin:8px 0;">' + title + '</h2>' +
-      '<p style="color:#555;max-width:640px;">' + sub + '</p>' +
-      '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;margin-top:24px;">' + inner + '</div>' +
+      '<p style="color:#555;max-width:640px;">' + sub + '</p></div>' +
+      '<div style="display:flex;gap:8px;"><button type="button" class="ek-car-btn" data-dir="-1" aria-label="Scroll row left">‹</button>' +
+      '<button type="button" class="ek-car-btn" data-dir="1" aria-label="Scroll row right">›</button></div></div>' +
+      '<div class="ek-carousel" style="margin-top:24px;">' + inner + '</div>' +
       '</div></section>';
   }
 
@@ -100,6 +105,13 @@
       sectionHtml('Material Stories', 'Material stories.', 'What a frame is made of decides how it feels all day. These are the material families EyeKart actually stocks.', matTiles) +
       tryAtHome;
     hero.parentNode.insertBefore(wrap, hero.nextSibling);
+    // Carousel arrows glide the row smoothly instead of jumping.
+    wrap.querySelectorAll('.ek-car-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var row = btn.closest('section').querySelector('.ek-carousel');
+        if (row) row.scrollBy({ left: parseInt(btn.getAttribute('data-dir'), 10) * 320, behavior: 'smooth' });
+      });
+    });
 
     // Header nav entry for the new section (plain anchor: the SPA router
     // only intercepts [data-path] links, so this scrolls normally).
