@@ -1,0 +1,42 @@
+/* EyeKart editorial layer (Lenskart-oriented refresh).
+ *
+ * Lenskart's premium cue is typography, not effects: very large
+ * high-contrast serif display type paired with clean sans body text and
+ * small tracked uppercase section labels, on black / white / warm
+ * off-white. This stylesheet applies that language on top of the
+ * existing Stitch panels without rebuilding them: headline utilities
+ * become serif, new discovery sections get tracked eyebrow labels and
+ * warm backgrounds. !important is deliberate — the Tailwind Play CDN
+ * injects its generated utilities after linked stylesheets.
+ */
+.font-headline-lg,
+.font-headline-md,
+.font-headline-sm {
+  font-family: Georgia, 'Times New Roman', serif !important;
+  letter-spacing: -0.01em !important;
+}
+
+.ek-eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: #6b7280;
+}
+
+.ek-display {
+  font-family: Georgia, 'Times New Roman', serif;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+}
+
+.ek-warm {
+  background: #faf7f2;
+}
+
+/* Lenskart pattern: the buy column sticks while the gallery scrolls. */
+@media (min-width: 1024px) {
+  #ek-sticky-buy {
+    display: none;
+  }
+}
