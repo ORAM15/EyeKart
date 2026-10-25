@@ -29,7 +29,7 @@ services:
       - key: DB_SSL
         value: true
       - key: STORAGE_PROVIDER
-        value: S3
+        value: DISABLED # Preview mode: boots without an S3/R2 bucket; uploads fail loudly until S3 is configured
       - key: S3_REGION
         value: af-south-1
       - key: S3_BUCKET
