@@ -190,6 +190,7 @@
       });
       this.renderer.setSize(width, height);
       this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      if (global.EyeKartEnvMap) global.EyeKartEnvMap.applyTo(this.renderer, this.scene);
 
       // WebGL context-loss recovery (previously: none — a lost context left
       // a permanently blank studio). Prevent the default (which kills the
