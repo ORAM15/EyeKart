@@ -34,6 +34,20 @@
       var btn = el('<a class="ek-tryon-btn w-full mt-2 py-2 bg-graphite hover:bg-primary text-on-primary font-label-sm text-label-sm rounded text-center transition-colors block" href="' + VTO_PATH + '?sku=' + encodeURIComponent(sku) + '">Try On</a>');
       if (btnRow && btnRow.parentNode) btnRow.parentNode.insertBefore(btn, btnRow.nextSibling);
       else card.appendChild(btn);
+      // Lenskart pattern: swatches with a "+N" count for extra colours.
+      // The count is the real catalog variant count minus the dots the
+      // static card already shows — never a made-up number.
+      if (prod && Array.isArray(prod.variants)) {
+        var dots = Array.prototype.filter.call(card.querySelectorAll('span'), function (s) {
+          return (s.className || '').indexOf('w-3.5') !== -1 && (s.className || '').indexOf('rounded-full') !== -1;
+        });
+        if (dots.length && prod.variants.length > dots.length && !card.querySelector('.ek-plus-n')) {
+          var plus = document.createElement('span');
+          plus.className = 'ek-plus-n font-label-sm text-label-sm text-on-surface-variant';
+          plus.textContent = '+' + (prod.variants.length - dots.length);
+          dots[dots.length - 1].parentNode.appendChild(plus);
+        }
+      }
       // Discount ribbon + struck price ONLY when the catalog carries a
       // real compare-at price for this SKU. No invented discounts.
       if (prod && typeof prod.compareAtPrice === 'number' && prod.compareAtPrice > prod.price) {
