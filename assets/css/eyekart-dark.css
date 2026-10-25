@@ -1,0 +1,276 @@
+/* EyeKart dark mode layer.
+ *
+ * The site already ships Tailwind with darkMode:"class" on every panel,
+ * but no panel authors any dark: variant — so toggling .dark alone
+ * changed nothing. This file is the actual dark theme: it re-maps the
+ * site's named theme colours (from each panel's Tailwind config) to
+ * dark surfaces under .dark, which eyekart-theme.js toggles on <html>.
+ *
+ * Why this works despite the Tailwind Play CDN: every rule below is
+ * `.dark .<utility>` (specificity 0,2,0), which beats the CDN's
+ * single-class utilities (0,1,0) regardless of injection order.
+ *
+ * Deliberately untouched: photos, product images, and the VTO camera
+ * feed (content, not chrome). A handful of inline style="background…"
+ * colours (4 instances site-wide) cannot be overridden by a stylesheet
+ * and are left as-is.
+ */
+
+html.dark {
+  color-scheme: dark;
+}
+
+/* ---- Page + text ---- */
+.dark body {
+  background-color: #0b1220;
+  color: #e8edf5;
+}
+.dark .bg-surface,
+.dark .bg-background,
+.dark .bg-surface-bright {
+  background-color: #0b1220;
+}
+.dark .text-on-surface,
+.dark .text-on-background,
+.dark .text-on-primary-fixed,
+.dark .text-primary-fixed {
+  color: #e8edf5;
+}
+.dark .text-on-surface-variant,
+.dark .text-on-primary-container,
+.dark .text-surface-tint,
+.dark .text-on-primary-fixed-variant {
+  color: #aab3c2;
+}
+.dark .text-primary {
+  /* "primary" is black in the light theme — unreadable on dark. */
+  color: #e8edf5;
+}
+.dark .text-on-primary,
+.dark .text-on-secondary,
+.dark .text-on-tertiary,
+.dark .text-on-error,
+.dark .text-optical-white {
+  color: #ffffff;
+}
+.dark .text-secondary,
+.dark .text-on-secondary-container {
+  color: #5ec8dd;
+}
+.dark .text-outline {
+  color: #8b93a3;
+}
+.dark .text-outline-variant {
+  color: #64748b;
+}
+.dark .text-graphite {
+  color: #d1d5db;
+}
+.dark .text-secondary-fixed-dim {
+  color: #2a6a80;
+}
+.dark .text-secondary-fixed {
+  color: #a5f3fc;
+}
+.dark .text-cyan-accent {
+  color: #22d3ee;
+}
+.dark .text-mpesa-green {
+  color: #34d399;
+}
+.dark .text-error,
+.dark .text-alert-clinical,
+.dark .text-on-error-container {
+  color: #f87171;
+}
+.dark .text-on-secondary-fixed {
+  color: #a5f3fc;
+}
+.dark .text-on-secondary-fixed-variant {
+  color: #67e8f9;
+}
+.dark .text-on-tertiary-container {
+  color: #fbbf24;
+}
+.dark .text-on-tertiary-fixed {
+  color: #fde68a;
+}
+.dark .text-on-tertiary-fixed-variant {
+  color: #fcd34d;
+}
+.dark .text-inverse-on-surface {
+  color: #0b1220;
+}
+.dark .text-inverse-primary {
+  color: #64748b;
+}
+
+/* ---- Surfaces / cards ---- */
+.dark .bg-optical-white,
+.dark .bg-surface-container-lowest,
+.dark .bg-surface-ivory {
+  background-color: #131a26;
+}
+.dark .bg-surface-container-low {
+  background-color: #16202f;
+}
+.dark .bg-surface-container {
+  background-color: #1a2436;
+}
+.dark .bg-surface-container-high,
+.dark .bg-surface-variant {
+  background-color: #1e2c44;
+}
+.dark .bg-surface-container-highest {
+  background-color: #24344f;
+}
+.dark .bg-surface-cream,
+.dark .bg-surface-subtle {
+  background-color: #141b29;
+}
+.dark .bg-surface-dim {
+  background-color: #22304a;
+}
+.dark .bg-primary {
+  /* Black buttons vanish on a dark page; lift to slate. */
+  background-color: #2e3a4e;
+}
+.dark .bg-primary-container,
+.dark .bg-primary-fixed {
+  background-color: #232b3a;
+}
+.dark .bg-primary-fixed-dim {
+  background-color: #3a4356;
+}
+.dark .bg-graphite {
+  background-color: #1a2233;
+}
+.dark .bg-secondary {
+  background-color: #155e75;
+}
+.dark .bg-secondary-fixed,
+.dark .bg-secondary-container {
+  background-color: #16495a;
+}
+.dark .bg-secondary-fixed-dim {
+  background-color: #2a6a80;
+}
+.dark .bg-tertiary {
+  background-color: #f5f5f5;
+}
+.dark .bg-tertiary-container {
+  background-color: #3a2410;
+}
+.dark .bg-tertiary-fixed {
+  background-color: #4a2c14;
+}
+.dark .bg-tertiary-fixed-dim {
+  background-color: #92400e;
+}
+.dark .bg-error-container {
+  background-color: #3f1d1d;
+}
+.dark .bg-inverse-surface {
+  background-color: #e8edf5;
+}
+.dark .bg-mpesa-green {
+  background-color: #059669;
+}
+.dark .bg-cyan-accent {
+  background-color: #0891b2;
+}
+
+/* Translucent variants collapse to their solid dark equivalent. */
+.dark .bg-optical-white\/95,
+.dark .bg-optical-white\/90,
+.dark .bg-optical-white\/80,
+.dark .bg-optical-white\/20 {
+  background-color: #131a26;
+}
+.dark .bg-surface-cream\/50,
+.dark .bg-surface-cream\/70,
+.dark .bg-surface-ivory\/60 {
+  background-color: #141b29;
+}
+.dark .bg-graphite\/90 {
+  background-color: #1a2233;
+}
+.dark .bg-secondary\/10,
+.dark .bg-mpesa-green\/10 {
+  background-color: #16495a;
+}
+
+/* ---- Borders + rings ---- */
+.dark .border-border-hairline,
+.dark .border-outline-variant,
+.dark .border-surface-container-high,
+.dark .border-graphite {
+  border-color: #263142;
+}
+.dark .border-outline-variant\/30,
+.dark .border-border-hairline\/60 {
+  border-color: #263142;
+}
+.dark .border-primary {
+  border-color: #e8edf5;
+}
+.dark .border-cyan-accent\/80 {
+  border-color: #0891b2;
+}
+.dark .ring-primary,
+.dark .ring-outline-variant,
+.dark .ring-secondary {
+  --tw-ring-color: #3d4657;
+}
+
+/* ---- Editorial + flow layers ---- */
+.dark .ek-warm {
+  background-color: #0e1523;
+}
+.dark .ek-eyebrow {
+  color: #8b93a3;
+}
+
+/* ---- Forms ---- */
+.dark input,
+.dark select,
+.dark textarea {
+  background-color: #1a2436;
+  color: #e8edf5;
+  border-color: #2a3342;
+}
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #64748b;
+}
+
+/* ---- Theme toggle button (works in both modes) ---- */
+.ek-theme-toggle {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 9999;
+  width: 48px;
+  height: 48px;
+  border-radius: 9999px;
+  border: 1px solid rgba(128, 128, 128, 0.35);
+  background: #0b1c30;
+  color: #ffffff;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  line-height: 1;
+}
+.dark .ek-theme-toggle {
+  background: #e8edf5;
+  color: #0b1220;
+}
+/* Clear the mobile sticky buy bar (below-lg only) on small screens. */
+@media (max-width: 1023px) {
+  .ek-theme-toggle {
+    bottom: 88px;
+  }
+}
