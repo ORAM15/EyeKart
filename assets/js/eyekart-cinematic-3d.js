@@ -354,6 +354,7 @@
       });
       this.renderer.setSize(width, height);
       this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      if (global.EyeKartEnvMap) global.EyeKartEnvMap.applyTo(this.renderer, this.scene);
 
       // WebGL context-loss recovery (previously none): keep the static hero
       // fallback path viable and rebuild on restore instead of going blank.

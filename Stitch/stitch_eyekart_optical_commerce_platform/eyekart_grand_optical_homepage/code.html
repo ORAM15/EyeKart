@@ -196,69 +196,52 @@
 <!-- Refractive Ambient Radial Glow -->
 <div class="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-cyan-accent/15 blur-3xl pointer-events-none"></div>
 <div class="absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-secondary-fixed/30 blur-3xl pointer-events-none"></div>
-<!-- Stage Top Chrome HUD -->
+<!-- Photo Hero header: the frame, worn — no 3D render in the hero -->
 <div class="relative z-10 flex items-center justify-between pb-4">
 <div class="flex items-center gap-2">
 <span class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-surface-container-low text-secondary font-label-sm text-label-sm rounded-full">
-<span class="material-symbols-outlined text-[15px] animate-spin">rotate_right</span>
-<span>360° Studio Renderer</span>
+<span class="material-symbols-outlined text-[15px]">photo_camera</span>
+<span>Worn in Nairobi</span>
 </span>
-<span class="hidden sm:inline-block font-label-sm text-label-sm text-outline" id="hero-lighting-tag">Equatorial Daylight (5400K)</span>
+<span class="hidden sm:inline-block font-label-sm text-label-sm text-outline">Studio portrait • Real frames, real faces</span>
 </div>
 <div class="flex items-center gap-2">
-<button class="p-2 text-on-surface-variant hover:text-primary bg-surface-subtle/70 rounded hover:bg-surface-subtle transition-colors" id="btn-lighting-toggle" title="Toggle Studio Lighting" type="button">
-<span class="material-symbols-outlined text-[18px]">light_mode</span>
-</button>
-<button class="p-2 text-on-surface-variant hover:text-primary bg-surface-subtle/70 rounded hover:bg-surface-subtle transition-colors" id="btn-dimension-hud" title="Toggle Caliper HUD" type="button">
-<span class="material-symbols-outlined text-[18px]">square_foot</span>
-</button>
+<span class="font-label-sm text-label-sm text-outline">EK-902 • Kibera Titanium</span>
 </div>
 </div>
-<!-- Optical Silhouette Display Canvas -->
-<div class="relative w-full h-[320px] sm:h-[380px] flex items-center justify-center select-none overflow-hidden my-2">
-<!-- Caliper Overlay Grid (toggleable) -->
-<div class="absolute inset-0 pointer-events-none opacity-40 transition-opacity duration-300" id="caliper-overlay">
-<div class="w-full h-full flex flex-col justify-between p-4 font-label-sm text-[10px] text-cyan-accent">
-<div class="flex justify-between border-b border-cyan-accent/20 pb-1">
-<span>FRAME WIDTH: 138.4 mm</span>
-<span>BRIDGE: 19 mm</span>
+<!-- Photo Hero: portrait first, featured frame below (Lens2Cart standard) -->
+<div class="relative z-10 w-full" id="hero-photo-wrapper">
+<div class="overflow-hidden rounded-xl bg-surface-ivory shadow-[0_16px_40px_rgba(0,0,0,0.10)]">
+<img class="w-full h-auto object-cover aspect-[4/5] max-h-[520px]" id="hero-photo-img" src="/assets/img/hero-model.jpg" alt="Studio portrait of a woman wearing EyeKart thin gold round frames"/>
 </div>
-<div class="flex justify-between items-center text-center">
-<span class="[writing-mode:vertical-rl] tracking-widest text-outline">TEMPLE: 145mm</span>
-<div class="w-12 h-12 rounded-full border border-dashed border-cyan-accent/50 flex items-center justify-center">
-<span class="w-1.5 h-1.5 rounded-full bg-cyan-accent"></span>
+<div class="absolute top-4 left-4 z-20 bg-optical-white/90 backdrop-blur-md px-3 py-1.5 rounded-full shadow-md flex items-center gap-2">
+<span class="material-symbols-outlined text-mpesa-green text-[16px]">verified</span>
+<span class="font-label-sm text-label-sm text-primary font-bold">Worn: Kibera Titanium · EK-902</span>
 </div>
-<span class="[writing-mode:vertical-rl] tracking-widest text-outline">PUPIL OPTIC: OD/OS</span>
+<div class="mt-4 flex items-center gap-4 bg-optical-white rounded-xl p-3 shadow-sm">
+<img class="w-20 h-20 object-contain rounded-lg bg-surface-ivory shrink-0" id="hero-frame-img" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBKQv_VnLuN8ds7xO3zgoSxc0DRFCJbfyaP_3BAYw_00SEWiB3Q_5TDyc0SW-uSuW8A1McFkE6u6wAyZ36yJ3KYBIaEo3fhghOFtSuKhqQjVYCRu4YQg3KlRXs4ZwFcFsTA4LWWJucRzbzAR1y7iNyPeejKz5L-iO4zNyLSMrgbnW_gTA7dWVgP6G4O3sqCMB16_opTwdRLhvzw3urr-e0ykitbgWDQ6YA1dV34BbvuJvRVYVLl6WYZyw" alt="EK-902 Kibera Minimalist Titanium product photograph"/>
+<div class="min-w-0 flex-1">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-secondary font-bold" id="hero-model-sku">EK-902 · KIBERA MINIMALIST TITANIUM</span>
+<p class="font-title-md text-title-md text-primary font-bold truncate" id="hero-finish-name">Matte Obsidian Black</p>
+<p class="font-body-sm text-body-sm text-outline"><span id="hero-price">KSh 18,500</span> • Ready for Digital Prescription</p>
 </div>
-<div class="flex justify-between border-t border-cyan-accent/20 pt-1">
-<span>LENS HEIGHT: 43.5 mm</span>
-<span>BASE CURVE: 4.0</span>
+<div class="flex flex-col gap-2 shrink-0">
+<a class="px-4 py-2 bg-graphite hover:bg-primary text-on-primary font-label-sm text-label-sm rounded text-center transition-colors" data-path="virtual-try-on" href="#">Try On</a>
+<a class="px-4 py-2 bg-surface-container-low hover:bg-surface-container text-on-surface font-label-sm text-label-sm rounded text-center transition-colors" data-path="product-details" href="#">View Frame</a>
 </div>
 </div>
 </div>
-<!-- Main Frame Showcase Image (Swappable finish) -->
-<div class="relative z-10 w-full max-w-[440px] transition-transform duration-500 hover:scale-105 flex items-center justify-center" id="hero-frame-wrapper">
-<img class="w-full h-auto object-contain max-h-[260px] drop-shadow-2xl transition-all duration-300" data-alt="Close-up studio photograph of luxury handcrafted eyeglasses with Japanese titanium hinges and warm tortoiseshell acetate rims sitting on an architectural white marble pedestal with soft equatorial natural lighting and reflections" id="hero-frame-img" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCgrXAAZEFnokcz4n4O4j3utZhg8Fo7Jyias-VCnnFmbSRBohgQVO6igzs0ISMP8byuauY_gumxKwZIof0IVRvwKrH6dFOyVjCRytWfCrmUjJtv1pef3ljonCOEOAZSsp6wSwXnIMy-uCgVQdn0y0Uyx650wJlUAjwjglG0CKcD985_rHH2QmeksGtiVhq4TGS_KjjqIaCVqAYa65dlrxUCARxsQR8e2gwT_Cpp0E69_MSCidmDv0OqEQ"/>
-</div>
-<!-- Interactive Floating Caliper Pointer -->
-<div class="absolute bottom-6 left-6 z-20 bg-optical-white/90 backdrop-blur-md px-3 py-1.5 rounded-full shadow-md flex items-center gap-2">
-<span class="material-symbols-outlined text-cyan-accent text-[16px]">touch_app</span>
-<span class="font-label-sm text-label-sm text-primary">Drag or click swatches to test luster</span>
-</div>
-</div>
-<!-- Frame Controls & Variant Selector -->
+<!-- Frame Controls & Variant Selector (driven by real catalog variants) -->
 <div class="relative z-10 pt-4 bg-surface-ivory p-4 rounded-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
 <div>
-<span class="font-label-sm text-label-sm uppercase tracking-wider text-secondary font-bold" id="hero-model-sku">KIBERA TITANIUM • SERIE 01</span>
-<p class="font-title-md text-title-md text-primary font-bold" id="hero-finish-name">Milled Obsidian Black &amp; Raw Titanium</p>
-<p class="font-body-sm text-body-sm text-outline">KSh 18,500 • Ready for Digital Prescription</p>
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-secondary font-bold">Choose a finish</span>
+<p class="font-body-sm text-body-sm text-outline" id="hero-finish-note">Four real EK-902 finishes, all KSh 18,500. Picking one sets it for Try On.</p>
 </div>
-<!-- Finish Swatches -->
-<div class="flex items-center gap-2.5">
-<button class="swatch-btn w-7 h-7 rounded-full bg-[#111418] ring-2 ring-primary ring-offset-2 transition-transform hover:scale-110" data-finish="Obsidian Black" data-price="KSh 18,500" data-sku="KIBERA TITANIUM • SERIE 01" title="Obsidian Black" type="button"></button>
-<button class="swatch-btn w-7 h-7 rounded-full bg-[#D4AF37] ring-1 ring-outline-variant transition-transform hover:scale-110" data-finish="Brushed Savannah Gold" data-price="KSh 21,500" data-sku="KIBERA TITANIUM • SERIE 02" title="Brushed Savannah Gold" type="button"></button>
-<button class="swatch-btn w-7 h-7 rounded-full bg-[#78350F] ring-1 ring-outline-variant transition-transform hover:scale-110" data-finish="Amber Rift Tortoise" data-price="KSh 19,800" data-sku="KIBERA TITANIUM • SERIE 03" title="Amber Rift Tortoise" type="button"></button>
-<button class="swatch-btn w-7 h-7 rounded-full bg-[#475569] ring-1 ring-outline-variant transition-transform hover:scale-110" data-finish="Frosted Smoke Quartz" data-price="KSh 17,900" data-sku="KIBERA TITANIUM • SERIE 04" title="Frosted Smoke Quartz" type="button"></button>
+<div class="flex items-center gap-2.5" id="hero-finish-dots">
+<button class="swatch-btn w-7 h-7 rounded-full bg-[#202224] ring-2 ring-primary ring-offset-2 transition-transform hover:scale-110" data-finish="Matte Obsidian Black" title="Matte Obsidian Black" type="button"></button>
+<button class="swatch-btn w-7 h-7 rounded-full bg-[#E5D7B7] ring-1 ring-outline-variant transition-transform hover:scale-110" data-finish="Brushed Champagne Titanium" title="Brushed Champagne Titanium" type="button"></button>
+<button class="swatch-btn w-7 h-7 rounded-full bg-[#D1D5DB] ring-1 ring-outline-variant transition-transform hover:scale-110" data-finish="Raw Brushed Platinum" title="Raw Brushed Platinum" type="button"></button>
+<button class="swatch-btn w-7 h-7 rounded-full bg-[#6B3E11] ring-1 ring-outline-variant transition-transform hover:scale-110" data-finish="Havana Tortoise &amp; Rose Titanium" title="Havana Tortoise &amp; Rose Titanium" type="button"></button>
 </div>
 </div>
 <!-- In-Clinic Try-On Callout Footer -->
@@ -1379,16 +1362,28 @@
       }
     })();
   </script>
-</div></main><footer class="w-full bg-surface-ivory pt-16 pb-12 shadow-[0_-1px_12px_rgba(0,0,0,0.02)]"><div class="max-w-7xl mx-auto px-gutter"><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 pb-12"><div class="lg:col-span-2 space-y-4"><div class="flex items-center gap-3"><img alt="EyeKart Brand Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1XFZlvgnz4SWLipOPqSIZA6RtCW2NZLqkeaxjHzXzq-AuFJsshCyySq1oMAHXLZ8ZKM16208tIChajcM2uOzO_U0Q43tULN75HulC8QmoFiz88aRjPJtaf6bDUP9s7YqVpxhYencqZ5aMMwdXo3qWk8zd8uGbV2re-bH6-vcloddnOnujhjZNiIdYZPLJqbGyCqr6UShZpx8TuTL2ufTBbwLpSflMBigbo40mlbMdu9nho9D8Ka33IoYzjA"/><span class="font-headline-sm text-headline-sm font-bold tracking-tight text-primary">EYEKART ATELIER</span></div><p class="font-body-md text-body-md text-on-surface-variant max-w-sm">Nairobi's foremost precision optometry house and handcrafted eyewear dispensary. Clinical accuracy calibrated for equatorial light, verified by registered East African optometrists.</p><div class="pt-2 space-y-2"><div class="flex items-center gap-2 text-on-surface font-label-md text-label-md"><span class="material-symbols-outlined text-mpesa-green text-[20px]">schedule</span><span>Clinics open Mon – Sat: 08:30 – 19:30 | Sun: 10:00 – 17:00</span></div><div class="flex items-center gap-2 text-on-surface font-label-md text-label-md"><span class="material-symbols-outlined text-secondary text-[20px]">verified_user</span><span>Licensed by Pharmacy and Poisons Board &amp; Optometrists Council</span></div></div></div><div><h4 class="font-title-md text-title-md text-primary font-bold mb-4">Nairobi Clinics &amp; Lounges</h4><ul class="space-y-2 font-body-sm text-body-sm text-on-surface-variant"><li><a class="hover:text-primary transition-colors font-medium text-on-surface" data-path="nairobi-clinics" href="#">Westlands Square</a><p class="text-outline text-xs">Ground Floor, Opp. The Mall</p></li><li><a class="hover:text-primary transition-colors font-medium text-on-surface" data-path="nairobi-clinics" href="#">Sarit Centre</a><p class="text-outline text-xs">New Wing, 2nd Floor (Eye Lab)</p></li><li><a class="hover:text-primary transition-colors font-medium text-on-surface" data-path="nairobi-clinics" href="#">Junction Mall</a><p class="text-outline text-xs">Ngong Road, 1st Level</p></li><li><a class="hover:text-primary transition-colors font-medium text-on-surface" data-path="nairobi-clinics" href="#">Village Market</a><p class="text-outline text-xs">Limuru Rd, Gigiri Courtyard</p></li></ul></div><div><h4 class="font-title-md text-title-md text-primary font-bold mb-4">Diagnostic Services</h4><ul class="space-y-2.5 font-body-sm text-body-sm text-on-surface-variant"><li><a class="hover:text-primary transition-colors" data-path="book-eye-test" href="#">Book 28-Point Optical Exam</a></li><li><a class="hover:text-primary transition-colors" data-path="upload-prescription" href="#">Optical Prescription Verification</a></li><li><a class="hover:text-primary transition-colors" data-path="lens-customizer" href="#">Custom Lens Configurator (OD/OS)</a></li><li><a class="hover:text-primary transition-colors" data-path="virtual-try-on" href="#">Pupillary Distance (PD) Scanner</a></li><li><a class="hover:text-primary transition-colors" data-path="contact-lenses" href="#">Contact Lens Corneal Fitting</a></li><li><a class="hover:text-primary transition-colors" data-path="order-tracking" href="#">Track M-PESA Optical Delivery</a></li></ul></div><div><h4 class="font-title-md text-title-md text-primary font-bold mb-4">The Nairobi Optical Gazette</h4><p class="font-body-sm text-body-sm text-on-surface-variant mb-3">Receive private atelier release notifications and eye care wellness essays.</p><div class="flex flex-col gap-2"><input class="px-3 py-2 bg-optical-white text-on-surface rounded font-body-sm text-body-sm placeholder:text-outline focus:outline-none shadow-[0_1px_4px_rgba(0,0,0,0.04)] focus:shadow-[0_2px_8px_rgba(0,0,0,0.08)]" placeholder="Your email address..." type="email"/><button class="px-4 py-2 bg-graphite hover:bg-primary text-on-primary font-label-sm text-label-sm rounded transition-colors text-center" type="button">Join Inner Circle</button></div></div></div><div class="pt-8 mt-8 border-t border-outline-variant/30 flex flex-col md:flex-row items-center justify-between gap-6 font-body-sm text-body-sm text-on-surface-variant"><div class="flex flex-wrap items-center gap-6"><span class="flex items-center gap-1.5 font-label-md text-label-md text-mpesa-green font-bold"><span class="material-symbols-outlined text-[18px]">payments</span>Verified M-PESA STK • Buy Goods 889211</span><span class="flex items-center gap-1.5 font-label-md text-label-md text-on-surface"><span class="material-symbols-outlined text-[18px]">credit_card</span>Visa • Mastercard Accepted</span><span class="text-xs text-outline">© 2025 EyeKart Optical Kenya Ltd. All Rights Reserved.</span></div><div class="flex items-center gap-4 text-xs"><a class="hover:text-primary" data-path="nairobi-clinics" href="#">Privacy Policy</a><a class="hover:text-primary" data-path="nairobi-clinics" href="#">Clinical Disclaimers</a><a class="hover:text-primary" data-path="nairobi-clinics" href="#">Warranty Protocol</a></div></div></div></footer>
+</div></main><!-- Atelier trust strip: real clinics, hours and phone from the footer -->
+<section class="w-full bg-graphite text-on-primary py-10">
+<div class="max-w-7xl mx-auto px-gutter flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+<div>
+<h2 class="font-headline-sm text-headline-sm font-bold">Visit the atelier, or we come to you</h2>
+<p class="font-body-md text-body-md text-on-primary/80 mt-1">Westlands Square · Sarit Centre · Junction Mall · Village Market — plus complimentary Nairobi in-home fitting.</p>
+</div>
+<div class="flex flex-col gap-1 font-body-md text-body-md">
+<span>Clinics open Mon – Sat: 08:30 – 19:30 | Sun: 10:00 – 17:00</span>
+<span>Call Optometrist: <a class="underline" href="tel:+254700393527">+254 700 393 527</a> · Certified MOH / Optometry Council of Kenya</span>
+</div>
+</div>
+</section>
+<footer class="w-full bg-surface-ivory pt-16 pb-12 shadow-[0_-1px_12px_rgba(0,0,0,0.02)]"><div class="max-w-7xl mx-auto px-gutter"><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 pb-12"><div class="lg:col-span-2 space-y-4"><div class="flex items-center gap-3"><img alt="EyeKart Brand Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1XFZlvgnz4SWLipOPqSIZA6RtCW2NZLqkeaxjHzXzq-AuFJsshCyySq1oMAHXLZ8ZKM16208tIChajcM2uOzO_U0Q43tULN75HulC8QmoFiz88aRjPJtaf6bDUP9s7YqVpxhYencqZ5aMMwdXo3qWk8zd8uGbV2re-bH6-vcloddnOnujhjZNiIdYZPLJqbGyCqr6UShZpx8TuTL2ufTBbwLpSflMBigbo40mlbMdu9nho9D8Ka33IoYzjA"/><span class="font-headline-sm text-headline-sm font-bold tracking-tight text-primary">EYEKART ATELIER</span></div><p class="font-body-md text-body-md text-on-surface-variant max-w-sm">Nairobi's foremost precision optometry house and handcrafted eyewear dispensary. Clinical accuracy calibrated for equatorial light, verified by registered East African optometrists.</p><div class="pt-2 space-y-2"><div class="flex items-center gap-2 text-on-surface font-label-md text-label-md"><span class="material-symbols-outlined text-mpesa-green text-[20px]">schedule</span><span>Clinics open Mon – Sat: 08:30 – 19:30 | Sun: 10:00 – 17:00</span></div><div class="flex items-center gap-2 text-on-surface font-label-md text-label-md"><span class="material-symbols-outlined text-secondary text-[20px]">verified_user</span><span>Licensed by Pharmacy and Poisons Board &amp; Optometrists Council</span></div></div></div><div><h4 class="font-title-md text-title-md text-primary font-bold mb-4">Nairobi Clinics &amp; Lounges</h4><ul class="space-y-2 font-body-sm text-body-sm text-on-surface-variant"><li><a class="hover:text-primary transition-colors font-medium text-on-surface" data-path="nairobi-clinics" href="#">Westlands Square</a><p class="text-outline text-xs">Ground Floor, Opp. The Mall</p></li><li><a class="hover:text-primary transition-colors font-medium text-on-surface" data-path="nairobi-clinics" href="#">Sarit Centre</a><p class="text-outline text-xs">New Wing, 2nd Floor (Eye Lab)</p></li><li><a class="hover:text-primary transition-colors font-medium text-on-surface" data-path="nairobi-clinics" href="#">Junction Mall</a><p class="text-outline text-xs">Ngong Road, 1st Level</p></li><li><a class="hover:text-primary transition-colors font-medium text-on-surface" data-path="nairobi-clinics" href="#">Village Market</a><p class="text-outline text-xs">Limuru Rd, Gigiri Courtyard</p></li></ul></div><div><h4 class="font-title-md text-title-md text-primary font-bold mb-4">Diagnostic Services</h4><ul class="space-y-2.5 font-body-sm text-body-sm text-on-surface-variant"><li><a class="hover:text-primary transition-colors" data-path="book-eye-test" href="#">Book 28-Point Optical Exam</a></li><li><a class="hover:text-primary transition-colors" data-path="upload-prescription" href="#">Optical Prescription Verification</a></li><li><a class="hover:text-primary transition-colors" data-path="lens-customizer" href="#">Custom Lens Configurator (OD/OS)</a></li><li><a class="hover:text-primary transition-colors" data-path="virtual-try-on" href="#">Pupillary Distance (PD) Scanner</a></li><li><a class="hover:text-primary transition-colors" data-path="contact-lenses" href="#">Contact Lens Corneal Fitting</a></li><li><a class="hover:text-primary transition-colors" data-path="order-tracking" href="#">Track M-PESA Optical Delivery</a></li></ul></div><div><h4 class="font-title-md text-title-md text-primary font-bold mb-4">The Nairobi Optical Gazette</h4><p class="font-body-sm text-body-sm text-on-surface-variant mb-3">Receive private atelier release notifications and eye care wellness essays.</p><div class="flex flex-col gap-2"><input class="px-3 py-2 bg-optical-white text-on-surface rounded font-body-sm text-body-sm placeholder:text-outline focus:outline-none shadow-[0_1px_4px_rgba(0,0,0,0.04)] focus:shadow-[0_2px_8px_rgba(0,0,0,0.08)]" placeholder="Your email address..." type="email"/><button class="px-4 py-2 bg-graphite hover:bg-primary text-on-primary font-label-sm text-label-sm rounded transition-colors text-center" type="button">Join Inner Circle</button></div></div></div><div class="pt-8 mt-8 border-t border-outline-variant/30 flex flex-col md:flex-row items-center justify-between gap-6 font-body-sm text-body-sm text-on-surface-variant"><div class="flex flex-wrap items-center gap-6"><span class="flex items-center gap-1.5 font-label-md text-label-md text-mpesa-green font-bold"><span class="material-symbols-outlined text-[18px]">payments</span>Verified M-PESA STK • Buy Goods 889211</span><span class="flex items-center gap-1.5 font-label-md text-label-md text-on-surface"><span class="material-symbols-outlined text-[18px]">credit_card</span>Visa • Mastercard Accepted</span><span class="text-xs text-outline">© 2025 EyeKart Optical Kenya Ltd. All Rights Reserved.</span></div><div class="flex items-center gap-4 text-xs"><a class="hover:text-primary" data-path="nairobi-clinics" href="#">Privacy Policy</a><a class="hover:text-primary" data-path="nairobi-clinics" href="#">Clinical Disclaimers</a><a class="hover:text-primary" data-path="nairobi-clinics" href="#">Warranty Protocol</a></div></div></div></footer>
 <!-- EyeKart Universal Application Runtime v1.1 -->
 <script src="/assets/js/catalog-data.js"></script>
 <script src="/assets/js/eyekart-store.js"></script>
 <script src="/assets/js/eyekart-router.js"></script>
 <script src="/assets/js/eyekart-dom-map.js"></script>
 <script src="/assets/vendor/three.min.js"></script>
-<script src="/assets/js/eyekart-cinematic-3d.js"></script>
-<script src="/assets/js/eyekart-universe-3d.js"></script>
 <script src="/assets/js/eyekart-motion-3d.js"></script>
+<script src="/assets/js/eyekart-envmap.js"></script>
 <script src="/assets/js/three-studio.js"></script>
 <script src="/assets/js/lens-configurator-engine.js"></script>
 <script src="/assets/js/vto-engine.js"></script>
@@ -1396,4 +1391,5 @@
 <script src="/assets/js/mpesa-service.js"></script>
 <script src="/assets/js/account-engine.js"></script>
 <script src="/assets/js/eyekart-runtime.js"></script>
+<script src="/assets/js/eyekart-photo-hero.js"></script>
 </body></html>

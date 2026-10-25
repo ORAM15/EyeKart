@@ -195,6 +195,7 @@
       this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
       this.renderer.setSize(innerWidth, innerHeight);
       this.renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 1.75));
+      if (global.EyeKartEnvMap) global.EyeKartEnvMap.applyTo(this.renderer, this.scene);
 
       this.scene.add(new THREE.AmbientLight(0xffffff, 0.85));
       const key = new THREE.DirectionalLight(0xfffaed, 1.5); key.position.set(4, 6, 6); this.scene.add(key);
