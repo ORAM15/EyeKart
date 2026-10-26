@@ -7,32 +7,32 @@
 - Font: playfairDisplay
 - Mode: light
 - Roundness: rounded-sm
-" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1XFZlvgnz4SWLipOPqSIZA6RtCW2NZLqkeaxjHzXzq-AuFJsshCyySq1oMAHXLZ8ZKM16208tIChajcM2uOzO_U0Q43tULN75HulC8QmoFiz88aRjPJtaf6bDUP9s7YqVpxhYencqZ5aMMwdXo3qWk8zd8uGbV2re-bH6-vcloddnOnujhjZNiIdYZPLJqbGyCqr6UShZpx8TuTL2ufTBbwLpSflMBigbo40mlbMdu9nho9D8Ka33IoYzjA"/><div class="flex flex-col justify-center"><div class="flex items-center gap-1"><span class="font-headline-sm text-headline-sm font-semibold tracking-tight text-primary leading-none">EyeKart</span><span class="h-1.5 w-1.5 rounded-full bg-cyan-accent"></span></div><span class="font-label-sm text-label-sm uppercase tracking-widest text-on-surface-variant leading-none mt-0.5">Nairobi Atelier</span></div></div><div class="flex items-center gap-space-xs"><button class="h-11 px-space-sm rounded-lg flex items-center gap-1.5 bg-surface-container-low text-on-surface hover:bg-surface-container transition-colors"><span class="material-symbols-outlined text-[16px] text-secondary">location_on</span><span class="font-label-sm text-label-sm uppercase tracking-wider font-semibold">Atelier</span></button><a class="h-11 px-space-sm rounded-lg flex items-center gap-1 bg-graphite text-optical-white hover:bg-primary transition-colors shadow-[0_2px_8px_rgba(42,46,53,0.15)]" data-path="try-on" href="#"><span class="material-symbols-outlined text-[18px] text-cyan-accent">view_in_ar</span><span class="font-label-sm text-label-sm uppercase tracking-wider font-semibold hidden sm:inline">VTO</span></a><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center ml-1"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex flex-col relative w-full pt-16 pb-24 bg-surface min-h-screen"><div class="flex flex-col w-full">
+" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1XFZlvgnz4SWLipOPqSIZA6RtCW2NZLqkeaxjHzXzq-AuFJsshCyySq1oMAHXLZ8ZKM16208tIChajcM2uOzO_U0Q43tULN75HulC8QmoFiz88aRjPJtaf6bDUP9s7YqVpxhYencqZ5aMMwdXo3qWk8zd8uGbV2re-bH6-vcloddnOnujhjZNiIdYZPLJqbGyCqr6UShZpx8TuTL2ufTBbwLpSflMBigbo40mlbMdu9nho9D8Ka33IoYzjA"/><div class="flex flex-col justify-center"><div class="flex items-center gap-1"><span class="font-headline-sm text-headline-sm font-semibold tracking-tight text-primary leading-none">EyeKart</span><span class="h-1.5 w-1.5 rounded-full bg-cyan-accent"></span></div><span class="font-label-sm text-label-sm uppercase tracking-widest text-on-surface-variant leading-none mt-0.5">Nairobi Atelier</span></div></div><div class="flex items-center gap-space-xs"><button class="h-11 px-space-sm rounded-lg flex items-center gap-1.5 bg-surface-container-low text-on-surface hover:bg-surface-container transition-colors" data-ek-action="location"><span class="material-symbols-outlined text-[16px] text-secondary">location_on</span><span class="font-label-sm text-label-sm uppercase tracking-wider font-semibold">Atelier</span></button><a class="h-11 px-space-sm rounded-lg flex items-center gap-1 bg-graphite text-optical-white hover:bg-primary transition-colors shadow-[0_2px_8px_rgba(42,46,53,0.15)]" data-path="try-on" href="#"><span class="material-symbols-outlined text-[18px] text-cyan-accent">view_in_ar</span><span class="font-label-sm text-label-sm uppercase tracking-wider font-semibold hidden sm:inline">VTO</span></a><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center ml-1"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex flex-col relative w-full pt-16 pb-24 bg-surface min-h-screen"><div class="flex flex-col w-full">
 <!-- Top Utility & Mode Bar -->
 <div class="px-margin-mobile pt-3 pb-2 flex flex-col gap-2.5 bg-surface-ivory/80 backdrop-blur-md">
 <div class="flex items-center justify-between">
-<button class="inline-flex items-center gap-1 text-on-surface-variant hover:text-on-surface transition-colors py-1">
+<button class="inline-flex items-center gap-1 text-on-surface-variant hover:text-on-surface transition-colors py-1" data-ek-action="vto-back">
 <span class="material-symbols-outlined text-[18px]">arrow_back_ios</span>
 <span class="font-label-sm text-label-sm tracking-wider uppercase">Live Studio</span>
 </button>
 <!-- Mode Pill Selector -->
 <div class="flex items-center bg-surface-container-low p-0.5 rounded-full">
-<button class="px-2.5 py-1 rounded-full bg-primary text-on-primary font-label-sm text-label-sm transition-all shadow-sm" id="btn-split">
+<button class="px-2.5 py-1 rounded-full bg-primary text-on-primary font-label-sm text-label-sm transition-all shadow-sm" id="btn-split" data-ek-action="view-mode" data-ek-mode="split">
           Split A/B
         </button>
-<button class="px-2.5 py-1 rounded-full text-on-surface-variant hover:text-on-surface font-label-sm text-label-sm transition-all" id="btn-swipe">
+<button class="px-2.5 py-1 rounded-full text-on-surface-variant hover:text-on-surface font-label-sm text-label-sm transition-all" id="btn-swipe" data-ek-action="view-mode" data-ek-mode="swipe">
           Swipe
         </button>
-<button class="px-2.5 py-1 rounded-full text-on-surface-variant hover:text-on-surface font-label-sm text-label-sm transition-all" id="btn-fade">
+<button class="px-2.5 py-1 rounded-full text-on-surface-variant hover:text-on-surface font-label-sm text-label-sm transition-all" id="btn-fade" data-ek-action="view-mode" data-ek-mode="fade">
           Fade
         </button>
 </div>
 <!-- Quick Actions -->
 <div class="flex items-center gap-1.5">
-<button class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-on-surface hover:bg-surface-container-high transition-colors" title="Instant Snapshot">
+<button class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-on-surface hover:bg-surface-container-high transition-colors" title="Instant Snapshot" data-ek-action="snapshot">
 <span class="material-symbols-outlined text-[18px]">photo_camera</span>
 </button>
-<button class="h-8 px-2.5 rounded-full bg-[#25D366]/15 text-[#128C7E] flex items-center gap-1 font-label-sm text-label-sm font-semibold hover:bg-[#25D366]/25 transition-colors">
+<button class="h-8 px-2.5 rounded-full bg-[#25D366]/15 text-[#128C7E] flex items-center gap-1 font-label-sm text-label-sm font-semibold hover:bg-[#25D366]/25 transition-colors" data-ek-action="vto-share">
 <span class="material-symbols-outlined text-[16px]">share</span>
 <span>Opinion</span>
 </button>
@@ -138,7 +138,7 @@
 <span class="px-2 py-0.5 rounded bg-graphite/75 text-optical-white font-label-sm text-[10px] tracking-wider">
               Balanced Temple Tension
             </span>
-<button class="px-2.5 py-1 rounded-full bg-primary text-on-primary hover:bg-graphite font-label-sm text-label-sm font-semibold flex items-center gap-1 shadow-sm" id="btn-quick-swap-trigger">
+<button class="px-2.5 py-1 rounded-full bg-primary text-on-primary hover:bg-graphite font-label-sm text-label-sm font-semibold flex items-center gap-1 shadow-sm" id="btn-quick-swap-trigger" data-ek-action="swap-b">
 <span class="material-symbols-outlined text-[14px]">cached</span>
 <span>Swap Frame B</span>
 </button>
@@ -281,7 +281,7 @@
 <!-- Scrollable Frame Ribbon -->
 <div class="flex gap-3 overflow-x-auto px-margin-mobile pb-2 pt-1 no-scrollbar">
 <!-- Alt 1 -->
-<button class="shrink-0 w-44 p-2.5 rounded-xl bg-surface-container-lowest text-left shadow-sm hover:shadow-md transition-all flex flex-col">
+<button class="shrink-0 w-44 p-2.5 rounded-xl bg-surface-container-lowest text-left shadow-sm hover:shadow-md transition-all flex flex-col" data-ek-action="tray-swap" data-ek-sku="EK-804">
 <div class="w-full h-20 rounded-lg bg-surface-container-low overflow-hidden mb-2 relative">
 <img class="w-full h-full object-cover" data-alt="Westlands octagonal geometric spectacles with sleek gold polished rim, professional white studio product shot, angle view." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDbhhJx3H6XdzreTMAbmKoMkSXLb2cc9EIi1wZcfHcm3B7aMPUuSnR63ebCcGbn42ptxvtbcEty8oXu4KiM8YqHWEH_g7ok8t8BocX8Z4dkqQiTKz3vbfzMbmQqZ91euvGQ7V5xIMb77nj0f1uqT9u1Vo9WOOWOg0bwkPoH1LqsSrgVkeLQ5wg-rHjOIyE9e4SXXk8Ck3wCk_Tygl5iVVqXLSfR4GVgPbmWX4gxC7BtzSyiMGjMid-LJg"/>
 <span class="absolute top-1 right-1 px-1.5 py-0.2 rounded bg-graphite/80 text-optical-white font-label-sm text-[9px] font-bold">96% Fit</span>
@@ -294,7 +294,7 @@
 </div>
 </button>
 <!-- Alt 2 -->
-<button class="shrink-0 w-44 p-2.5 rounded-xl bg-surface-container-lowest text-left shadow-sm hover:shadow-md transition-all flex flex-col">
+<button class="shrink-0 w-44 p-2.5 rounded-xl bg-surface-container-lowest text-left shadow-sm hover:shadow-md transition-all flex flex-col" data-ek-action="tray-swap">
 <div class="w-full h-20 rounded-lg bg-surface-container-low overflow-hidden mb-2 relative">
 <img class="w-full h-full object-cover" data-alt="Warm honey tortoiseshell acetate rounded eyeglasses, Italian handcrafted spectacle frames, luxury product photography on pale cream backdrop." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCapwRCftDNhngO3PuqN3xTOJVMVv4xgNcaiS_OBR26_85kRx3YmNho-ePXtqgW6dPCQUqea4p-ZUaeENxZ76zdqAgYWcQF5cNtZ4SLKsePxC9COiXmZ3BjszDByXIs7He-wp9EYGBM6v321vdQtylNoKW1rqHW_ZbN7Harvw0soiZinPEQswbaI_JoPfAWsBSzkxU5U99k-mkiVW8uPniyDY-NeGEOPtXaqcbdggdkLr8j0mPRoLQFkQ"/>
 <span class="absolute top-1 right-1 px-1.5 py-0.2 rounded bg-graphite/80 text-optical-white font-label-sm text-[9px] font-bold">92% Fit</span>
@@ -307,7 +307,7 @@
 </div>
 </button>
 <!-- Alt 3 -->
-<button class="shrink-0 w-44 p-2.5 rounded-xl bg-surface-container-lowest text-left shadow-sm hover:shadow-md transition-all flex flex-col">
+<button class="shrink-0 w-44 p-2.5 rounded-xl bg-surface-container-lowest text-left shadow-sm hover:shadow-md transition-all flex flex-col" data-ek-action="tray-swap">
 <div class="w-full h-20 rounded-lg bg-surface-container-low overflow-hidden mb-2 relative">
 <img class="w-full h-full object-cover" data-alt="Contemporary browline hybrid spectacle frames combining dark horn and rose titanium, minimal luxury aesthetic, top quality optical studio photo." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBerZyQlKKPMDVHxUA9YelhaNhA3nT85daDD1BaLh32ixnFrLY6MGO-uV7c_nNlMovku2og_nJncQGGGcMn9DNXOEi9H-MXPiOYkE3RaCvPm60zxQ6gv2G5-AJunyz8jKrQUA29ibC2tX0TwtmInA5C_a25AZSbdsUTIPnOHjqin5FxbLfsIFRDt7rlGc-vnn0doxGMOdgDVWCe3R_HfkFsBZxK2GMPuCo2r56a0Q3sZ5zKKMCSZWjcOA"/>
 <span class="absolute top-1 right-1 px-1.5 py-0.2 rounded bg-graphite/80 text-optical-white font-label-sm text-[9px] font-bold">97% Fit</span>
@@ -320,7 +320,7 @@
 </div>
 </button>
 <!-- Alt 4 -->
-<button class="shrink-0 w-44 p-2.5 rounded-xl bg-surface-container-lowest text-left shadow-sm hover:shadow-md transition-all flex flex-col">
+<button class="shrink-0 w-44 p-2.5 rounded-xl bg-surface-container-lowest text-left shadow-sm hover:shadow-md transition-all flex flex-col" data-ek-action="tray-swap">
 <div class="w-full h-20 rounded-lg bg-surface-container-low overflow-hidden mb-2 relative">
 <img class="w-full h-full object-cover" data-alt="Bold black architectural square glasses frames, modern urban eyewear, sleek minimal design on soft grey background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBQxp2bJ5efbf8IkF891BnPF0IrRUAjzKlhxkDBTkI7UMHKHt1P8R3yolHsaMx41CE2WZ6F0WEOYPLwqX-p035s4FSvNxmkLd5pxWyB7wpYtmGnCWWfy3aI8RVfHt11OSqgC2cXb7tUJmle_0cp2LZffgBQi3kYgTTfx1A3Hf56b-6J4BBOGMlsIOqBAxSPS-JjA9mQTZNhrvLCyN4I-9ICTI07ei_s16TfKzuF0roHKFOmWymFtWWOmA"/>
 <span class="absolute top-1 right-1 px-1.5 py-0.2 rounded bg-graphite/80 text-optical-white font-label-sm text-[9px] font-bold">94% Fit</span>
@@ -354,12 +354,12 @@
 <!-- Sticky Conversion Bottom Bar -->
 <div class="sticky bottom-0 z-30 w-full mt-5 p-margin-mobile bg-surface-ivory/95 backdrop-blur-lg shadow-[0_-4px_16px_rgba(0,0,0,0.06)] flex flex-col gap-2">
 <!-- Home Try-On Box Add-On -->
-<button class="w-full h-11 px-4 rounded-lg bg-surface-container-high text-on-surface hover:bg-surface-container flex items-center justify-center gap-2 font-label-lg text-label-lg font-semibold transition-colors">
+<button class="w-full h-11 px-4 rounded-lg bg-surface-container-high text-on-surface hover:bg-surface-container flex items-center justify-center gap-2 font-label-lg text-label-lg font-semibold transition-colors" data-ek-action="homebox" data-ek-sku="EK-902,MR-104">
 <span class="material-symbols-outlined text-[18px] text-secondary">inventory_2</span>
 <span>Add Both to Nairobi Try-On Box (2/4 Slots)</span>
 </button>
 <!-- Primary Purchase & Lens Step -->
-<button class="w-full h-12 px-4 rounded-lg bg-primary text-on-primary hover:bg-graphite active:scale-[0.99] transition-all flex items-center justify-between shadow-md">
+<button class="w-full h-12 px-4 rounded-lg bg-primary text-on-primary hover:bg-graphite active:scale-[0.99] transition-all flex items-center justify-between shadow-md" data-ek-action="configurator" data-ek-sku="EK-902">
 <div class="flex flex-col text-left">
 <span class="font-label-sm text-[11px] uppercase tracking-wider text-optical-white/75">Proceed With Frame A</span>
 <span class="font-title-md text-title-md font-bold leading-tight">Configure Custom Lenses</span>
@@ -566,4 +566,5 @@
 <script src="/assets/js/account-engine.js"></script>
 <script src="/assets/js/eyekart-runtime.js"></script>
 <script src="/assets/js/eyekart-theme.js"></script>
+<script src="/assets/js/eyekart-actions.js"></script>
 </body></html>

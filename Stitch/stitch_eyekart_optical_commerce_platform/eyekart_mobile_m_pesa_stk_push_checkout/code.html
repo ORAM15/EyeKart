@@ -133,7 +133,7 @@
 </div>
 <!-- Secondary Payment Options (Inactive) -->
 <div class="grid grid-cols-2 gap-space-xs">
-<button class="bg-surface-container-low/70 rounded-xl p-space-sm flex items-center justify-between opacity-70 hover:opacity-100 transition-opacity text-left" type="button">
+<button class="bg-surface-container-low/70 rounded-xl p-space-sm flex items-center justify-between opacity-70 hover:opacity-100 transition-opacity text-left" type="button" data-ek-action="pay-method" data-ek-pay="card">
 <div class="flex flex-col min-w-0">
 <span class="font-label-md text-label-md text-on-surface truncate">Credit / Debit Card</span>
 <span class="font-body-sm text-[11px] text-on-surface-variant truncate">Visa, Mastercard</span>
@@ -207,7 +207,7 @@
 <div class="flex flex-col gap-1 pt-1">
 <div class="flex items-center justify-between font-label-sm text-label-sm">
 <span class="text-on-surface-variant">Didn't see the prompt?</span>
-<button class="text-mpesa-green font-bold hover:underline flex items-center gap-0.5" onclick="alert('New STK prompt requested. Check your phone.');" type="button">
+<button class="text-mpesa-green font-bold hover:underline flex items-center gap-0.5" type="button" data-ek-action="pay-pending">
 <span class="material-symbols-outlined text-[14px]">replay</span>
             Resend STK Push
           </button>
@@ -220,7 +220,7 @@
 </div>
 <!-- Main Payment Verification CTA -->
 <div class="flex flex-col gap-space-xs">
-<button class="w-full h-12 bg-primary hover:bg-graphite text-on-primary rounded-lg font-label-lg text-label-lg flex items-center justify-center gap-2 active:scale-[0.99] transition-all shadow-md" onclick="this.innerHTML='&lt;span class=\'material-symbols-outlined text-[18px] animate-spin\'&gt;progress_activity&lt;/span&gt; Verifying Safaricom Ledger...'; setTimeout(()=&gt;{ this.innerHTML='&lt;span class=\'material-symbols-outlined text-[18px]\'&gt;check_circle&lt;/span&gt; Payment Confirmed! Generating Optical Rx Order...'; this.classList.remove('bg-primary'); this.classList.add('bg-mpesa-green'); }, 1400);" type="button">
+<button class="w-full h-12 bg-primary hover:bg-graphite text-on-primary rounded-lg font-label-lg text-label-lg flex items-center justify-center gap-2 active:scale-[0.99] transition-all shadow-md" type="button" data-ek-action="pay-pending">
 <span>I Have Entered My PIN</span>
 <span class="text-outline-variant">•</span>
 <span class="text-mpesa-green font-bold">KSh 23,000</span>
@@ -301,4 +301,5 @@
 <script src="/assets/js/account-engine.js"></script>
 <script src="/assets/js/eyekart-runtime.js"></script>
 <script src="/assets/js/eyekart-theme.js"></script>
+<script src="/assets/js/eyekart-actions.js"></script>
 </body></html>

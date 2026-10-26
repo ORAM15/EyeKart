@@ -277,15 +277,20 @@
     toggleWishlist(sku) {
       if (!sku) return false;
       const clean = sku.toUpperCase().trim();
+      // Showcase saves (homepage cards that are not catalog SKUs) store as
+      // SHOWCASE:NAME|PRICE; toasts show the human name, not the raw key.
+      const display = clean.indexOf('SHOWCASE:') === 0
+        ? clean.slice(9).split('|')[0].toLowerCase().replace(/\b\w/g, c => c.toUpperCase())
+        : clean;
       if (!Array.isArray(this.state.wishlist)) this.state.wishlist = [];
       const idx = this.state.wishlist.indexOf(clean);
       let added = false;
       if (idx > -1) {
         this.state.wishlist.splice(idx, 1);
-        this.showToast(`Removed ${clean} from Saved Frames`, 'favorite_border');
+        this.showToast(`Removed ${display} from Saved Frames`, 'favorite_border');
       } else {
         this.state.wishlist.push(clean);
-        this.showToast(`Saved ${clean} to Atelier Wishlist`, 'favorite');
+        this.showToast(`Saved ${display} to Atelier Wishlist`, 'favorite');
         added = true;
       }
       this.notify('wishlist');
@@ -434,7 +439,7 @@
       if (!Array.isArray(this.state.appointments)) this.state.appointments = [];
       this.state.appointments.unshift(newApt);
       this.notify('appointments');
-      this.showToast(`28-Point Exam booked at ${newApt.clinicName}`, 'event_available');
+      this.showToast(`Exam request saved at ${newApt.clinicName} — the clinic confirms by phone`, 'event_available');
       return newApt;
     }
 
@@ -446,7 +451,7 @@
         status: "APPROVED_DEMO"
       });
       this.notify('insurance');
-      this.showToast(`Pre-Authorization Approved: ${code}`, 'verified');
+      this.showToast(`Pre-auth draft saved: ${code} — not yet filed with the insurer`, 'verified');
       return this.state.insurance;
     }
 

@@ -40,17 +40,17 @@
 </div>
 <!-- Action Ribbon -->
 <div class="flex flex-wrap items-center gap-space-xs">
-<button class="flex items-center gap-space-xs px-space-md py-2.5 bg-primary text-optical-white rounded font-label-md text-label-md hover:bg-graphite transition-all shadow-sm" type="button">
+<button class="flex items-center gap-space-xs px-space-md py-2.5 bg-primary text-optical-white rounded font-label-md text-label-md hover:bg-graphite transition-all shadow-sm" type="button" data-ek-action="download" data-ek-download="taxinvoice" data-ek-ref="EK-78420-NB">
 <span class="material-symbols-outlined text-[16px]">picture_as_pdf</span>
 <span>Clinical Tax Invoice (PDF)</span>
 </button>
-<button class="flex items-center gap-space-xs px-space-md py-2.5 bg-mpesa-green text-optical-white rounded font-label-md text-label-md hover:opacity-90 transition-all shadow-sm" type="button">
+<button class="flex items-center gap-space-xs px-space-md py-2.5 bg-mpesa-green text-optical-white rounded font-label-md text-label-md hover:opacity-90 transition-all shadow-sm" type="button" data-ek-action="wa-track" data-ek-ref="EK-78420-NB">
 <span class="material-symbols-outlined text-[16px]">chat</span>
 <span>Live Tracker to WhatsApp</span>
 </button>
-<button class="flex items-center gap-space-xs px-space-md py-2.5 bg-optical-white text-on-surface rounded font-label-md text-label-md shadow-sm hover:bg-surface-cream transition-all" type="button">
+<button class="flex items-center gap-space-xs px-space-md py-2.5 bg-optical-white text-on-surface rounded font-label-md text-label-md shadow-sm hover:bg-surface-cream transition-all" type="button" data-ek-action="download" data-ek-download="ordercard" data-ek-ref="EK-78420-NB">
 <span class="material-symbols-outlined text-[16px]">wallet</span>
-<span>Add to Wallet</span>
+<span>Download order card</span>
 </button>
 </div>
 </div>
@@ -531,7 +531,7 @@
 </div>
 </div>
 </section>
-</div></main><footer class="w-full bg-surface-cream text-on-surface pt-space-xl pb-space-lg"><div class="max-w-[1440px] mx-auto px-margin-mobile lg:px-margin"><div class="bg-optical-white rounded p-space-lg lg:p-space-xl mb-space-xl shadow-[0_1px_3px_rgba(17,20,24,0.04)] flex flex-col lg:flex-row items-center justify-between gap-space-lg"><div class="max-w-xl"><span class="font-label-sm text-label-sm uppercase tracking-widest text-secondary">Optical Intelligence</span><h3 class="font-headline-md text-headline-md text-primary mt-1">Subscribe to The Nairobi Optical Gazette</h3><p class="font-body-md text-body-md text-on-surface-variant mt-2">Curated ophthalmic breakthroughs, seasonal frame drops from Milan and Tokyo, and priority clinical booking slots in Nairobi.</p></div><div class="w-full lg:w-auto flex flex-col sm:flex-row gap-space-xs"><input class="px-space-md py-3 rounded bg-surface-ivory text-body-md font-body-md text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:bg-optical-white min-w-[280px]" placeholder="Enter your personal or clinical email" type="email"/><button class="px-space-lg py-3 rounded bg-primary text-optical-white font-label-lg text-label-lg hover:bg-graphite transition-colors" type="button">Subscribe</button></div></div><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-space-xl mb-space-xl"><div class="flex flex-col gap-space-sm"><div class="flex items-center gap-space-xs mb-space-xs"><img alt="Brand logo. - Primary color: #111418
+</div></main><footer class="w-full bg-surface-cream text-on-surface pt-space-xl pb-space-lg"><div class="max-w-[1440px] mx-auto px-margin-mobile lg:px-margin"><div class="bg-optical-white rounded p-space-lg lg:p-space-xl mb-space-xl shadow-[0_1px_3px_rgba(17,20,24,0.04)] flex flex-col lg:flex-row items-center justify-between gap-space-lg"><div class="max-w-xl"><span class="font-label-sm text-label-sm uppercase tracking-widest text-secondary">Optical Intelligence</span><h3 class="font-headline-md text-headline-md text-primary mt-1">Subscribe to The Nairobi Optical Gazette</h3><p class="font-body-md text-body-md text-on-surface-variant mt-2">Curated ophthalmic breakthroughs, seasonal frame drops from Milan and Tokyo, and priority clinical booking slots in Nairobi.</p></div><div class="w-full lg:w-auto flex flex-col sm:flex-row gap-space-xs"><input class="px-space-md py-3 rounded bg-surface-ivory text-body-md font-body-md text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:bg-optical-white min-w-[280px]" placeholder="Enter your personal or clinical email" type="email"/><button class="px-space-lg py-3 rounded bg-primary text-optical-white font-label-lg text-label-lg hover:bg-graphite transition-colors" type="button" data-ek-action="subscribe">Subscribe</button></div></div><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-space-xl mb-space-xl"><div class="flex flex-col gap-space-sm"><div class="flex items-center gap-space-xs mb-space-xs"><img alt="Brand logo. - Primary color: #111418
 - Font: playfairDisplay
 - Mode: light
 - Roundness: rounded-sm
@@ -549,4 +549,5 @@
 <script src="/assets/js/account-engine.js"></script>
 <script src="/assets/js/eyekart-runtime.js"></script>
 <script src="/assets/js/eyekart-theme.js"></script>
+<script src="/assets/js/eyekart-actions.js"></script>
 </body></html>

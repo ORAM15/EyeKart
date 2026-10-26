@@ -180,6 +180,7 @@
       categories: [],
       materials: [],
       shapes: [],
+      width: 'all',
       bridge: 0,
       priceMax: 38000
     };
@@ -201,6 +202,18 @@
       }
       if (matParam) {
         activeFilters.materials.push(matParam.toLowerCase());
+      }
+      const genderParam = params.get('gender');
+      if (genderParam && ['men', 'women', 'teens', 'unisex'].includes(genderParam.toLowerCase())) {
+        activeFilters.gender = genderParam.toLowerCase();
+      }
+      const widthParam = params.get('width');
+      if (widthParam && ['narrow', 'medium', 'wide'].includes(widthParam.toLowerCase())) {
+        activeFilters.width = widthParam.toLowerCase();
+      }
+      const shapeParam = params.get('shape');
+      if (shapeParam && ['round', 'square', 'aviator', 'cat-eye', 'browline', 'rectangle', 'rimless', 'semi-rimless', 'octagonal'].includes(shapeParam.toLowerCase())) {
+        activeFilters.shapes = [shapeParam.toLowerCase()];
       }
     }
 
@@ -282,10 +295,11 @@
       btn.addEventListener('click', (e) => {
         e.preventDefault();
         const text = btn.textContent.toLowerCase();
-        if (text.includes("men's")) {
-          activeFilters.gender = activeFilters.gender === 'men' ? 'all' : 'men';
-        } else if (text.includes("women's")) {
+        // NOTE: "women's" contains the substring "men's", so women's must be checked first.
+        if (text.includes("women's")) {
           activeFilters.gender = activeFilters.gender === 'women' ? 'all' : 'women';
+        } else if (text.includes("men's")) {
+          activeFilters.gender = activeFilters.gender === 'men' ? 'all' : 'men';
         } else if (text.includes("teens")) {
           activeFilters.gender = activeFilters.gender === 'teens' ? 'all' : 'teens';
         }
@@ -296,6 +310,17 @@
         applyCatalogFilters();
       });
     });
+
+    // Highlight the gender button preselected via ?gender= (if any).
+    if (activeFilters.gender !== 'all') {
+      const preset = genderBtns.find(b => {
+        const t = b.textContent.toLowerCase();
+        return activeFilters.gender === 'women' ? t.includes("women's")
+          : activeFilters.gender === 'men' ? (t.includes("men's") && !t.includes("women's"))
+          : t.includes('teens');
+      });
+      if (preset) preset.classList.add('bg-primary', 'text-on-primary');
+    }
 
     // 7. Shape Filter Icon Buttons
     const shapeBtns = Array.from(document.querySelectorAll('button')).filter(btn => 
@@ -315,6 +340,16 @@
         applyCatalogFilters();
       });
     });
+
+    // Bridge for the site-wide actions layer (eyekart-actions.js): in-page
+    // filter pills call these instead of navigating away.
+    global.EyeKartCatalog = {
+      setGender: function (g) { activeFilters.gender = g; applyCatalogFilters(); },
+      setWidth: function (w) { activeFilters.width = w; applyCatalogFilters(); },
+      setShape: function (s) { activeFilters.shapes = s ? [s] : []; applyCatalogFilters(); },
+      setMaterial: function (m) { activeFilters.materials = m ? [m] : []; applyCatalogFilters(); },
+      setCategory: function (c) { activeFilters.categories = c ? [c] : []; applyCatalogFilters(); }
+    };
 
     // Core Multi-Faceted Filter Pipeline
     function applyCatalogFilters() {
@@ -362,6 +397,17 @@
         if (visible && activeFilters.materials.length > 0) {
           const matchMat = activeFilters.materials.some(m => frame.material.toLowerCase().includes(m));
           if (!matchMat) visible = false;
+        }
+
+        // Width Filter (total frame width = 2 x eye + bridge, from dimensions "eye [] bridge - temple")
+        if (visible && activeFilters.width && activeFilters.width !== 'all') {
+          const dims = (frame.dimensions || '').match(/(\d+)\s*\u25a1\s*(\d+)/);
+          if (dims) {
+            const total = 2 * parseInt(dims[1], 10) + parseInt(dims[2], 10);
+            if (activeFilters.width === 'narrow' && total >= 130) visible = false;
+            if (activeFilters.width === 'medium' && (total < 130 || total > 139)) visible = false;
+            if (activeFilters.width === 'wide' && total < 140) visible = false;
+          }
         }
 
         // Bridge Filter (if slider moved)

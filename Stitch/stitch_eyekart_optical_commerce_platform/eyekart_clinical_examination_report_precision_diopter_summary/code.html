@@ -79,17 +79,17 @@
 <!-- Right 4 Cols: Quick Command Actions -->
 <div class="lg:col-span-4 flex flex-col gap-space-xs p-space-md rounded bg-surface shadow-sm">
 <span class="font-label-sm text-label-sm uppercase tracking-widest text-on-surface-variant mb-1">Clinical Vault Actions</span>
-<button class="w-full px-4 py-2.5 rounded bg-primary text-optical-white font-label-md text-label-md hover:bg-graphite transition-all flex items-center justify-between shadow-sm" type="button">
+<button class="w-full px-4 py-2.5 rounded bg-primary text-optical-white font-label-md text-label-md hover:bg-graphite transition-all flex items-center justify-between shadow-sm" type="button" data-ek-action="download" data-ek-download="dossier">
 <span class="flex items-center gap-2">
 <span class="material-symbols-outlined text-[18px]">download_done</span>
               Download Signed PDF Dossier
             </span>
 <span class="font-data-metric text-[11px] opacity-70">2.4 MB</span>
 </button>
-<button class="w-full px-4 py-2.5 rounded bg-optical-white text-primary hover:bg-surface-cream transition-all flex items-center justify-between shadow-sm" type="button">
+<button class="w-full px-4 py-2.5 rounded bg-optical-white text-primary hover:bg-surface-cream transition-all flex items-center justify-between shadow-sm" type="button" data-ek-action="sync-copy" data-ek-sync="moh">
 <span class="flex items-center gap-2">
 <span class="material-symbols-outlined text-[18px] text-secondary">cloud_sync</span>
-              Sync to Aga Khan / MOH E-Record
+              Copy MOH reference
             </span>
 <span class="material-symbols-outlined text-[14px]">chevron_right</span>
 </button>
@@ -776,7 +776,7 @@
 <button class="w-full sm:w-auto px-space-lg py-3 rounded bg-mpesa-green text-optical-white font-label-lg text-label-lg hover:brightness-105 transition-all shadow-sm" type="button">
             Configure Lenses with This Rx
           </button>
-<button class="w-full sm:w-auto px-space-md py-3 rounded bg-optical-white/10 text-optical-white font-label-lg text-label-lg hover:bg-optical-white/20 transition-all" type="button">
+<button class="w-full sm:w-auto px-space-md py-3 rounded bg-optical-white/10 text-optical-white font-label-lg text-label-lg hover:bg-optical-white/20 transition-all" type="button" data-ek-action="book">
             Schedule 6-Month Review
           </button>
 </div>
@@ -855,7 +855,7 @@
       toggleBtn.classList.toggle('text-optical-white');
     });
   }
-</script></main><footer class="w-full bg-surface-cream text-on-surface pt-space-xl pb-space-lg"><div class="max-w-[1440px] mx-auto px-margin-mobile lg:px-margin"><div class="bg-optical-white rounded p-space-lg lg:p-space-xl mb-space-xl shadow-[0_1px_3px_rgba(17,20,24,0.04)] flex flex-col lg:flex-row items-center justify-between gap-space-lg"><div class="max-w-xl"><span class="font-label-sm text-label-sm uppercase tracking-widest text-secondary">Optical Intelligence</span><h3 class="font-headline-md text-headline-md text-primary mt-1">Subscribe to The Nairobi Optical Gazette</h3><p class="font-body-md text-body-md text-on-surface-variant mt-2">Curated ophthalmic breakthroughs, seasonal frame drops from Milan and Tokyo, and priority clinical booking slots in Nairobi.</p></div><div class="w-full lg:w-auto flex flex-col sm:flex-row gap-space-xs"><input class="px-space-md py-3 rounded bg-surface-ivory text-body-md font-body-md text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:bg-optical-white min-w-[280px]" placeholder="Enter your personal or clinical email" type="email"/><button class="px-space-lg py-3 rounded bg-primary text-optical-white font-label-lg text-label-lg hover:bg-graphite transition-colors" type="button">Subscribe</button></div></div><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-space-xl mb-space-xl"><div class="flex flex-col gap-space-sm"><div class="flex items-center gap-space-xs mb-space-xs"><img alt="Brand logo. - Primary color: #111418
+</script></main><footer class="w-full bg-surface-cream text-on-surface pt-space-xl pb-space-lg"><div class="max-w-[1440px] mx-auto px-margin-mobile lg:px-margin"><div class="bg-optical-white rounded p-space-lg lg:p-space-xl mb-space-xl shadow-[0_1px_3px_rgba(17,20,24,0.04)] flex flex-col lg:flex-row items-center justify-between gap-space-lg"><div class="max-w-xl"><span class="font-label-sm text-label-sm uppercase tracking-widest text-secondary">Optical Intelligence</span><h3 class="font-headline-md text-headline-md text-primary mt-1">Subscribe to The Nairobi Optical Gazette</h3><p class="font-body-md text-body-md text-on-surface-variant mt-2">Curated ophthalmic breakthroughs, seasonal frame drops from Milan and Tokyo, and priority clinical booking slots in Nairobi.</p></div><div class="w-full lg:w-auto flex flex-col sm:flex-row gap-space-xs"><input class="px-space-md py-3 rounded bg-surface-ivory text-body-md font-body-md text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:bg-optical-white min-w-[280px]" placeholder="Enter your personal or clinical email" type="email"/><button class="px-space-lg py-3 rounded bg-primary text-optical-white font-label-lg text-label-lg hover:bg-graphite transition-colors" type="button" data-ek-action="subscribe">Subscribe</button></div></div><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-space-xl mb-space-xl"><div class="flex flex-col gap-space-sm"><div class="flex items-center gap-space-xs mb-space-xs"><img alt="Brand logo. - Primary color: #111418
 - Font: playfairDisplay
 - Mode: light
 - Roundness: rounded-sm
@@ -873,4 +873,5 @@
 <script src="/assets/js/account-engine.js"></script>
 <script src="/assets/js/eyekart-runtime.js"></script>
 <script src="/assets/js/eyekart-theme.js"></script>
+<script src="/assets/js/eyekart-actions.js"></script>
 </body></html>
