@@ -349,6 +349,21 @@ class DemoPaymentProvider extends PaymentProvider {
     }
     const attempt = res.rows[0];
 
+    // Ownership check BEFORE anything is confirmed or returned: only
+    // the owner of the attempt's order may confirm it. A stranger probing
+    // an attempt ID (or checkout request ID) gets exactly the same
+    // generic 404 as for an attempt that does not exist at all — no
+    // existence leak, no attempt data, no order data, no checkout ID.
+    // A missing actorId is also refused (fail closed). Mirrors the
+    // ownership-first rule in initiatePayment (PR #14).
+    const orderRes = await query(`SELECT user_id FROM orders WHERE id = $1`, [attempt.order_id]);
+    if (orderRes.rows.length === 0 || orderRes.rows[0].user_id !== actorId) {
+      const err = new Error('Payment attempt not found.');
+      err.statusCode = 404;
+      err.code = 'PAYMENT_NOT_FOUND';
+      throw err;
+    }
+
     if (attempt.status === PAYMENT_STATES.SUCCESS) {
       return {
         success: true,
