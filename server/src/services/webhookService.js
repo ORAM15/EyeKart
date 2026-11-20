@@ -11,6 +11,26 @@ const { allocateStock, releaseStock } = require('./inventoryService');
 
 const MAX_WEBHOOK_AGE_SECONDS = 300; // 5 minutes
 
+/**
+ * Preserve absent values instead of stringifying them: String(null) is
+ * "null" and String(undefined) is "undefined", so a callback item whose
+ * Value is null/undefined used to pass the missing-receipt guard as the
+ * bogus non-empty string "null"/"undefined" and get stored as the receipt.
+ * Number(null) is 0, which would likewise fabricate an amount. Empty
+ * strings count as absent too. (Codex P2, 2026-11-20.)
+ */
+function nullableString(value) {
+  if (value === null || value === undefined) return null;
+  const text = String(value).trim();
+  return text === '' ? null : text;
+}
+
+function nullableNumber(value) {
+  if (value === null || value === undefined || value === '') return null;
+  const num = Number(value);
+  return Number.isNaN(num) ? null : num;
+}
+
 class WebhookService {
   /**
    * Parse standard Safaricom Daraja STK Push callback payload
@@ -33,10 +53,10 @@ class WebhookService {
 
     if (stk.CallbackMetadata && Array.isArray(stk.CallbackMetadata.Item)) {
       for (const item of stk.CallbackMetadata.Item) {
-        if (item.Name === 'Amount') amount = Number(item.Value);
-        if (item.Name === 'MpesaReceiptNumber') mpesaReceiptNumber = String(item.Value).trim();
-        if (item.Name === 'TransactionDate') transactionDate = String(item.Value);
-        if (item.Name === 'PhoneNumber') phoneNumber = String(item.Value);
+        if (item.Name === 'Amount') amount = nullableNumber(item.Value);
+        if (item.Name === 'MpesaReceiptNumber') mpesaReceiptNumber = nullableString(item.Value);
+        if (item.Name === 'TransactionDate') transactionDate = nullableString(item.Value);
+        if (item.Name === 'PhoneNumber') phoneNumber = nullableString(item.Value);
       }
     }
 
@@ -68,9 +88,113 @@ class WebhookService {
   }
 
   /**
+   * Confirm a transaction with Safaricom itself via the Daraja STK query
+   * API (stkpushquery/v1/query) using the checkoutRequestId.
+   *
+   * This is the primary authentication for callbacks that were NOT
+   * authenticated by the shared secret: Daraja cannot send the
+   * x-webhook-secret header, so in the documented direct-callback setup the
+   * secret is never present and the callback must instead be confirmed
+   * against the provider before it may move money.
+   *
+   * Trade-off: the STK query response carries no CallbackMetadata, so it
+   * confirms the transaction succeeded but returns no amount, receipt or
+   * phone — those still come from the callback and are checked against the
+   * authoritative order total in the success path. That is sufficient: a
+   * forged callback can only get an order marked paid if Daraja itself says
+   * the payment succeeded, in which case the payment genuinely happened.
+   * An IP allowlist was considered and rejected: Safaricom publishes no
+   * stable list of callback source IPs, so an allowlist would be brittle
+   * and could silently drop genuine callbacks.
+   *
+   * Returns { outcome: 'paid' | 'not-paid' | 'unavailable', result?,
+   * reason?, error? }. 'unavailable' covers Daraja being DISABLED,
+   * unconfigured, unreachable, or erroring — callers must treat it as
+   * "cannot confirm", never as confirmation.
+   */
+  async verifyWithDaraja(checkoutRequestId, darajaVerifier) {
+    try {
+      const verifier = darajaVerifier || (({ checkoutRequestId: id }) => {
+        // Lazy require: avoids a load-order cycle and lets tests inject a stub.
+        const { darajaInstance } = require('./payment');
+        return darajaInstance.queryPayment({ checkoutRequestId: id });
+      });
+      const result = await verifier({ checkoutRequestId });
+      const rawCode = result ? result.resultCode : null;
+      const resultCode = rawCode !== undefined && rawCode !== null ? Number(rawCode) : null;
+      if (resultCode === 0) return { outcome: 'paid', result };
+      return { outcome: 'not-paid', result, reason: `DARAJA_RESULT_${resultCode}` };
+    } catch (err) {
+      return { outcome: 'unavailable', reason: 'DARAJA_QUERY_FAILED', error: err.message };
+    }
+  }
+
+  /**
+   * Accept-and-flag: record an unauthenticated/unverifiable callback on the
+   * attempt WITHOUT changing its payment state, so the attempt stays PENDING
+   * and can still be resolved by the genuine callback, a retry, or manual
+   * reconciliation. A customer who paid must never be left with a terminally
+   * failed order just because Daraja was unreachable when the callback
+   * arrived. Commits the metadata update, audit-logs it, and returns the
+   * result the route should acknowledge with. Callers must return its
+   * result directly (the transaction is already committed).
+   */
+  async recordUnverifiedCallback(client, { attempt, callback, ip, status, flagReason }) {
+    await client.query(
+      `UPDATE payment_attempts
+       SET callback_received_at = CURRENT_TIMESTAMP,
+           metadata = jsonb_set(COALESCE(metadata, '{}'::jsonb), '{unverified_callback}', $1::jsonb),
+           updated_at = CURRENT_TIMESTAMP
+       WHERE id = $2`,
+      [
+        JSON.stringify({
+          flagReason,
+          checkoutRequestId: callback.checkoutRequestId,
+          resultCode: callback.resultCode,
+          resultDesc: callback.resultDesc,
+          receivedAt: new Date().toISOString(),
+          rawCallback: callback
+        }),
+        attempt.id
+      ]
+    );
+
+    await client.query('COMMIT');
+
+    await logAuditEvent({
+      actorId: attempt.order_user_id,
+      actorRole: 'SYSTEM',
+      ipAddress: ip,
+      action: 'PAYMENT_CALLBACK_UNVERIFIED',
+      entity: 'Order',
+      entityId: attempt.authoritative_order_id,
+      metadata: {
+        attemptId: attempt.id,
+        flagReason,
+        checkoutRequestId: callback.checkoutRequestId,
+        resultCode: callback.resultCode
+      }
+    });
+
+    return {
+      processed: false,
+      success: false,
+      status,
+      reason: flagReason,
+      resultCode: 1,
+      httpStatus: 200
+    };
+  }
+
+  /**
    * Process Safaricom Daraja STK callback inside an atomic transaction
    */
-  async processMpesaCallback(rawPayload, { headers = {}, ip = null } = {}) {
+  async processMpesaCallback(rawPayload, { headers = {}, ip = null, webhookAuth = 'none', darajaVerifier = null } = {}) {
+    // webhookAuth: 'secret' when the shared-secret header authenticated
+    // this callback (see routes/webhooks.js); anything else means the
+    // callback arrived without secret authentication and must be confirmed
+    // with Daraja before it may change payment state. Defaults to 'none'
+    // (verify) so callers that forget to pass it fail closed.
     const callback = WebhookService.parseDarajaCallback(rawPayload);
 
     if (!callback.checkoutRequestId) {
@@ -185,27 +309,107 @@ class WebhookService {
         }
       }
 
-      // 3. Replay attack inspection
+      // 3. Daraja verification (only when the callback was NOT authenticated
+      // by the shared secret). A secret-authenticated callback skips this
+      // query: the secret is the trust anchor there. For every other
+      // callback the transaction is confirmed with Safaricom itself before
+      // any state change below; an unverifiable callback is recorded and
+      // flagged, never acted on (see recordUnverifiedCallback).
+      let daraja = null;
+      if (webhookAuth !== 'secret') {
+        daraja = await this.verifyWithDaraja(callback.checkoutRequestId, darajaVerifier);
+      }
+
+      // 4. Replay / staleness inspection. A callback whose TransactionDate
+      // is older than the threshold is stale, but it is no longer rejected
+      // outright: a late SUCCESS callback that Daraja confirms is processed
+      // as a catch-up (a customer who paid must not lose the order — and its
+      // reserved stock — to a slow callback), while a late success Daraja
+      // does not confirm is recorded and flagged without changing payment
+      // state. Kept as outright rejections: a secret-authenticated stale
+      // callback (replays stay refused even for a trusted sender) and a
+      // stale failure claim (no money moves on it; pending-payment expiry
+      // handles the order). A replayed success for an already-paid attempt
+      // is still caught by the idempotency check in step 2.
       if (callback.transactionDate) {
         const txDate = WebhookService.parseTransactionDate(callback.transactionDate);
         if (txDate) {
           const ageSeconds = (Date.now() - txDate.getTime()) / 1000;
           if (ageSeconds > MAX_WEBHOOK_AGE_SECONDS) {
-            // Note in metadata but do not crash sandbox testing
-            console.warn(`[Webhook Ingress] Warning: Webhook transaction age is ${ageSeconds.toFixed(1)}s (exceeds ${MAX_WEBHOOK_AGE_SECONDS}s threshold).`);
+            if (webhookAuth === 'secret' || callback.resultCode !== 0) {
+              console.error(`[Webhook Ingress] SECURITY ALERT: Stale webhook callback rejected. Transaction age is ${ageSeconds.toFixed(1)}s (exceeds ${MAX_WEBHOOK_AGE_SECONDS}s threshold). CheckoutRequestID: ${callback.checkoutRequestId}`);
+              await client.query('ROLLBACK');
+              return {
+                processed: false,
+                success: false,
+                status: 'STALE_CALLBACK',
+                reason: 'STALE_CALLBACK',
+                resultCode: 1,
+                httpStatus: 200
+              };
+            }
+            if (daraja && daraja.outcome === 'paid') {
+              console.warn(`[Webhook Ingress] Late success callback verified with Daraja (age ${ageSeconds.toFixed(1)}s); processing as catch-up. CheckoutRequestID: ${callback.checkoutRequestId}`);
+              // Fall through to the success path below.
+            } else {
+              console.error(`[Webhook Ingress] SECURITY ALERT: Stale success callback NOT confirmed by Daraja (age ${ageSeconds.toFixed(1)}s, Daraja: ${daraja ? daraja.outcome : 'not queried'}). Recording without marking paid. CheckoutRequestID: ${callback.checkoutRequestId}`);
+              return await this.recordUnverifiedCallback(client, {
+                attempt,
+                callback,
+                ip,
+                status: 'STALE_CALLBACK_UNVERIFIED',
+                flagReason: daraja && daraja.outcome === 'not-paid' ? 'DARAJA_CONTRADICTS_SUCCESS' : 'DARAJA_QUERY_FAILED'
+              });
+            }
           }
         }
       }
 
-      // 4. Handle ResultCode
+      // 5. Handle ResultCode
       if (callback.resultCode === 0) {
-        // SUCCESS PATH: Tamper Verification
-        const orderTotal = Number(attempt.order_total);
-        const callbackAmount = callback.amount !== null ? Number(callback.amount) : orderTotal;
+        // SUCCESS PATH: Daraja confirmation first — only Safaricom's own
+        // word may move money on an unauthenticated callback. A
+        // secret-authenticated callback skips this (daraja is null there);
+        // a late-but-verified callback already passed step 4 with
+        // daraja.outcome === 'paid'. A success claim Daraja contradicts, or
+        // one Daraja cannot confirm, is recorded and flagged and the attempt
+        // stays PENDING — never marked paid on an unverified callback.
+        if (webhookAuth !== 'secret' && (!daraja || daraja.outcome !== 'paid')) {
+          return await this.recordUnverifiedCallback(client, {
+            attempt,
+            callback,
+            ip,
+            status: 'AWAITING_VERIFICATION',
+            flagReason: daraja && daraja.outcome === 'not-paid' ? 'DARAJA_CONTRADICTS_SUCCESS' : 'DARAJA_QUERY_FAILED'
+          });
+        }
 
-        // Anti-Tampering Check: Callback amount must strictly match authoritative order total
-        if (Math.abs(callbackAmount - orderTotal) > 0.01) {
-          console.error(`[Webhook Ingress] SECURITY ALERT: Amount mismatch! Callback amount KES ${callbackAmount}, Order total KES ${orderTotal}`);
+        // Tamper Verification
+        const orderTotal = Number(attempt.order_total);
+        const parsedAmount = callback.amount !== null && callback.amount !== undefined ? Number(callback.amount) : NaN;
+        const callbackAmount = Number.isNaN(parsedAmount) ? null : parsedAmount;
+
+        // Anti-Tampering Check: a missing amount must never be replaced with
+        // the order total (that would make this check vacuous), and a missing
+        // receipt must never be replaced with a fabricated one. Any of these
+        // on a success callback is treated as tampering: the attempt is
+        // marked FAILED and the order is NOT marked SUCCESS.
+        let tamperReason = null;
+        if (callbackAmount === null) {
+          tamperReason = 'MISSING_AMOUNT';
+        } else if (Math.abs(callbackAmount - orderTotal) > 0.01) {
+          tamperReason = 'AMOUNT_MISMATCH';
+        } else if (!callback.mpesaReceiptNumber) {
+          tamperReason = 'MISSING_RECEIPT';
+        }
+
+        if (tamperReason) {
+          const tamperDetail = tamperReason === 'MISSING_AMOUNT'
+            ? `MISSING_AMOUNT: Success callback carried no Amount. Authoritative KES ${orderTotal}`
+            : tamperReason === 'MISSING_RECEIPT'
+              ? `MISSING_RECEIPT: Success callback carried no MpesaReceiptNumber. Authoritative KES ${orderTotal}, Received KES ${callbackAmount}`
+              : `AMOUNT_MISMATCH: Authoritative KES ${orderTotal}, Received KES ${callbackAmount}`;
+          console.error(`[Webhook Ingress] SECURITY ALERT: ${tamperDetail}`);
 
           await client.query(
             `UPDATE payment_attempts
@@ -216,8 +420,8 @@ class WebhookService {
                  updated_at = CURRENT_TIMESTAMP
              WHERE id = $3`,
             [
-              `AMOUNT_MISMATCH: Authoritative KES ${orderTotal}, Received KES ${callbackAmount}`,
-              JSON.stringify({ expected: orderTotal, received: callbackAmount, rawCallback: callback }),
+              tamperDetail,
+              JSON.stringify({ reason: tamperReason, expected: orderTotal, received: callbackAmount, rawCallback: callback }),
               attempt.id
             ]
           );
@@ -242,6 +446,7 @@ class WebhookService {
             entityId: attempt.authoritative_order_id,
             metadata: {
               attemptId: attempt.id,
+              reason: tamperReason,
               orderTotal,
               callbackAmount,
               checkoutRequestId: callback.checkoutRequestId
@@ -252,7 +457,8 @@ class WebhookService {
             processed: true,
             success: false,
             status: 'FAILED',
-            reason: 'AMOUNT_MISMATCH',
+            reason: tamperReason,
+            resultCode: 1,
             httpStatus: 200
           };
         }
@@ -269,7 +475,7 @@ class WebhookService {
                updated_at = CURRENT_TIMESTAMP
            WHERE id = $4`,
           [
-            callback.mpesaReceiptNumber || ('MOCK-' + Date.now()),
+            callback.mpesaReceiptNumber,
             callback.phoneNumber,
             JSON.stringify(callback.raw),
             attempt.id
@@ -341,7 +547,36 @@ class WebhookService {
           httpStatus: 200
         };
       } else {
-        // FAILURE PATH: User cancelled or system error
+        // FAILURE PATH: User cancelled or system error. An unauthenticated
+        // failure claim is only processed when Daraja agrees the transaction
+        // did not succeed: a forged failure callback must not be able to
+        // cancel a genuine payment (a CANCELLED attempt blocks the real
+        // success callback below). If Daraja says the transaction succeeded,
+        // or the query is unavailable, record-and-flag and leave the attempt
+        // PENDING so the genuine callback or manual reconciliation can still
+        // resolve it.
+        if (webhookAuth !== 'secret') {
+          if (!daraja || daraja.outcome === 'unavailable') {
+            return await this.recordUnverifiedCallback(client, {
+              attempt,
+              callback,
+              ip,
+              status: 'AWAITING_VERIFICATION',
+              flagReason: 'DARAJA_QUERY_FAILED'
+            });
+          }
+          if (daraja.outcome === 'paid') {
+            return await this.recordUnverifiedCallback(client, {
+              attempt,
+              callback,
+              ip,
+              status: 'AWAITING_VERIFICATION',
+              flagReason: 'DARAJA_CONTRADICTS_FAILURE'
+            });
+          }
+          // daraja.outcome === 'not-paid': Daraja corroborates the failure.
+        }
+
         const targetStatus = callback.resultCode === 1032 ? PAYMENT_STATES.CANCELLED
                            : callback.resultCode === 1037 ? PAYMENT_STATES.EXPIRED
                            : PAYMENT_STATES.FAILED;

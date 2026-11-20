@@ -145,6 +145,29 @@ function validateConfig(cfg) {
     if (hasLocalhost && !allowLocalCorsInProd) {
       throw new Error('[Security Fatal] CORS_ORIGIN cannot contain localhost/127.0.0.1 in production mode. Specify authentic production origins (e.g. https://eyekart.co.ke).');
     }
+
+    // 5. M-PESA webhook authentication (fail closed, with a choice).
+    // Production must authenticate Daraja callbacks one of two ways:
+    // (a) a shared secret (MPESA_WEBHOOK_SECRET) checked against the
+    // x-webhook-secret header — requires a proxy/signer that can send it,
+    // because Daraja itself cannot; or (b) Daraja verification: the
+    // callback is confirmed against Safaricom via the STK query API before
+    // any payment is marked paid (see services/webhookService.js). With
+    // neither configured, callbacks cannot be authenticated and boot fails.
+    const mpesa = targetConfig.integrations?.mpesa || {};
+    const webhookSecret = mpesa.webhookSecret;
+    const hasWebhookSecret = Boolean(webhookSecret && typeof webhookSecret === 'string' && webhookSecret.trim());
+    const darajaEnv = (mpesa.environment || '').toUpperCase();
+    const darajaConfigured = darajaEnv !== 'DISABLED'
+      && Boolean(mpesa.consumerKey && mpesa.consumerKey.trim())
+      && Boolean(mpesa.consumerSecret && mpesa.consumerSecret.trim())
+      && Boolean(mpesa.passkey && mpesa.passkey.trim());
+    if (!hasWebhookSecret && !darajaConfigured) {
+      throw new Error('[Security Fatal] M-PESA webhook callbacks cannot be authenticated in production: set MPESA_WEBHOOK_SECRET, or configure Daraja (MPESA_ENVIRONMENT=SANDBOX|LIVE with MPESA_CONSUMER_KEY, MPESA_CONSUMER_SECRET and MPESA_PASSKEY) so callbacks are verified against Safaricom.');
+    }
+    if (!hasWebhookSecret) {
+      console.warn('[Security Warning] MPESA_WEBHOOK_SECRET is not set; production M-PESA callbacks will be verified against Safaricom via the Daraja STK query API before any payment is marked paid.');
+    }
   }
   return true;
 }

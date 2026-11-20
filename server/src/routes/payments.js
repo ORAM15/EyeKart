@@ -79,6 +79,14 @@ async function paymentRoutes(fastify, options) {
 
   // 3. POST /api/payments/demo/initiate - Backward compatible demo initiation endpoint
   fastify.post('/api/payments/demo/initiate', { preHandler: requireAuth }, async (req, reply) => {
+    if (process.env.NODE_ENV === 'production') {
+      return reply.status(403).send({
+        success: false,
+        error: 'Demo payment initiation is disabled in production environments.',
+        code: 'FORBIDDEN_IN_PRODUCTION'
+      });
+    }
+
     const idempotencyKey = req.headers['idempotency-key'] || req.body?.idempotencyKey || null;
     const { orderId, phone, amount, currency, simulateOutcome } = req.body || {};
 
