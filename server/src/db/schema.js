@@ -456,7 +456,11 @@ CREATE INDEX IF NOT EXISTS idx_appointments_clinic ON appointments(clinic_id);
 CREATE INDEX IF NOT EXISTS idx_appointments_status ON appointments(status);
 CREATE INDEX IF NOT EXISTS idx_appointments_ref ON appointments(booking_reference);
 CREATE UNIQUE INDEX IF NOT EXISTS uq_active_appointment_slot ON appointments(slot_id) WHERE slot_id IS NOT NULL AND status IN ('BOOKED', 'CONFIRMED');
-CREATE UNIQUE INDEX IF NOT EXISTS uq_appointments_idemp ON appointments(idempotency_key) WHERE idempotency_key IS NOT NULL;
+-- Stage 2 Slice D: idempotency uniqueness is scoped per user, so a
+-- client-chosen key can never collide with (or replay) another user's
+-- appointment. The runMigrations DO block below performs the same change
+-- on existing databases (dropping the old global index first).
+CREATE UNIQUE INDEX IF NOT EXISTS uq_appointments_idemp ON appointments(user_id, idempotency_key) WHERE idempotency_key IS NOT NULL;
 
 -- 23. Stored Documents table (Phase 6.6 Secure Storage Abstraction)
 CREATE TABLE IF NOT EXISTS stored_documents (
@@ -610,7 +614,36 @@ async function runMigrations() {
       END $$;
 
       CREATE UNIQUE INDEX IF NOT EXISTS uq_active_appointment_slot ON appointments(slot_id) WHERE slot_id IS NOT NULL AND status IN ('BOOKED', 'CONFIRMED');
-      CREATE UNIQUE INDEX IF NOT EXISTS uq_appointments_idemp ON appointments(idempotency_key) WHERE idempotency_key IS NOT NULL;
+
+      -- Stage 2 Slice D: rescope the idempotency unique index from the
+      -- global (idempotency_key) to (user_id, idempotency_key). The key is
+      -- client-chosen, so the global index let one user replay another
+      -- user's key and be handed their appointment. Safe on existing rows:
+      -- while the old global index is in place no duplicate key can exist
+      -- at all, so duplicate (user_id, key) pairs are impossible; if the
+      -- old index is somehow absent and duplicates DO exist, creation is
+      -- skipped with a NOTICE and the old index is left untouched for
+      -- manual cleanup instead of failing the migration. (The canonical
+      -- SCHEMA_SQL definition above already carries the scoped columns,
+      -- so fresh installs get it directly; this block only migrates
+      -- existing databases, and it is idempotent — re-runs are no-ops
+      -- because the index already exists under the same name.)
+      DO $$
+      BEGIN
+        IF EXISTS (
+          SELECT 1 FROM appointments
+          WHERE idempotency_key IS NOT NULL
+          GROUP BY user_id, idempotency_key
+          HAVING COUNT(*) > 1
+        ) THEN
+          RAISE NOTICE 'Skipping uq_appointments_idemp rescope: duplicate (user_id, idempotency_key) pairs exist; manual cleanup required.';
+        ELSE
+          DROP INDEX IF EXISTS uq_appointments_idemp;
+          CREATE UNIQUE INDEX IF NOT EXISTS uq_appointments_idemp
+            ON appointments(user_id, idempotency_key)
+            WHERE idempotency_key IS NOT NULL;
+        END IF;
+      END $$;
 
       CREATE INDEX IF NOT EXISTS idx_audit_action_date ON audit_logs(action, created_at DESC);
 
