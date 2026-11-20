@@ -63,30 +63,27 @@ class S3StorageProvider extends ObjectStorageProvider {
   }
 
   /**
-   * Create a secure presigned upload URL for direct client-to-bucket upload.
-   * Also issues a single-use uploadToken: confirm-upload validates the
-   * token against the stored intent (see routes/storage.js), so the
-   * presigned URL alone is never enough to register a document.
+   * Create an upload-intent ticket: a single-use uploadToken plus a
+   * server-generated object key. This is the ONLY upload contract:
+   * the client sends the file bytes as base64 to /confirm-upload
+   * together with the token (see routes/storage.js). No presigned
+   * upload URL is issued and there is no direct-to-bucket upload path
+   * — an earlier version returned a presigned PUT URL that no client
+   * ever used, and a client that PUT to it first would then fail
+   * confirmation, because saveObject refuses to overwrite the object
+   * that PUT had just created (IfNoneMatch: '*', 412 -> 409).
+   * The token is validated against the stored intent at confirm time,
+   * so the token alone is never enough to register a document.
    */
   async createUploadIntent({ userId, purpose = 'PRESCRIPTION', fileName, mimeType, fileSize }) {
-    const client = this.getClient();
+    // Fail fast if S3 is not configured; the intent itself needs no
+    // client call (no presigned URL is minted any more).
+    this.getClient();
 
     const safeName = path.basename(fileName || 'document.pdf').replace(/[^a-zA-Z0-9._-]/g, '_');
     const uniqueId = crypto.randomUUID();
     const objectKey = `${purpose.toLowerCase()}/${userId}/${Date.now()}-${uniqueId}-${safeName}`;
     const token = crypto.randomBytes(24).toString('hex');
-    const cleanMime = (mimeType || 'application/pdf').toLowerCase();
-
-    const command = new PutObjectCommand({
-      Bucket: this.bucket,
-      Key: objectKey,
-      ContentType: cleanMime,
-      ServerSideEncryption: 'AES256'
-    });
-
-    const uploadUrl = await getSignedUrl(client, command, {
-      expiresIn: this.presignedExpirySeconds
-    });
 
     const expiresAt = new Date(Date.now() + this.presignedExpirySeconds * 1000).toISOString();
 
@@ -96,11 +93,6 @@ class S3StorageProvider extends ObjectStorageProvider {
       region: this.region,
       objectKey,
       uploadToken: token,
-      uploadUrl,
-      method: 'PUT',
-      headers: {
-        'Content-Type': cleanMime
-      },
       expiresAt,
       maxSizeBytes: 10 * 1024 * 1024 // 10MB limit
     };

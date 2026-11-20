@@ -17,7 +17,10 @@
  *   token. The object key, purpose, file name and MIME type all come from
  *   the validated intent (server-generated); client-supplied objectKey /
  *   purpose / mimeType are ignored, so keys can no longer be squatted and
- *   one user cannot confirm under another user's prefix.
+ *   one user cannot confirm under another user's prefix. The file bytes
+ *   travel to confirm-upload as base64 in the JSON body — no presigned
+ *   upload URL is issued and there is no direct-to-bucket upload path
+ *   (see S3StorageProvider.createUploadIntent).
  * - Uploaded bytes are magic-byte validated against the claimed MIME
  *   before anything is saved (see services/storage/contentValidation.js).
  * - Save-then-insert failures clean up the saved object, and providers

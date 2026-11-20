@@ -543,6 +543,8 @@
      * server-generated `objectKey`; pass the token (not the objectKey)
      * to confirmStorageUpload — confirm validates the token and takes
      * the key, purpose, file name and MIME type from the stored intent.
+     * The intent carries no presigned upload URL: send the file itself
+     * as base64 to confirmStorageUpload.
      */
     async createStorageUploadIntent({ purpose = 'PRESCRIPTION', fileName, mimeType, fileSize } = {}) {
       return this._fetch('/api/storage/upload-intent', {

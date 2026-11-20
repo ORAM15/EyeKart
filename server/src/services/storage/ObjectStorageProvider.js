@@ -9,7 +9,9 @@ class ObjectStorageProvider {
   }
 
   /**
-   * Create an upload intent ticket or presigned upload URL
+   * Create an upload intent ticket (single-use token + server-generated
+   * object key). No presigned upload URL is issued; the client sends
+   * the file bytes as base64 to confirm-upload.
    */
   async createUploadIntent(params) {
     throw new Error(`createUploadIntent() must be implemented by ${this.constructor.name}`);
