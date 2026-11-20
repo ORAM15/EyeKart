@@ -11,6 +11,26 @@ const { allocateStock, releaseStock } = require('./inventoryService');
 
 const MAX_WEBHOOK_AGE_SECONDS = 300; // 5 minutes
 
+/**
+ * Preserve absent values instead of stringifying them: String(null) is
+ * "null" and String(undefined) is "undefined", so a callback item whose
+ * Value is null/undefined used to pass the missing-receipt guard as the
+ * bogus non-empty string "null"/"undefined" and get stored as the receipt.
+ * Number(null) is 0, which would likewise fabricate an amount. Empty
+ * strings count as absent too. (Codex P2, 2026-11-20.)
+ */
+function nullableString(value) {
+  if (value === null || value === undefined) return null;
+  const text = String(value).trim();
+  return text === '' ? null : text;
+}
+
+function nullableNumber(value) {
+  if (value === null || value === undefined || value === '') return null;
+  const num = Number(value);
+  return Number.isNaN(num) ? null : num;
+}
+
 class WebhookService {
   /**
    * Parse standard Safaricom Daraja STK Push callback payload
@@ -33,10 +53,10 @@ class WebhookService {
 
     if (stk.CallbackMetadata && Array.isArray(stk.CallbackMetadata.Item)) {
       for (const item of stk.CallbackMetadata.Item) {
-        if (item.Name === 'Amount') amount = Number(item.Value);
-        if (item.Name === 'MpesaReceiptNumber') mpesaReceiptNumber = String(item.Value).trim();
-        if (item.Name === 'TransactionDate') transactionDate = String(item.Value);
-        if (item.Name === 'PhoneNumber') phoneNumber = String(item.Value);
+        if (item.Name === 'Amount') amount = nullableNumber(item.Value);
+        if (item.Name === 'MpesaReceiptNumber') mpesaReceiptNumber = nullableString(item.Value);
+        if (item.Name === 'TransactionDate') transactionDate = nullableString(item.Value);
+        if (item.Name === 'PhoneNumber') phoneNumber = nullableString(item.Value);
       }
     }
 

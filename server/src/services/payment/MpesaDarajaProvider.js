@@ -13,6 +13,26 @@ const DarajaClient = require('./DarajaClient');
 const { query } = require('../../db/pool');
 const { logAuditEvent } = require('../auditService');
 
+/**
+ * Preserve absent values instead of stringifying them: String(null) is
+ * "null" and Number(null) is 0, so a metadata item whose Value is
+ * null/undefined would otherwise be stored as a bogus receipt ("null") or
+ * amount (0). Same defect class as the webhook parser fix (Codex P2,
+ * 2026-11-20); kept local here to avoid a require cycle with the webhook
+ * service. Empty strings count as absent too.
+ */
+function nullableString(value) {
+  if (value === null || value === undefined) return null;
+  const text = String(value).trim();
+  return text === '' ? null : text;
+}
+
+function nullableNumber(value) {
+  if (value === null || value === undefined || value === '') return null;
+  const num = Number(value);
+  return Number.isNaN(num) ? null : num;
+}
+
 class MpesaDarajaProvider extends PaymentProvider {
   constructor(config = {}) {
     const env = (config.environment || process.env.MPESA_ENVIRONMENT || 'DISABLED').toUpperCase();
@@ -246,10 +266,10 @@ class MpesaDarajaProvider extends PaymentProvider {
     // Parse CallbackMetadata if present
     if (raw.CallbackMetadata && Array.isArray(raw.CallbackMetadata.Item)) {
       for (const item of raw.CallbackMetadata.Item) {
-        if (item.Name === 'MpesaReceiptNumber') receiptNumber = String(item.Value);
-        if (item.Name === 'Amount') amount = Number(item.Value);
-        if (item.Name === 'PhoneNumber') phone = String(item.Value);
-        if (item.Name === 'TransactionDate') transactionDate = String(item.Value);
+        if (item.Name === 'MpesaReceiptNumber') receiptNumber = nullableString(item.Value);
+        if (item.Name === 'Amount') amount = nullableNumber(item.Value);
+        if (item.Name === 'PhoneNumber') phone = nullableString(item.Value);
+        if (item.Name === 'TransactionDate') transactionDate = nullableString(item.Value);
       }
     }
 
