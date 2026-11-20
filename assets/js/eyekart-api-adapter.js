@@ -538,7 +538,11 @@
     }
 
     /**
-     * Request a secure upload intent ticket for optical prescriptions/clinical files
+     * Request a secure upload intent ticket for optical prescriptions/clinical files.
+     * The response includes a single-use `uploadToken` plus the
+     * server-generated `objectKey`; pass the token (not the objectKey)
+     * to confirmStorageUpload — confirm validates the token and takes
+     * the key, purpose, file name and MIME type from the stored intent.
      */
     async createStorageUploadIntent({ purpose = 'PRESCRIPTION', fileName, mimeType, fileSize } = {}) {
       return this._fetch('/api/storage/upload-intent', {
@@ -548,12 +552,15 @@
     }
 
     /**
-     * Confirm and record uploaded document
+     * Confirm and record uploaded document.
+     * Requires the single-use `uploadToken` returned by
+     * createStorageUploadIntent; the server derives the object key,
+     * purpose, file name and MIME type from that validated intent.
      */
-    async confirmStorageUpload({ purpose = 'PRESCRIPTION', objectKey, fileName, mimeType, fileContentBase64 } = {}) {
+    async confirmStorageUpload({ uploadToken, fileContentBase64 } = {}) {
       return this._fetch('/api/storage/confirm-upload', {
         method: 'POST',
-        body: JSON.stringify({ purpose, objectKey, fileName, mimeType, fileContentBase64 })
+        body: JSON.stringify({ uploadToken, fileContentBase64 })
       });
     }
 

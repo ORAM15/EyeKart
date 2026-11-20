@@ -64,6 +64,9 @@ class S3StorageProvider extends ObjectStorageProvider {
 
   /**
    * Create a secure presigned upload URL for direct client-to-bucket upload.
+   * Also issues a single-use uploadToken: confirm-upload validates the
+   * token against the stored intent (see routes/storage.js), so the
+   * presigned URL alone is never enough to register a document.
    */
   async createUploadIntent({ userId, purpose = 'PRESCRIPTION', fileName, mimeType, fileSize }) {
     const client = this.getClient();
@@ -71,6 +74,7 @@ class S3StorageProvider extends ObjectStorageProvider {
     const safeName = path.basename(fileName || 'document.pdf').replace(/[^a-zA-Z0-9._-]/g, '_');
     const uniqueId = crypto.randomUUID();
     const objectKey = `${purpose.toLowerCase()}/${userId}/${Date.now()}-${uniqueId}-${safeName}`;
+    const token = crypto.randomBytes(24).toString('hex');
     const cleanMime = (mimeType || 'application/pdf').toLowerCase();
 
     const command = new PutObjectCommand({
@@ -91,6 +95,7 @@ class S3StorageProvider extends ObjectStorageProvider {
       bucket: this.bucket,
       region: this.region,
       objectKey,
+      uploadToken: token,
       uploadUrl,
       method: 'PUT',
       headers: {
@@ -103,8 +108,11 @@ class S3StorageProvider extends ObjectStorageProvider {
 
   /**
    * Directly save a file buffer into the S3 bucket with server-side encryption.
+   * Uses a conditional write (IfNoneMatch: '*') unless `overwrite: true`
+   * is passed, so saving can never silently replace an existing object
+   * at the same key.
    */
-  async saveObject({ objectKey, buffer, mimeType }) {
+  async saveObject({ objectKey, buffer, mimeType, overwrite = false }) {
     const client = this.getClient();
     const cleanMime = (mimeType || 'application/octet-stream').toLowerCase();
 
@@ -113,10 +121,21 @@ class S3StorageProvider extends ObjectStorageProvider {
       Key: objectKey,
       Body: buffer,
       ContentType: cleanMime,
-      ServerSideEncryption: 'AES256'
+      ServerSideEncryption: 'AES256',
+      ...(overwrite ? {} : { IfNoneMatch: '*' })
     });
 
-    await client.send(command);
+    try {
+      await client.send(command);
+    } catch (err) {
+      if (err.name === 'PreconditionFailed' || err.$metadata?.httpStatusCode === 412) {
+        const conflict = new Error(`Object '${objectKey}' already exists.`);
+        conflict.code = 'OBJECT_ALREADY_EXISTS';
+        conflict.statusCode = 409;
+        throw conflict;
+      }
+      throw err;
+    }
 
     return {
       objectKey,
