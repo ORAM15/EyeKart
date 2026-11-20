@@ -3,30 +3,32 @@
  * Handles incoming payment callbacks from external gateways (e.g. Safaricom Daraja).
  */
 const webhookService = require('../services/webhookService');
+const { darajaInstance } = require('../services/payment');
 
 async function webhookRoutes(fastify, options) {
   /**
-   * Helper to verify the webhook shared secret.
-   * Header only: the secret is never accepted via query string (URLs are
-   * logged and leak). Fail closed in production: if no secret is configured
-   * the callback is rejected. In non-production, a missing secret only logs
-   * a loud warning and allows the callback so sandbox/demo flows keep
-   * working; production boot already fails fast without the secret
-   * (see config/env.js validateConfig), so this branch is defence in depth.
+   * Verify the webhook shared secret — an OPTIONAL extra layer, never a
+   * hard gate for Daraja.
+   *
+   * Why: in the documented direct Daraja setup the callback URL is a bare
+   * URL and Safaricom cannot add an `x-webhook-secret` header (the repo
+   * configures no callback signer or proxy that could). Hard-gating on the
+   * header therefore 401s every genuine production callback and leaves
+   * successful payments unrecorded. Instead:
+   * - secret configured AND header matches -> 'secret': the callback is
+   *   authenticated by the shared secret (e.g. via a proxy that adds it).
+   * - secret configured but header missing/wrong -> 401 (unchanged).
+   * - no secret configured -> 'none': the callback is allowed through and
+   *   the service verifies the transaction with Daraja itself (STK query by
+   *   checkoutRequestId) before any payment is marked paid; an unverifiable
+   *   callback is recorded and flagged, never acted on.
+   * Returns 'secret' | 'none', or false after replying 401.
    */
   function verifyWebhookSecret(req, reply) {
     const configuredSecret = process.env.MPESA_WEBHOOK_SECRET;
     if (!configuredSecret) {
-      if (process.env.NODE_ENV === 'production') {
-        fastify.log.error('[Webhook Route] MPESA_WEBHOOK_SECRET is not configured in production; rejecting webhook.');
-        reply.status(500).send({
-          ResultCode: 1,
-          ResultDesc: 'Internal Server Error'
-        });
-        return false;
-      }
-      console.warn('[Webhook Route] WARNING: MPESA_WEBHOOK_SECRET is not configured; webhook callbacks are unauthenticated. Set MPESA_WEBHOOK_SECRET before deploying to production.');
-      return true;
+      console.warn('[Webhook Route] MPESA_WEBHOOK_SECRET is not configured; M-PESA callbacks will be verified against Safaricom via the Daraja STK query API before any payment is marked paid.');
+      return 'none';
     }
     const incomingSecret = req.headers['x-webhook-secret'];
     if (incomingSecret !== configuredSecret) {
@@ -36,17 +38,20 @@ async function webhookRoutes(fastify, options) {
       });
       return false;
     }
-    return true;
+    return 'secret';
   }
 
   // 1. POST /api/webhooks/mpesa - Dedicated Safaricom Daraja STK Push callback URL
   fastify.post('/api/webhooks/mpesa', async (req, reply) => {
-    if (!verifyWebhookSecret(req, reply)) return;
+    const webhookAuth = verifyWebhookSecret(req, reply);
+    if (!webhookAuth) return;
 
     try {
       const result = await webhookService.processMpesaCallback(req.body, {
         headers: req.headers,
-        ip: req.ip
+        ip: req.ip,
+        webhookAuth,
+        darajaVerifier: ({ checkoutRequestId }) => darajaInstance.queryPayment({ checkoutRequestId })
       });
 
       // Safaricom expects a standard acknowledgement. Only the ResultCode /
@@ -70,12 +75,15 @@ async function webhookRoutes(fastify, options) {
     const provider = String(req.params.provider).toLowerCase();
 
     if (provider === 'mpesa' || provider === 'daraja') {
-      if (!verifyWebhookSecret(req, reply)) return;
+      const webhookAuth = verifyWebhookSecret(req, reply);
+      if (!webhookAuth) return;
 
       try {
         const result = await webhookService.processMpesaCallback(req.body, {
           headers: req.headers,
-          ip: req.ip
+          ip: req.ip,
+          webhookAuth,
+          darajaVerifier: ({ checkoutRequestId }) => darajaInstance.queryPayment({ checkoutRequestId })
         });
         return reply.status(result.httpStatus || 200).send({
           ResultCode: result.resultCode ?? 0,

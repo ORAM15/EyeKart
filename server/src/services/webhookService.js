@@ -88,9 +88,113 @@ class WebhookService {
   }
 
   /**
+   * Confirm a transaction with Safaricom itself via the Daraja STK query
+   * API (stkpushquery/v1/query) using the checkoutRequestId.
+   *
+   * This is the primary authentication for callbacks that were NOT
+   * authenticated by the shared secret: Daraja cannot send the
+   * x-webhook-secret header, so in the documented direct-callback setup the
+   * secret is never present and the callback must instead be confirmed
+   * against the provider before it may move money.
+   *
+   * Trade-off: the STK query response carries no CallbackMetadata, so it
+   * confirms the transaction succeeded but returns no amount, receipt or
+   * phone — those still come from the callback and are checked against the
+   * authoritative order total in the success path. That is sufficient: a
+   * forged callback can only get an order marked paid if Daraja itself says
+   * the payment succeeded, in which case the payment genuinely happened.
+   * An IP allowlist was considered and rejected: Safaricom publishes no
+   * stable list of callback source IPs, so an allowlist would be brittle
+   * and could silently drop genuine callbacks.
+   *
+   * Returns { outcome: 'paid' | 'not-paid' | 'unavailable', result?,
+   * reason?, error? }. 'unavailable' covers Daraja being DISABLED,
+   * unconfigured, unreachable, or erroring — callers must treat it as
+   * "cannot confirm", never as confirmation.
+   */
+  async verifyWithDaraja(checkoutRequestId, darajaVerifier) {
+    try {
+      const verifier = darajaVerifier || (({ checkoutRequestId: id }) => {
+        // Lazy require: avoids a load-order cycle and lets tests inject a stub.
+        const { darajaInstance } = require('./payment');
+        return darajaInstance.queryPayment({ checkoutRequestId: id });
+      });
+      const result = await verifier({ checkoutRequestId });
+      const rawCode = result ? result.resultCode : null;
+      const resultCode = rawCode !== undefined && rawCode !== null ? Number(rawCode) : null;
+      if (resultCode === 0) return { outcome: 'paid', result };
+      return { outcome: 'not-paid', result, reason: `DARAJA_RESULT_${resultCode}` };
+    } catch (err) {
+      return { outcome: 'unavailable', reason: 'DARAJA_QUERY_FAILED', error: err.message };
+    }
+  }
+
+  /**
+   * Accept-and-flag: record an unauthenticated/unverifiable callback on the
+   * attempt WITHOUT changing its payment state, so the attempt stays PENDING
+   * and can still be resolved by the genuine callback, a retry, or manual
+   * reconciliation. A customer who paid must never be left with a terminally
+   * failed order just because Daraja was unreachable when the callback
+   * arrived. Commits the metadata update, audit-logs it, and returns the
+   * result the route should acknowledge with. Callers must return its
+   * result directly (the transaction is already committed).
+   */
+  async recordUnverifiedCallback(client, { attempt, callback, ip, status, flagReason }) {
+    await client.query(
+      `UPDATE payment_attempts
+       SET callback_received_at = CURRENT_TIMESTAMP,
+           metadata = jsonb_set(COALESCE(metadata, '{}'::jsonb), '{unverified_callback}', $1::jsonb),
+           updated_at = CURRENT_TIMESTAMP
+       WHERE id = $2`,
+      [
+        JSON.stringify({
+          flagReason,
+          checkoutRequestId: callback.checkoutRequestId,
+          resultCode: callback.resultCode,
+          resultDesc: callback.resultDesc,
+          receivedAt: new Date().toISOString(),
+          rawCallback: callback
+        }),
+        attempt.id
+      ]
+    );
+
+    await client.query('COMMIT');
+
+    await logAuditEvent({
+      actorId: attempt.order_user_id,
+      actorRole: 'SYSTEM',
+      ipAddress: ip,
+      action: 'PAYMENT_CALLBACK_UNVERIFIED',
+      entity: 'Order',
+      entityId: attempt.authoritative_order_id,
+      metadata: {
+        attemptId: attempt.id,
+        flagReason,
+        checkoutRequestId: callback.checkoutRequestId,
+        resultCode: callback.resultCode
+      }
+    });
+
+    return {
+      processed: false,
+      success: false,
+      status,
+      reason: flagReason,
+      resultCode: 1,
+      httpStatus: 200
+    };
+  }
+
+  /**
    * Process Safaricom Daraja STK callback inside an atomic transaction
    */
-  async processMpesaCallback(rawPayload, { headers = {}, ip = null } = {}) {
+  async processMpesaCallback(rawPayload, { headers = {}, ip = null, webhookAuth = 'none', darajaVerifier = null } = {}) {
+    // webhookAuth: 'secret' when the shared-secret header authenticated
+    // this callback (see routes/webhooks.js); anything else means the
+    // callback arrived without secret authentication and must be confirmed
+    // with Daraja before it may change payment state. Defaults to 'none'
+    // (verify) so callers that forget to pass it fail closed.
     const callback = WebhookService.parseDarajaCallback(rawPayload);
 
     if (!callback.checkoutRequestId) {
@@ -205,7 +309,18 @@ class WebhookService {
         }
       }
 
-      // 3. Replay attack inspection: callbacks older than the threshold are
+      // 3. Daraja verification (only when the callback was NOT authenticated
+      // by the shared secret). A secret-authenticated callback skips this
+      // query: the secret is the trust anchor there. For every other
+      // callback the transaction is confirmed with Safaricom itself before
+      // any state change below; an unverifiable callback is recorded and
+      // flagged, never acted on (see recordUnverifiedCallback).
+      let daraja = null;
+      if (webhookAuth !== 'secret') {
+        daraja = await this.verifyWithDaraja(callback.checkoutRequestId, darajaVerifier);
+      }
+
+      // 4. Replay attack inspection: callbacks older than the threshold are
       // rejected outright, never processed (a replayed success callback
       // must not be able to mark an order paid).
       if (callback.transactionDate) {
@@ -227,9 +342,26 @@ class WebhookService {
         }
       }
 
-      // 4. Handle ResultCode
+      // 5. Handle ResultCode
       if (callback.resultCode === 0) {
-        // SUCCESS PATH: Tamper Verification
+        // SUCCESS PATH: Daraja confirmation first — only Safaricom's own
+        // word may move money on an unauthenticated callback. A
+        // secret-authenticated callback skips this (daraja is null there);
+        // a late-but-verified callback already passed step 4 with
+        // daraja.outcome === 'paid'. A success claim Daraja contradicts, or
+        // one Daraja cannot confirm, is recorded and flagged and the attempt
+        // stays PENDING — never marked paid on an unverified callback.
+        if (webhookAuth !== 'secret' && (!daraja || daraja.outcome !== 'paid')) {
+          return await this.recordUnverifiedCallback(client, {
+            attempt,
+            callback,
+            ip,
+            status: 'AWAITING_VERIFICATION',
+            flagReason: daraja && daraja.outcome === 'not-paid' ? 'DARAJA_CONTRADICTS_SUCCESS' : 'DARAJA_QUERY_FAILED'
+          });
+        }
+
+        // Tamper Verification
         const orderTotal = Number(attempt.order_total);
         const parsedAmount = callback.amount !== null && callback.amount !== undefined ? Number(callback.amount) : NaN;
         const callbackAmount = Number.isNaN(parsedAmount) ? null : parsedAmount;
@@ -392,7 +524,36 @@ class WebhookService {
           httpStatus: 200
         };
       } else {
-        // FAILURE PATH: User cancelled or system error
+        // FAILURE PATH: User cancelled or system error. An unauthenticated
+        // failure claim is only processed when Daraja agrees the transaction
+        // did not succeed: a forged failure callback must not be able to
+        // cancel a genuine payment (a CANCELLED attempt blocks the real
+        // success callback below). If Daraja says the transaction succeeded,
+        // or the query is unavailable, record-and-flag and leave the attempt
+        // PENDING so the genuine callback or manual reconciliation can still
+        // resolve it.
+        if (webhookAuth !== 'secret') {
+          if (!daraja || daraja.outcome === 'unavailable') {
+            return await this.recordUnverifiedCallback(client, {
+              attempt,
+              callback,
+              ip,
+              status: 'AWAITING_VERIFICATION',
+              flagReason: 'DARAJA_QUERY_FAILED'
+            });
+          }
+          if (daraja.outcome === 'paid') {
+            return await this.recordUnverifiedCallback(client, {
+              attempt,
+              callback,
+              ip,
+              status: 'AWAITING_VERIFICATION',
+              flagReason: 'DARAJA_CONTRADICTS_FAILURE'
+            });
+          }
+          // daraja.outcome === 'not-paid': Daraja corroborates the failure.
+        }
+
         const targetStatus = callback.resultCode === 1032 ? PAYMENT_STATES.CANCELLED
                            : callback.resultCode === 1037 ? PAYMENT_STATES.EXPIRED
                            : PAYMENT_STATES.FAILED;
