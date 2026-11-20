@@ -3,6 +3,7 @@
  * Handles upload intents, file ingestion, IDOR access controls, and optometrist RBAC.
  */
 const { requireAuth } = require('../middleware/auth');
+const { rateLimitStorage } = require('../middleware/rateLimit');
 const { getStorageProvider } = require('../services/storage');
 const { query } = require('../db/pool');
 const { logAuditEvent } = require('../services/auditService');
@@ -20,6 +21,9 @@ const CLINICAL_ROLES = ['OPTOMETRIST', 'ADMIN', 'LAB_TECH', 'STORE_STAFF'];
 const storageProvider = getStorageProvider();
 
 async function storageRoutes(fastify, options) {
+  // Stage 2 slice F: 20/min/IP on all storage endpoints (upload intents
+  // and confirm-upload carry up to 10MB bodies and write documents).
+  fastify.addHook('preHandler', rateLimitStorage);
   // 1. POST /api/storage/upload-intent - Issue upload intent ticket
   fastify.post('/api/storage/upload-intent', { preHandler: requireAuth }, async (req, reply) => {
     const { purpose = 'PRESCRIPTION', fileName, mimeType, fileSize } = req.body || {};

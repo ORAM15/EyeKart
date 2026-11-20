@@ -28,6 +28,58 @@ const webhookRoutes = require('./routes/webhooks');
 const storageRoutes = require('./routes/storage');
 const notificationRoutes = require('./routes/notifications');
 
+// Content-Security-Policy for the served Stitch panels + /assets.
+// Asset inventory (checked against the real pages, main @ ee790df):
+//   - scripts: same-origin /assets/js/* (incl. vendored assets/vendor/three.min.js)
+//     plus https://cdn.tailwindcss.com (Tailwind Play CDN).
+//   - styles: same-origin, https://fonts.googleapis.com, Tailwind CDN.
+//   - fonts: https://fonts.gstatic.com (Google Fonts files).
+//   - images: same-origin /assets, https://lh3.googleusercontent.com
+//     (Stitch panel photography), data: (inline webp) and blob: (camera/
+//     canvas previews via URL.createObjectURL).
+//   - XHR/fetch: same-origin /api/* only, plus https://lh3.googleusercontent.com
+//     (snapshot download in assets/js/eyekart-actions.js fetches the catalog
+//     image bytes from that host; img-src alone does not cover fetch()).
+//     No WebSockets, no workers.
+//   - WebAssembly: 'wasm-unsafe-eval' on script-src — the vendored MediaPipe
+//     bundle (assets/vendor/mediapipe/vision_wasm_internal.wasm, loaded by
+//     assets/js/vto-engine.js via FilesetResolver) compiles WASM with
+//     WebAssembly.instantiateStreaming/instantiate. Without this keyword
+//     browsers that enforce CSP block compilation, so FaceLandmarker never
+//     initialises on either the GPU or the CPU path (both use the same WASM).
+//     This is narrower than 'unsafe-eval': eval() / new Function() stay blocked.
+//   - No <iframe>/<embed>/<object> and no cross-origin form posts.
+// KNOWN WEAKNESS — 'unsafe-inline' is required on script-src and style-src:
+// the panels ship ~41 inline <script> blocks (incl. 22 inline
+// tailwind-config blocks) plus 22 <style> blocks and inline style=""
+// attributes, so a nonce/hash CSP would break the site today. Follow-up:
+// move inline code into /assets/js files and inline styles into classes,
+// then replace 'unsafe-inline' with per-request nonces. Until then CSP
+// still blocks the dangerous cases: cross-origin scripts, plugins
+// (object-src 'none'), framing by other origins, and form exfiltration.
+const CONTENT_SECURITY_POLICY = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://cdn.tailwindcss.com",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.tailwindcss.com",
+  "font-src 'self' https://fonts.gstatic.com",
+  "img-src 'self' data: blob: https://lh3.googleusercontent.com",
+  "media-src 'self' blob:",
+  "connect-src 'self' https://lh3.googleusercontent.com",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "frame-ancestors 'self'",
+  "form-action 'self'"
+].join('; ');
+
+// Strict-Transport-Security: production only. Render terminates TLS in
+// front of the app, so browsers must only ever reach it over HTTPS once
+// they have seen this header. Never sent in local dev (plain HTTP), where
+// it would pin the browser to HTTPS for a host that serves none.
+// max-age 1 year + includeSubDomains; no `preload` (the domain has not
+// been submitted to the HSTS preload list — that is a separate, deliberate
+// decision, not an oversight).
+const STRICT_TRANSPORT_SECURITY = 'max-age=31536000; includeSubDomains';
+
 function buildApp(opts = {}) {
   const redactPaths = [
     'req.headers.authorization',
@@ -77,9 +129,15 @@ function buildApp(opts = {}) {
   app.addHook('onSend', async (request, reply, payload) => {
     reply.header('X-Content-Type-Options', 'nosniff');
     reply.header('X-Frame-Options', 'SAMEORIGIN');
-    reply.header('X-XSS-Protection', '1; mode=block');
+    // NOTE: X-XSS-Protection intentionally NOT set — it is deprecated and
+    // ignored by Chrome/Edge; Content-Security-Policy below is its
+    // replacement. Sending it can even re-enable a buggy legacy filter.
     reply.header('Referrer-Policy', 'strict-origin-when-cross-origin');
     reply.header('Permissions-Policy', 'camera=(self), microphone=(), geolocation=()');
+    reply.header('Content-Security-Policy', CONTENT_SECURITY_POLICY);
+    if (config.isProd) {
+      reply.header('Strict-Transport-Security', STRICT_TRANSPORT_SECURITY);
+    }
     if (request.id) {
       reply.header('x-request-id', request.id);
       reply.header('x-correlation-id', request.id);
