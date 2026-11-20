@@ -63,26 +63,27 @@ class S3StorageProvider extends ObjectStorageProvider {
   }
 
   /**
-   * Create a secure presigned upload URL for direct client-to-bucket upload.
+   * Create an upload-intent ticket: a single-use uploadToken plus a
+   * server-generated object key. This is the ONLY upload contract:
+   * the client sends the file bytes as base64 to /confirm-upload
+   * together with the token (see routes/storage.js). No presigned
+   * upload URL is issued and there is no direct-to-bucket upload path
+   * — an earlier version returned a presigned PUT URL that no client
+   * ever used, and a client that PUT to it first would then fail
+   * confirmation, because saveObject refuses to overwrite the object
+   * that PUT had just created (IfNoneMatch: '*', 412 -> 409).
+   * The token is validated against the stored intent at confirm time,
+   * so the token alone is never enough to register a document.
    */
   async createUploadIntent({ userId, purpose = 'PRESCRIPTION', fileName, mimeType, fileSize }) {
-    const client = this.getClient();
+    // Fail fast if S3 is not configured; the intent itself needs no
+    // client call (no presigned URL is minted any more).
+    this.getClient();
 
     const safeName = path.basename(fileName || 'document.pdf').replace(/[^a-zA-Z0-9._-]/g, '_');
     const uniqueId = crypto.randomUUID();
     const objectKey = `${purpose.toLowerCase()}/${userId}/${Date.now()}-${uniqueId}-${safeName}`;
-    const cleanMime = (mimeType || 'application/pdf').toLowerCase();
-
-    const command = new PutObjectCommand({
-      Bucket: this.bucket,
-      Key: objectKey,
-      ContentType: cleanMime,
-      ServerSideEncryption: 'AES256'
-    });
-
-    const uploadUrl = await getSignedUrl(client, command, {
-      expiresIn: this.presignedExpirySeconds
-    });
+    const token = crypto.randomBytes(24).toString('hex');
 
     const expiresAt = new Date(Date.now() + this.presignedExpirySeconds * 1000).toISOString();
 
@@ -91,11 +92,7 @@ class S3StorageProvider extends ObjectStorageProvider {
       bucket: this.bucket,
       region: this.region,
       objectKey,
-      uploadUrl,
-      method: 'PUT',
-      headers: {
-        'Content-Type': cleanMime
-      },
+      uploadToken: token,
       expiresAt,
       maxSizeBytes: 10 * 1024 * 1024 // 10MB limit
     };
@@ -103,8 +100,11 @@ class S3StorageProvider extends ObjectStorageProvider {
 
   /**
    * Directly save a file buffer into the S3 bucket with server-side encryption.
+   * Uses a conditional write (IfNoneMatch: '*') unless `overwrite: true`
+   * is passed, so saving can never silently replace an existing object
+   * at the same key.
    */
-  async saveObject({ objectKey, buffer, mimeType }) {
+  async saveObject({ objectKey, buffer, mimeType, overwrite = false }) {
     const client = this.getClient();
     const cleanMime = (mimeType || 'application/octet-stream').toLowerCase();
 
@@ -113,10 +113,21 @@ class S3StorageProvider extends ObjectStorageProvider {
       Key: objectKey,
       Body: buffer,
       ContentType: cleanMime,
-      ServerSideEncryption: 'AES256'
+      ServerSideEncryption: 'AES256',
+      ...(overwrite ? {} : { IfNoneMatch: '*' })
     });
 
-    await client.send(command);
+    try {
+      await client.send(command);
+    } catch (err) {
+      if (err.name === 'PreconditionFailed' || err.$metadata?.httpStatusCode === 412) {
+        const conflict = new Error(`Object '${objectKey}' already exists.`);
+        conflict.code = 'OBJECT_ALREADY_EXISTS';
+        conflict.statusCode = 409;
+        throw conflict;
+      }
+      throw err;
+    }
 
     return {
       objectKey,

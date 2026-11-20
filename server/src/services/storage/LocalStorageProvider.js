@@ -49,10 +49,22 @@ class LocalStorageProvider extends ObjectStorageProvider {
   }
 
   /**
-   * Commit file buffer into local storage
+   * Commit file buffer into local storage.
+   * Refuses to overwrite an existing object unless `overwrite: true` is
+   * passed explicitly, so a failed or colliding confirm can never
+   * clobber another user's file. Object keys are server-generated and
+   * single-use, so a legitimate confirm never needs an overwrite.
    */
-  async saveObject({ objectKey, buffer, mimeType }) {
+  async saveObject({ objectKey, buffer, mimeType, overwrite = false }) {
     const fullPath = this._resolveSafePath(objectKey);
+
+    if (!overwrite && fs.existsSync(fullPath)) {
+      const err = new Error(`Object '${objectKey}' already exists.`);
+      err.statusCode = 409;
+      err.code = 'OBJECT_ALREADY_EXISTS';
+      throw err;
+    }
+
     const parentDir = path.dirname(fullPath);
 
     if (!fs.existsSync(parentDir)) {

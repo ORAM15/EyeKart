@@ -478,6 +478,30 @@ CREATE TABLE IF NOT EXISTS stored_documents (
 CREATE INDEX IF NOT EXISTS idx_stored_documents_user ON stored_documents(user_id);
 CREATE INDEX IF NOT EXISTS idx_stored_documents_purpose ON stored_documents(purpose);
 
+-- 23b. Storage Upload Intents table (Stage 2 security hardening)
+-- Persists upload-intent tickets so confirm-upload can validate them.
+-- Only the SHA-256 hash of the token is stored, never the raw token.
+-- An intent is bound to one user, one server-generated object key, one
+-- purpose/MIME, and an expiry; used_at is set atomically on confirm so
+-- each token is single-use. Expired, unused rows are inert and may be
+-- pruned by a future housekeeping job (no scheduler exists yet).
+CREATE TABLE IF NOT EXISTS storage_upload_intents (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  token_hash VARCHAR(64) NOT NULL UNIQUE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  purpose VARCHAR(64) NOT NULL DEFAULT 'PRESCRIPTION',
+  object_key VARCHAR(512) NOT NULL UNIQUE,
+  file_name VARCHAR(255) NOT NULL,
+  mime_type VARCHAR(128) NOT NULL,
+  file_size_bytes BIGINT,
+  expires_at TIMESTAMPTZ NOT NULL,
+  used_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_upload_intents_user ON storage_upload_intents(user_id);
+CREATE INDEX IF NOT EXISTS idx_upload_intents_expires ON storage_upload_intents(expires_at);
+
 -- 24. Notifications table (Phase 8 Notifications, Communication & Event Delivery)
 CREATE TABLE IF NOT EXISTS notifications (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -635,6 +659,7 @@ async function dropAllTables() {
     DROP TABLE IF EXISTS notification_outbox CASCADE;
     DROP TABLE IF EXISTS notifications CASCADE;
     DROP TABLE IF EXISTS notification_preferences CASCADE;
+    DROP TABLE IF EXISTS storage_upload_intents CASCADE;
     DROP TABLE IF EXISTS stored_documents CASCADE;
     DROP TABLE IF EXISTS appointments CASCADE;
     DROP TABLE IF EXISTS appointment_slots CASCADE;
