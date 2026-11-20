@@ -10,8 +10,14 @@
  */
 const { PaymentProvider, PAYMENT_STATES, PROVIDER_ENVIRONMENTS } = require('./PaymentProvider');
 const DarajaClient = require('./DarajaClient');
-const { query } = require('../../db/pool');
+const { query, getPool } = require('../../db/pool');
 const { logAuditEvent } = require('../auditService');
+
+// An INITIATED attempt means the row was inserted but the STK dispatch has
+// not completed yet. Dispatch takes seconds, so an INITIATED row older than
+// this was orphaned by a crashed request and may be superseded by a retry.
+// (The admin expire-stale job, 30 min default, is the outer cleanup.)
+const STALE_INITIATED_MS = 5 * 60 * 1000;
 
 class MpesaDarajaProvider extends PaymentProvider {
   constructor(config = {}) {
@@ -49,100 +55,211 @@ class MpesaDarajaProvider extends PaymentProvider {
       throw err;
     }
 
-    // 3. Idempotency verification
-    if (idempotencyKey) {
-      const existing = await query(
-        `SELECT * FROM payment_attempts WHERE idempotency_key = $1`,
-        [idempotencyKey]
+    // 3-6. Order fetch + ownership + idempotency + active-attempt guard + insert,
+    // all inside one transaction holding a row lock on the order. The lock
+    // serializes concurrent initiations for the same order, so the
+    // check-then-insert below cannot race. Ownership is verified BEFORE any
+    // duplicate/active attempt is returned, and the idempotency lookup is
+    // scoped to this order: a key belonging to another order is a generic
+    // 409 conflict, never the other order's attempt row.
+    const pool = getPool();
+    const client = await pool.connect();
+    let order;
+    let attempt;
+    let isDuplicate = false;
+    let authoritativeAmount;
+    let formattedPhone;
+    try {
+      await client.query('BEGIN');
+
+      // 3. Fetch authoritative order, locked for the duration of this txn.
+      const orderRes = await client.query(
+        `SELECT * FROM orders WHERE id::text = $1 OR order_number = $1 FOR UPDATE`,
+        [orderId]
       );
-      if (existing.rows.length > 0) {
-        return {
-          isDuplicate: true,
-          attempt: existing.rows[0]
-        };
+      if (orderRes.rows.length === 0) {
+        const err = new Error(`Order '${orderId}' not found.`);
+        err.code = 'ORDER_NOT_FOUND';
+        err.statusCode = 404;
+        throw err;
       }
-    }
+      order = orderRes.rows[0];
 
-    // 4. Fetch authoritative order from database
-    const orderRes = await query(`SELECT * FROM orders WHERE id::text = $1 OR order_number = $1`, [orderId]);
-    if (orderRes.rows.length === 0) {
-      const err = new Error(`Order '${orderId}' not found.`);
-      err.code = 'ORDER_NOT_FOUND';
-      err.statusCode = 404;
-      throw err;
-    }
-    const order = orderRes.rows[0];
+      // Ownership check FIRST: customer cannot pay for another customer's
+      // order, and must not learn anything about another order's attempts.
+      if (actorId && order.user_id !== actorId && actorRole !== 'ADMIN') {
+        const err = new Error('Access denied. You can only initiate payment for your own orders.');
+        err.code = 'FORBIDDEN_ORDER_ACCESS';
+        err.statusCode = 403;
+        throw err;
+      }
 
-    // Ownership check: Customer cannot pay for another customer's order
-    if (actorId && order.user_id !== actorId && actorRole !== 'ADMIN') {
-      const err = new Error('Access denied. You can only initiate payment for your own orders.');
-      err.code = 'FORBIDDEN_ORDER_ACCESS';
-      err.statusCode = 403;
-      throw err;
-    }
-
-    if (order.status === 'CANCELLED') {
-      const err = new Error('Cannot initiate payment for a cancelled order.');
-      err.code = 'ORDER_CANCELLED';
-      err.statusCode = 400;
-      throw err;
-    }
-
-    if (order.status === 'EXPIRED') {
-      const err = new Error('Cannot initiate payment for an expired order.');
-      err.code = 'ORDER_EXPIRED';
-      err.statusCode = 400;
-      throw err;
-    }
-
-    if (order.payment_status === 'SUCCESS') {
-      const err = new Error('Order is already fully paid.');
-      err.code = 'ORDER_ALREADY_PAID';
-      err.statusCode = 400;
-      throw err;
-    }
-
-    // 5. Authoritative amount check: Client cannot underpay or tamper with order total
-    const authoritativeAmount = Number(order.total);
-    if (amount !== null && amount !== undefined) {
-      const requestedAmount = Number(amount);
-      if (Math.abs(requestedAmount - authoritativeAmount) > 0.01) {
-        const err = new Error(`Amount mismatch. Authoritative order total is KES ${authoritativeAmount.toFixed(2)}, but requested amount was KES ${requestedAmount.toFixed(2)}.`);
-        err.code = 'AMOUNT_MISMATCH';
+      if (order.status === 'CANCELLED') {
+        const err = new Error('Cannot initiate payment for a cancelled order.');
+        err.code = 'ORDER_CANCELLED';
         err.statusCode = 400;
         throw err;
       }
-    }
 
-    const formattedPhone = DarajaClient.formatPhoneNumber(phone || order.phone);
-    if (!formattedPhone || formattedPhone.length !== 12) {
-      const err = new Error(`A valid Kenyan phone number (254XXXXXXXXX) is required for M-PESA STK Push. Received: '${phone}'.`);
-      err.code = 'INVALID_PHONE_NUMBER';
-      err.statusCode = 400;
+      if (order.status === 'EXPIRED') {
+        const err = new Error('Cannot initiate payment for an expired order.');
+        err.code = 'ORDER_EXPIRED';
+        err.statusCode = 400;
+        throw err;
+      }
+
+      if (order.payment_status === 'SUCCESS') {
+        const err = new Error('Order is already fully paid.');
+        err.code = 'ORDER_ALREADY_PAID';
+        err.statusCode = 400;
+        throw err;
+      }
+
+      // 4. Authoritative amount check: client cannot underpay or tamper with order total
+      authoritativeAmount = Number(order.total);
+      if (amount !== null && amount !== undefined) {
+        const requestedAmount = Number(amount);
+        if (Math.abs(requestedAmount - authoritativeAmount) > 0.01) {
+          const err = new Error(`Amount mismatch. Authoritative order total is KES ${authoritativeAmount.toFixed(2)}, but requested amount was KES ${requestedAmount.toFixed(2)}.`);
+          err.code = 'AMOUNT_MISMATCH';
+          err.statusCode = 400;
+          throw err;
+        }
+      }
+
+      formattedPhone = DarajaClient.formatPhoneNumber(phone || order.phone);
+      if (!formattedPhone || formattedPhone.length !== 12) {
+        const err = new Error(`A valid Kenyan phone number (254XXXXXXXXX) is required for M-PESA STK Push. Received: '${phone}'.`);
+        err.code = 'INVALID_PHONE_NUMBER';
+        err.statusCode = 400;
+        throw err;
+      }
+
+      // 5a. Idempotency verification, scoped to this order. A prior attempt
+      // is only a replay when it belongs to THIS order; a key already used
+      // for a different order is a conflict, and the row is never returned.
+      if (idempotencyKey) {
+        const existing = await client.query(
+          `SELECT * FROM payment_attempts WHERE idempotency_key = $1`,
+          [idempotencyKey]
+        );
+        if (existing.rows.length > 0) {
+          const prior = existing.rows[0];
+          if (prior.order_id !== order.id) {
+            const err = new Error('This idempotency key has already been used for a different order. Retry with a new key.');
+            err.code = 'IDEMPOTENCY_KEY_CONFLICT';
+            err.statusCode = 409;
+            throw err;
+          }
+          attempt = prior;
+          isDuplicate = true;
+        }
+      }
+
+      // 5b. Active-attempt guard: a PENDING (push dispatched, awaiting PIN)
+      // or in-flight INITIATED attempt for this order is returned instead of
+      // dispatching a second STK push. This also covers keyless retries and
+      // concurrent requests using different keys, which the idempotency key
+      // alone cannot catch.
+      if (!isDuplicate) {
+        const activeRes = await client.query(
+          `SELECT * FROM payment_attempts
+           WHERE order_id = $1 AND status IN ('PENDING', 'INITIATED')
+           ORDER BY created_at DESC LIMIT 1`,
+          [order.id]
+        );
+        if (activeRes.rows.length > 0) {
+          const active = activeRes.rows[0];
+          if (active.status === 'PENDING') {
+            attempt = active;
+            isDuplicate = true;
+          } else if (Date.now() - new Date(active.created_at).getTime() > STALE_INITIATED_MS) {
+            // Orphaned INITIATED row: its creator crashed before dispatching.
+            // Mark it failed so this retry can proceed; the admin
+            // expire-stale job would otherwise clean it up within 30 min.
+            await client.query(
+              `UPDATE payment_attempts
+               SET status = 'FAILED',
+                   failure_reason = 'Superseded: stale initiated attempt with no dispatched STK push',
+                   updated_at = CURRENT_TIMESTAMP
+               WHERE id = $1`,
+              [active.id]
+            );
+          } else {
+            // Dispatch genuinely in flight: return it, do not double-push.
+            attempt = active;
+            isDuplicate = true;
+          }
+        }
+      }
+
+      // 6. Record payment attempt with INITIATED status (unless replaying).
+      // Backstop: uq_payment_attempts_order_idemp (unique on
+      // (order_id, idempotency_key) where key IS NOT NULL) rejects a
+      // same-key race that slipped past the lookup above; on violation we
+      // return the winning attempt instead of failing the request.
+      if (!isDuplicate) {
+        try {
+          const insertRes = await client.query(
+            `INSERT INTO payment_attempts (
+              order_id, provider, payment_rail, amount, currency, status, idempotency_key, phone_number, metadata
+            ) VALUES ($1, $2, $3, $4, 'KES', 'INITIATED', $5, $6, $7)
+            RETURNING *`,
+            [
+              order.id,
+              this.name,
+              'Safaricom M-PESA Express (STK Push)',
+              authoritativeAmount,
+              idempotencyKey || null,
+              formattedPhone,
+              JSON.stringify({
+                environment: this.environment,
+                initiatedAt: new Date().toISOString(),
+                customerOrderNumber: order.order_number
+              })
+            ]
+          );
+          attempt = insertRes.rows[0];
+        } catch (insertErr) {
+          if (insertErr.code === '23505' && idempotencyKey) {
+            await client.query('ROLLBACK').catch(() => {});
+            const winner = await query(
+              `SELECT * FROM payment_attempts WHERE idempotency_key = $1 AND order_id = $2`,
+              [idempotencyKey, order.id]
+            );
+            if (winner.rows.length > 0) {
+              return {
+                isDuplicate: true,
+                attempt: winner.rows[0],
+                checkoutRequestId: winner.rows[0].checkout_request_id || null,
+                merchantRequestId: winner.rows[0].merchant_request_id || null,
+                status: winner.rows[0].status
+              };
+            }
+          }
+          throw insertErr;
+        }
+      }
+
+      await client.query('COMMIT');
+    } catch (err) {
+      await client.query('ROLLBACK').catch(() => {});
       throw err;
+    } finally {
+      client.release();
     }
 
-    // 6. Record payment attempt with INITIATED status
-    const insertRes = await query(
-      `INSERT INTO payment_attempts (
-        order_id, provider, payment_rail, amount, currency, status, idempotency_key, phone_number, metadata
-      ) VALUES ($1, $2, $3, $4, 'KES', 'INITIATED', $5, $6, $7)
-      RETURNING *`,
-      [
-        order.id,
-        this.name,
-        'Safaricom M-PESA Express (STK Push)',
-        authoritativeAmount,
-        idempotencyKey || null,
-        formattedPhone,
-        JSON.stringify({
-          environment: this.environment,
-          initiatedAt: new Date().toISOString(),
-          customerOrderNumber: order.order_number
-        })
-      ]
-    );
-    const attempt = insertRes.rows[0];
+    // Replay / active-attempt return: no second STK push is dispatched.
+    // The route layer projects only safe fields from this attempt.
+    if (isDuplicate) {
+      return {
+        isDuplicate: true,
+        attempt,
+        checkoutRequestId: attempt.checkout_request_id || null,
+        merchantRequestId: attempt.merchant_request_id || null,
+        status: attempt.status
+      };
+    }
 
     // 7. Dispatch STK Push via DarajaClient
     let stkResult;

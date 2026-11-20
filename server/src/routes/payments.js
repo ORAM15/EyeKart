@@ -6,6 +6,21 @@
 const { getPaymentProvider, demoInstance, darajaInstance } = require('../services/payment');
 const { getPaymentStatus, expirePendingPayments } = require('../services/payment/paymentService');
 const { requireAuth } = require('../middleware/auth');
+const { query } = require('../db/pool');
+
+/**
+ * Minimal attempt summary safe for API responses. The client only needs the
+ * attempt id (to poll GET /api/payments/:attemptId/status) and the status.
+ * Never expose phone_number, failure_reason, metadata, checkout identifiers
+ * beyond the top-level fields, or the raw DB row.
+ */
+function summarizeAttempt(attempt) {
+  if (!attempt) return null;
+  return {
+    attemptId: attempt.id,
+    status: attempt.status
+  };
+}
 
 async function paymentRoutes(fastify, options) {
   // 1. POST /api/payments/initiate - Unified payment initiation endpoint
@@ -42,7 +57,8 @@ async function paymentRoutes(fastify, options) {
         checkoutRequestId: result.checkoutRequestId,
         merchantRequestId: result.merchantRequestId,
         customerMessage: result.customerMessage || 'Payment initiated. Please check your phone.',
-        attempt: result.attempt || result
+        isDuplicate: Boolean(result.isDuplicate),
+        attempt: summarizeAttempt(result.attempt)
       });
     } catch (err) {
       return reply.status(err.statusCode || 500).send({
@@ -111,7 +127,8 @@ async function paymentRoutes(fastify, options) {
         checkoutRequestId: result.checkoutRequestId,
         merchantRequestId: result.merchantRequestId,
         customerMessage: result.customerMessage,
-        attempt: result.attempt,
+        isDuplicate: Boolean(result.isDuplicate),
+        attempt: summarizeAttempt(result.attempt),
         message: '[DEMO PAYMENT] Simulated STK Push initiated. PIN confirmation pending.'
       });
     } catch (err) {
@@ -158,7 +175,7 @@ async function paymentRoutes(fastify, options) {
         status: result.status,
         receiptNumber: result.receiptNumber,
         alreadyProcessed: Boolean(result.alreadyProcessed),
-        attempt: result.attempt
+        attempt: summarizeAttempt(result.attempt)
       });
     } catch (err) {
       return reply.status(err.statusCode || 500).send({
@@ -208,7 +225,11 @@ async function paymentRoutes(fastify, options) {
 
       return reply.send({
         success: true,
-        payment: updated
+        payment: {
+          attemptId: updated.id,
+          orderId: updated.order_id,
+          status: updated.status
+        }
       });
     } catch (err) {
       return reply.status(err.statusCode || 500).send({
@@ -251,7 +272,8 @@ async function paymentRoutes(fastify, options) {
         checkoutRequestId: result.checkoutRequestId,
         merchantRequestId: result.merchantRequestId,
         customerMessage: result.customerMessage,
-        attempt: result.attempt
+        isDuplicate: Boolean(result.isDuplicate),
+        attempt: summarizeAttempt(result.attempt)
       });
     } catch (err) {
       return reply.status(err.statusCode || 500).send({
@@ -274,6 +296,35 @@ async function paymentRoutes(fastify, options) {
     }
 
     try {
+      // Ownership check BEFORE calling Daraja: look up the attempt and its
+      // order by checkoutRequestId and verify the caller owns the order.
+      // 404 when no attempt matches; 403 when it belongs to another user —
+      // the same pattern as GET /api/payments/:attemptId/status
+      // (paymentService.getPaymentStatus: PAYMENT_NOT_FOUND /
+      // FORBIDDEN_PAYMENT_ACCESS).
+      const attemptRes = await query(
+        `SELECT pa.id, pa.order_id, o.user_id AS order_user_id
+         FROM payment_attempts pa
+         JOIN orders o ON pa.order_id = o.id
+         WHERE pa.checkout_request_id = $1`,
+        [checkoutRequestId]
+      );
+      if (attemptRes.rows.length === 0) {
+        return reply.status(404).send({
+          success: false,
+          error: 'Payment attempt not found.',
+          code: 'PAYMENT_NOT_FOUND'
+        });
+      }
+      const attemptOwnerId = attemptRes.rows[0].order_user_id;
+      if (attemptOwnerId !== req.user.id && req.user.role !== 'ADMIN') {
+        return reply.status(403).send({
+          success: false,
+          error: 'Access denied. You cannot view payment details for another user.',
+          code: 'FORBIDDEN_PAYMENT_ACCESS'
+        });
+      }
+
       const status = await darajaInstance.queryPayment({ checkoutRequestId });
       return reply.status(200).send({
         success: true,
