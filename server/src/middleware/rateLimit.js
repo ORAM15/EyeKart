@@ -94,10 +94,86 @@ function resetRateLimiter() {
   authLimiter.reset();
 }
 
+// ---------------------------------------------------------------------------
+// Per-account limiters (Stage 2, slice E) — ADDITIVE, built on the existing
+// MemoryRateLimitStore. The IP-only limiter above can be evaded by rotating
+// the source IP (or the raw X-Forwarded-For value it keys on); keying by
+// account identifier closes that evasion for the targeted account, because
+// the bucket follows the account no matter which IP the attempt comes from.
+//
+// Same in-memory / multi-instance caveat as the header note: each process
+// holds its own counters, so on a multi-instance deployment without sticky
+// sessions these limits are per-instance. A shared store (e.g. Redis) would
+// be needed to enforce them globally.
+//
+// Thresholds are deliberately generous: a legitimate user mistyping a
+// password is unlikely to trip them, while credential stuffing against one
+// account is capped at 20 guesses per 15 minutes. Accepted trade-off: an
+// attacker who knows a victim's email can burn that account's login budget
+// (a short lockout), so the threshold is kept high rather than tight; a
+// failure-only counter would remove that trade-off but needs post-handler
+// hooks and is left as a follow-up.
+// ---------------------------------------------------------------------------
+
+// Login attempts per account (normalised email): 20 per 15 minutes.
+const accountLoginLimiter = new RateLimiter(20, 15 * 60 * 1000);
+// Password-change attempts per authenticated user: 5 per 15 minutes.
+const changePasswordLimiter = new RateLimiter(5, 15 * 60 * 1000);
+
+function sendRateLimited(reply, retrySecs) {
+  reply.header('Retry-After', retrySecs);
+  reply.status(429).send({
+    success: false,
+    error: `Too many attempts. Please try again in ${retrySecs} seconds.`,
+    code: 'RATE_LIMITED'
+  });
+}
+
+function rateLimitLoginPerAccount(req, reply, done) {
+  const body = req.body || {};
+  const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
+  // No usable account identifier: let the handler return its 400; do not
+  // burn a per-account bucket on malformed input.
+  if (!email) {
+    done();
+    return;
+  }
+  if (!accountLoginLimiter.isAllowed(`login:${email}`)) {
+    sendRateLimited(reply, Math.ceil(accountLoginLimiter.windowMs / 1000));
+    return;
+  }
+  done();
+}
+
+function rateLimitChangePasswordPerAccount(req, reply, done) {
+  const userId = req.user && req.user.id;
+  // requireAuth runs first in the preHandler chain, so req.user is set for
+  // every request that reaches here. Fall back to the IP if it somehow is
+  // not, so the endpoint is never left un-limited.
+  const key = userId
+    ? `change-password:${userId}`
+    : `change-password:ip:${req.ip || req.headers['x-forwarded-for'] || '127.0.0.1'}`;
+  if (!changePasswordLimiter.isAllowed(key)) {
+    sendRateLimited(reply, Math.ceil(changePasswordLimiter.windowMs / 1000));
+    return;
+  }
+  done();
+}
+
+function resetAccountLimiters() {
+  accountLoginLimiter.reset();
+  changePasswordLimiter.reset();
+}
+
 module.exports = {
   RateLimiter,
   MemoryRateLimitStore,
   rateLimitAuth,
   resetRateLimiter,
-  authLimiter
+  authLimiter,
+  rateLimitLoginPerAccount,
+  rateLimitChangePasswordPerAccount,
+  resetAccountLimiters,
+  accountLoginLimiter,
+  changePasswordLimiter
 };
