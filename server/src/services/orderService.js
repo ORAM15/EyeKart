@@ -76,9 +76,28 @@ async function createOrderFromQuote({
     throw err;
   }
 
-  // 1. Idempotency Check
+  // 1. Idempotency Check (payload supplied so a replayed key with a
+  // different payload is a conflict, not a replay of the first order).
+  // The payload must cover every input that decides what order is built:
+  // quoteId, cartId and items (a quote is generated from cartId/items when
+  // quoteId is omitted), plus the delivery address. The same object is
+  // reused for the save below so check and save can never drift apart.
+  // Fields are normalised to null so `undefined` vs `null` cannot change
+  // the hash between a check and its save, or between retries.
+  const idempotencyPayload = {
+    quoteId: quoteId || null,
+    cartId: cartId || null,
+    items: items || null,
+    deliveryAddress
+  };
   if (idempotencyKey) {
-    const idemp = await checkIdempotency(idempotencyKey, userId, '/api/orders');
+    const idemp = await checkIdempotency(idempotencyKey, userId, '/api/orders', idempotencyPayload);
+    if (idemp.conflict) {
+      const err = new Error('This idempotency key has already been used with a different request. Retry with a new key.');
+      err.statusCode = 409;
+      err.code = 'IDEMPOTENCY_CONFLICT';
+      throw err;
+    }
     if (idemp.hit) {
       return idemp.body;
     }
@@ -114,6 +133,21 @@ async function createOrderFromQuote({
   if (!quote) {
     // Generate fresh quote from cart or direct items
     quote = await generateCheckoutQuote({ userId, cartId, items });
+  }
+
+  // 3a. Quote ownership: a stored quote belongs to the user who created it
+  // (checkoutService records userId on the quote). An order must not be
+  // created from another customer's quote — quote IDs are only
+  // `QTE-<epoch ms>-<4 random bytes hex>`, so they must not be treated as
+  // unguessable secrets. Freshly generated quotes above already carry this
+  // caller's userId, so the check passes trivially for them. Quotes created
+  // anonymously (userId null, e.g. before the quote endpoint required auth)
+  // have no owner to protect and remain usable.
+  if (quote.userId && actorRole !== 'ADMIN' && quote.userId !== userId) {
+    const err = new Error('Access denied. Cannot create an order from another customer\'s quote.');
+    err.statusCode = 403;
+    err.code = 'FORBIDDEN_QUOTE_ACCESS';
+    throw err;
   }
 
   if (!quote || !quote.items || quote.items.length === 0) {
@@ -419,7 +453,7 @@ async function createOrderFromQuote({
     });
 
     if (idempotencyKey) {
-      await saveIdempotency(idempotencyKey, userId, '/api/orders', { quoteId, deliveryAddress }, 201, fullOrder);
+      await saveIdempotency(idempotencyKey, userId, '/api/orders', idempotencyPayload, 201, fullOrder);
     }
 
     return fullOrder;

@@ -231,6 +231,33 @@ CREATE INDEX IF NOT EXISTS idx_payment_attempts_idemp ON payment_attempts(idempo
 CREATE INDEX IF NOT EXISTS idx_payment_attempts_checkout_req ON payment_attempts(checkout_request_id);
 CREATE UNIQUE INDEX IF NOT EXISTS uq_payment_attempts_mpesa_receipt ON payment_attempts(mpesa_receipt_number) WHERE mpesa_receipt_number IS NOT NULL;
 
+-- Stage 2 (Slice B): one attempt per (order, idempotency key). Guards the
+-- same-key race at the DB level; the application-level guard in
+-- MpesaDarajaProvider (FOR UPDATE + active-attempt check) handles keyless
+-- and different-key retries. Deliberately NOT a partial unique index on
+-- (order_id) WHERE status IN ('PENDING','INITIATED'): a stuck PENDING
+-- attempt (e.g. a demo PENDING never confirmed) would block all future
+-- payment initiation for that order, including paths with no guard logic.
+-- The duplicate check below keeps db:migrate safe on legacy data:
+-- SCHEMA_SQL re-runs against existing databases, so a bare CREATE UNIQUE
+-- INDEX would abort the whole migration if duplicate (order_id, key) pairs
+-- already exist. When duplicates exist the index is skipped with a NOTICE
+-- and the application-level guard remains the protection.
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM payment_attempts
+    WHERE idempotency_key IS NOT NULL
+    GROUP BY order_id, idempotency_key
+    HAVING COUNT(*) > 1
+  ) THEN
+    CREATE UNIQUE INDEX IF NOT EXISTS uq_payment_attempts_order_idemp
+      ON payment_attempts(order_id, idempotency_key) WHERE idempotency_key IS NOT NULL;
+  ELSE
+    RAISE NOTICE '[EyeKart Migration] Skipping uq_payment_attempts_order_idemp: duplicate (order_id, idempotency_key) pairs exist in payment_attempts.';
+  END IF;
+END $$;
+
 -- 14. Idempotency Keys table (Phase 6.2)
 CREATE TABLE IF NOT EXISTS idempotency_keys (
   key VARCHAR(128) PRIMARY KEY,
