@@ -37,7 +37,17 @@ const notificationRoutes = require('./routes/notifications');
 //   - images: same-origin /assets, https://lh3.googleusercontent.com
 //     (Stitch panel photography), data: (inline webp) and blob: (camera/
 //     canvas previews via URL.createObjectURL).
-//   - XHR/fetch: same-origin /api/* only; no WebSockets, no workers.
+//   - XHR/fetch: same-origin /api/* only, plus https://lh3.googleusercontent.com
+//     (snapshot download in assets/js/eyekart-actions.js fetches the catalog
+//     image bytes from that host; img-src alone does not cover fetch()).
+//     No WebSockets, no workers.
+//   - WebAssembly: 'wasm-unsafe-eval' on script-src — the vendored MediaPipe
+//     bundle (assets/vendor/mediapipe/vision_wasm_internal.wasm, loaded by
+//     assets/js/vto-engine.js via FilesetResolver) compiles WASM with
+//     WebAssembly.instantiateStreaming/instantiate. Without this keyword
+//     browsers that enforce CSP block compilation, so FaceLandmarker never
+//     initialises on either the GPU or the CPU path (both use the same WASM).
+//     This is narrower than 'unsafe-eval': eval() / new Function() stay blocked.
 //   - No <iframe>/<embed>/<object> and no cross-origin form posts.
 // KNOWN WEAKNESS — 'unsafe-inline' is required on script-src and style-src:
 // the panels ship ~41 inline <script> blocks (incl. 22 inline
@@ -49,12 +59,12 @@ const notificationRoutes = require('./routes/notifications');
 // (object-src 'none'), framing by other origins, and form exfiltration.
 const CONTENT_SECURITY_POLICY = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com",
+  "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://cdn.tailwindcss.com",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.tailwindcss.com",
   "font-src 'self' https://fonts.gstatic.com",
   "img-src 'self' data: blob: https://lh3.googleusercontent.com",
   "media-src 'self' blob:",
-  "connect-src 'self'",
+  "connect-src 'self' https://lh3.googleusercontent.com",
   "object-src 'none'",
   "base-uri 'self'",
   "frame-ancestors 'self'",
