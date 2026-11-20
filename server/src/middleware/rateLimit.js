@@ -90,6 +90,58 @@ function rateLimitAuth(req, reply, done) {
   done();
 }
 
+// ---------------------------------------------------------------------------
+// Stage 2 slice F: per-route limiters for payment-adjacent, upload,
+// appointment and order routes. Same in-process MemoryRateLimitStore and
+// same IP keying as rateLimitAuth (with trustProxy: true in prod, req.ip
+// is already derived from X-Forwarded-For by Fastify; the header fallback
+// only matters when the proxy is not trusted). Limits are per IP per
+// minute and deliberately human-scale — a real checkout/booking flow
+// makes a handful of calls; floods and credentialed-abuse loops make
+// hundreds. Deliberately NOT applied: notifications (already has its own
+// 60/min limiter) and the M-PESA webhook callbacks (unauthenticated
+// gateway callbacks with retry behaviour — rate-limiting them would drop
+// legitimate payment confirmations).
+// ---------------------------------------------------------------------------
+
+// Generic factory: builds a preHandler middleware backed by its own
+// RateLimiter instance. `label` appears in the 429 message.
+function makeRateLimit(maxRequests, windowMs, label) {
+  const limiter = new RateLimiter(maxRequests, windowMs);
+  return function rateLimitRoute(req, reply, done) {
+    const ip = req.ip || req.headers['x-forwarded-for'] || '127.0.0.1';
+    if (!limiter.isAllowed(ip)) {
+      const retrySecs = Math.ceil(limiter.windowMs / 1000);
+      reply.header('Retry-After', retrySecs);
+      reply.status(429).send({
+        success: false,
+        error: `Too many ${label} requests. Please try again in ${retrySecs} seconds.`,
+        code: 'RATE_LIMITED'
+      });
+      return;
+    }
+    done();
+  };
+}
+
+// 30/min: payment initiation hits the Daraja gateway and creates payment
+// attempts; the same limiter covers status polling (a checkout flow
+// polling every 2s stays well under it) and the dev-only demo endpoints.
+const rateLimitPayments = makeRateLimit(30, 60000, 'payment');
+// 30/min: quote generation is unauthenticated and does pricing work, so
+// it needs a limit even though a human re-quotes rarely.
+const rateLimitCheckout = makeRateLimit(30, 60000, 'checkout');
+// 30/min: order creation / listing / cancellation for one shopper.
+const rateLimitOrders = makeRateLimit(30, 60000, 'order');
+// 60/min: availability is a public, pollable endpoint (date-picker
+// browsing), so it gets the loosest write-adjacent limit; booking writes
+// are additionally guarded by slot atomicity + idempotency keys.
+const rateLimitAppointments = makeRateLimit(60, 60000, 'appointment');
+// 20/min: upload intents and confirm-upload carry up to 10MB base64
+// bodies and write documents; 20/min still lets a human upload several
+// prescriptions in a row while blocking bulk upload floods.
+const rateLimitStorage = makeRateLimit(20, 60000, 'storage');
+
 function resetRateLimiter() {
   authLimiter.reset();
 }
@@ -99,5 +151,11 @@ module.exports = {
   MemoryRateLimitStore,
   rateLimitAuth,
   resetRateLimiter,
-  authLimiter
+  authLimiter,
+  makeRateLimit,
+  rateLimitPayments,
+  rateLimitCheckout,
+  rateLimitOrders,
+  rateLimitAppointments,
+  rateLimitStorage
 };

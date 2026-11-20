@@ -6,8 +6,13 @@
 const { getPaymentProvider, demoInstance, darajaInstance } = require('../services/payment');
 const { getPaymentStatus, expirePendingPayments } = require('../services/payment/paymentService');
 const { requireAuth } = require('../middleware/auth');
+const { rateLimitPayments } = require('../middleware/rateLimit');
 
 async function paymentRoutes(fastify, options) {
+  // Stage 2 slice F: 30/min/IP on all payment endpoints (initiation hits
+  // the Daraja gateway; status polling included). M-PESA webhook
+  // callbacks are deliberately NOT limited (see rateLimit.js).
+  fastify.addHook('preHandler', rateLimitPayments);
   // 1. POST /api/payments/initiate - Unified payment initiation endpoint
   fastify.post('/api/payments/initiate', { preHandler: requireAuth }, async (req, reply) => {
     const idempotencyKey = req.headers['idempotency-key'] || req.body?.idempotencyKey || null;

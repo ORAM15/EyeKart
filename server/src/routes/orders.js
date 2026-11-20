@@ -10,8 +10,12 @@ const {
   updateOrderStatus 
 } = require('../services/orderService');
 const { requireAuth, requireRole } = require('../middleware/auth');
+const { rateLimitOrders } = require('../middleware/rateLimit');
 
 async function orderRoutes(fastify, options) {
+  // Stage 2 slice F: 30/min/IP on all order endpoints (creation, listing,
+  // cancellation, status updates) for one shopper/staff member.
+  fastify.addHook('preHandler', rateLimitOrders);
   // 1. POST /api/orders - Create Order from Authoritative Quote
   fastify.post('/api/orders', { preHandler: requireAuth }, async (req, reply) => {
     const idempotencyKey = req.headers['idempotency-key'] || req.headers['x-idempotency-key'] || req.body?.idempotencyKey || null;

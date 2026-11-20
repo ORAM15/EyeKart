@@ -19,10 +19,16 @@ const {
   listOperationalAppointments
 } = require('../services/appointmentService');
 const { requireAuth, requireRole } = require('../middleware/auth');
+const { rateLimitAppointments } = require('../middleware/rateLimit');
 
 const OPERATIONAL_ROLES = ['ADMIN', 'OPTOMETRIST', 'STORE_STAFF'];
 
 async function appointmentRoutes(fastify, options) {
+  // Stage 2 slice F: 60/min/IP on all appointment endpoints (availability
+  // is public and pollable, so it gets the loosest write-adjacent limit;
+  // booking writes are additionally guarded by slot atomicity +
+  // idempotency keys).
+  fastify.addHook('preHandler', rateLimitAppointments);
   // 1. GET /api/appointments/availability - Query available slots (Public / Customer)
   fastify.get('/api/appointments/availability', async (req, reply) => {
     const { clinicId, date } = req.query || {};

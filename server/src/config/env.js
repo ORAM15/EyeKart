@@ -100,6 +100,13 @@ function validateConfig(cfg) {
     }
 
     // Database SSL check in production
+    // DB SSL is mandatory in production: an unencrypted database
+    // connection would expose patient/order data on the wire. resolveDbSsl()
+    // returns `false` when DB_SSL is unset/disabled, so fail fast here
+    // rather than booting with plaintext Postgres.
+    if (!targetConfig.db?.ssl) {
+      throw new Error('[Database Fatal] Production requires encrypted database connections: set DB_SSL=true (or require/verify-full/verify-ca).');
+    }
     if (targetConfig.db?.ssl) {
       if (targetConfig.db.ssl.rejectUnauthorized === false) {
         const explicitBypass = process.env.DB_SSL_INSECURE_SKIP_VERIFY === 'true' ||
@@ -140,6 +147,13 @@ function validateConfig(cfg) {
     if (!origins || !Array.isArray(origins) || origins.length === 0 || origins.every(o => !o || !o.trim())) {
       throw new Error('[Security Fatal] CORS_ORIGIN must be explicitly configured in production mode.');
     }
+    // A wildcard origin together with credentials: true (see app.js CORS
+    // plugin) would let ANY website make credentialed cross-origin calls
+    // to the API — the allow-list would be meaningless. Production must
+    // name its real origins; '*' stays usable in dev only.
+    if (origins.some(o => o.trim() === '*')) {
+      throw new Error("[Security Fatal] CORS_ORIGIN cannot contain '*' in production mode. Specify authentic production origins (e.g. https://eyekart.co.ke).");
+    }
     const hasLocalhost = origins.some(o => o.includes('localhost') || o.includes('127.0.0.1'));
     const allowLocalCorsInProd = process.env.ALLOW_LOCAL_CORS_IN_PROD === 'true';
     if (hasLocalhost && !allowLocalCorsInProd) {
@@ -161,6 +175,16 @@ const config = {
   server: {
     port: serverPort,
     host: serverHost,
+    // WHY trustProxy is true in production: Render terminates TLS at its
+    // edge and forwards the request to this app over plain HTTP, setting
+    // X-Forwarded-Proto / X-Forwarded-For. The proxy MUST be trusted for
+    // Fastify to derive the real client IP (req.ip — used by the rate
+    // limiters and audit log) and the real scheme (secure cookies).
+    // Without it, every request would look like it came from Render's
+    // internal proxy and HTTPS would be invisible to the app. This is
+    // safe here only because Render's edge is the sole ingress: never
+    // enable trustProxy on a host that clients can reach directly.
+    // (render.yaml also sets TRUST_PROXY: true for the deployed service.)
     trustProxy: (function() {
       const tp = (process.env.TRUST_PROXY || '').trim().toLowerCase();
       if (tp === 'true' || tp === '1') return true;
