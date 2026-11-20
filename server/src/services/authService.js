@@ -3,7 +3,7 @@
  * Implements OWASP-compliant memory-hard password hashing and secure session tokens.
  */
 const crypto = require('crypto');
-const { query } = require('../db/pool');
+const { query, withTransaction } = require('../db/pool');
 const config = require('../config/env');
 const notificationService = require('./notification/notificationService');
 
@@ -147,8 +147,12 @@ async function invalidateSession(rawToken) {
  * `exceptSessionId` to keep the user signed in on the device they changed
  * the password from; every other session (including a stolen one) is revoked.
  * Returns the number of sessions revoked.
+ *
+ * Accepts an optional checked-out `client` so the revocation can run inside
+ * a caller-owned transaction (see changeUserPassword); without one it uses
+ * the pool directly, as before.
  */
-async function invalidateSessionsForUser(userId, exceptSessionId = null) {
+async function invalidateSessionsForUser(userId, exceptSessionId = null, client = null) {
   if (!userId) return 0;
   const params = [userId];
   let sql = `UPDATE sessions SET is_revoked = TRUE WHERE user_id = $1 AND is_revoked = FALSE`;
@@ -156,7 +160,8 @@ async function invalidateSessionsForUser(userId, exceptSessionId = null) {
     params.push(exceptSessionId);
     sql += ` AND id != $2`;
   }
-  const res = await query(sql, params);
+  const runQuery = client ? client.query.bind(client) : query;
+  const res = await runQuery(sql, params);
   return res.rowCount;
 }
 
@@ -301,8 +306,10 @@ async function updateUserProfile(userId, updates = {}, ipAddress = null) {
 /**
  * Change authenticated user password.
  *
- * Security: after the password is updated, every OTHER session belonging to
- * the user is revoked (see invalidateSessionsForUser). A session stolen
+ * Security: the password update and the revocation of every OTHER session
+ * belonging to the user run atomically in one transaction (see below), so a
+ * revocation failure rolls the password change back instead of leaving the
+ * new password stored with old sessions still active. A session stolen
  * before the change therefore stops working immediately. The session that
  * performed the change (currentSessionId, when supplied) is deliberately
  * kept alive so the user is not signed out of the device they are using to
@@ -355,16 +362,22 @@ async function changeUserPassword(userId, currentPassword, newPassword, ipAddres
   }
 
   const newHash = await hashPassword(newPassword);
-  await query(
-    `UPDATE users SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2`,
-    [newHash, userId]
-  );
 
-  // Revoke all other sessions: a stolen session must not survive a password
-  // change. This runs after the password update and fails closed — if the
-  // revocation errors, the caller sees the failure instead of being told
-  // the change succeeded while old sessions stayed alive.
-  const revokedOtherSessions = await invalidateSessionsForUser(userId, currentSessionId);
+  // Atomic password change + session revocation: the password update and
+  // the revocation of all OTHER sessions run in a single transaction, so a
+  // revocation failure rolls the password change back instead of leaving
+  // the new password stored with the old (possibly stolen) sessions still
+  // active. The session that performed the change (currentSessionId, when
+  // supplied) is deliberately kept alive so the user is not signed out of
+  // the device they are using — the standard "sign out other devices"
+  // behaviour. Pass null to revoke all sessions, including the current one.
+  const revokedOtherSessions = await withTransaction(async (client) => {
+    await client.query(
+      `UPDATE users SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2`,
+      [newHash, userId]
+    );
+    return invalidateSessionsForUser(userId, currentSessionId, client);
+  });
 
   const message = revokedOtherSessions > 0
     ? `Password changed successfully. ${revokedOtherSessions} other session${revokedOtherSessions === 1 ? '' : 's'} signed out.`
