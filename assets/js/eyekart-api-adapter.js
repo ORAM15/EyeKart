@@ -50,25 +50,16 @@
     constructor(baseUrl) {
       this.baseUrl = typeof baseUrl === 'string' ? baseUrl : resolveDefaultApiBase();
       this.isConnected = false;
-      this.activeToken = null;
+      // No in-memory bearer token is kept here: authentication travels ONLY
+      // in the HttpOnly `eyekart_session` cookie (sent via
+      // credentials: 'include'). The server no longer returns the raw
+      // session token in login/register JSON, so there is nothing to store —
+      // keeping a JS-readable copy would defeat the HttpOnly flag.
     }
 
     /**
-     * Set active authorization token (stored in memory, not localStorage)
-     */
-    setToken(token) {
-      this.activeToken = token;
-    }
-
-    /**
-     * Clear active authorization token
-     */
-    clearToken() {
-      this.activeToken = null;
-    }
-
-    /**
-     * Private fetch helper with credentials and authorization headers
+     * Private fetch helper with credentials (HttpOnly session cookie).
+     * No Authorization header is sent: the cookie is the only credential.
      */
     async _fetch(endpoint, options = {}) {
       const url = `${this.baseUrl}${endpoint}`;
@@ -76,10 +67,6 @@
         'Content-Type': 'application/json',
         ...(options.headers || {})
       };
-
-      if (this.activeToken) {
-        headers['Authorization'] = `Bearer ${this.activeToken}`;
-      }
 
       try {
         const res = await fetch(url, {
@@ -148,40 +135,34 @@
     }
 
     /**
-     * Authenticate customer credentials
+     * Authenticate customer credentials.
+     * The session is established by the HttpOnly cookie the server sets;
+     * no token is returned or stored client-side.
      */
     async login(email, password) {
-      const res = await this._fetch('/api/auth/login', {
+      return this._fetch('/api/auth/login', {
         method: 'POST',
         body: JSON.stringify({ email, password })
       });
-      if (res.ok && res.data && res.data.token) {
-        this.setToken(res.data.token);
-      }
-      return res;
     }
 
     /**
-     * Register new customer account
+     * Register new customer account.
+     * The session is established by the HttpOnly cookie the server sets;
+     * no token is returned or stored client-side.
      */
     async register(email, password, fullName, phone) {
-      const res = await this._fetch('/api/auth/register', {
+      return this._fetch('/api/auth/register', {
         method: 'POST',
         body: JSON.stringify({ email, password, fullName, phone })
       });
-      if (res.ok && res.data && res.data.token) {
-        this.setToken(res.data.token);
-      }
-      return res;
     }
 
     /**
      * Invalidate session and logout
      */
     async logout() {
-      const res = await this._fetch('/api/auth/logout', { method: 'POST' });
-      this.clearToken();
-      return res;
+      return this._fetch('/api/auth/logout', { method: 'POST' });
     }
 
     /**

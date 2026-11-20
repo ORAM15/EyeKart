@@ -17,7 +17,7 @@ const {
 const { query } = require('../db/pool');
 const { logAuditEvent } = require('../services/auditService');
 const { requireAuth } = require('../middleware/auth');
-const { rateLimitAuth } = require('../middleware/rateLimit');
+const { rateLimitAuth, rateLimitLoginPerAccount, rateLimitChangePasswordPerAccount } = require('../middleware/rateLimit');
 const notificationService = require('../services/notification/notificationService');
 const config = require('../config/env');
 
@@ -143,16 +143,19 @@ async function authRoutes(fastify, options) {
       }).catch(() => {});
     } catch {}
 
+    // The session travels ONLY in the HttpOnly cookie set above. The raw
+    // token is deliberately NOT returned in the JSON body: a JSON copy is
+    // readable from JavaScript, which defeats the HttpOnly flag entirely.
     return reply.status(201).send({
       success: true,
       message: 'Account successfully registered.',
-      token: session.rawToken,
       user: sanitizeUser(newUser)
     });
   });
 
-  // 2. User Login
-  fastify.post('/api/auth/login', { preHandler: rateLimitAuth }, async (req, reply) => {
+  // 2. User Login (IP limiter + per-account limiter: rotating source IPs
+  // cannot evade the per-account bucket)
+  fastify.post('/api/auth/login', { preHandler: [rateLimitAuth, rateLimitLoginPerAccount] }, async (req, reply) => {
     const { email, password } = req.body || {};
 
     if (!email || !password || typeof email !== 'string' || typeof password !== 'string') {
@@ -238,10 +241,11 @@ async function authRoutes(fastify, options) {
       metadata: { role: user.role }
     });
 
+    // The session travels ONLY in the HttpOnly cookie set above (see the
+    // register handler comment). No raw token is returned in JSON.
     return reply.send({
       success: true,
       message: 'Authentication successful.',
-      token: session.rawToken,
       user: sanitizeUser(user)
     });
   });
@@ -307,10 +311,14 @@ async function authRoutes(fastify, options) {
   });
 
   // 6. Change Password (Requires current password verification)
-  fastify.post('/api/auth/change-password', { preHandler: requireAuth }, async (req, reply) => {
+  // Per-account rate limited (keyed by user id) so the current password
+  // cannot be brute-forced through this endpoint by a stolen session.
+  // The current session (req.sessionId) is passed through so it survives
+  // the change; every OTHER session for the user is revoked.
+  fastify.post('/api/auth/change-password', { preHandler: [requireAuth, rateLimitChangePasswordPerAccount] }, async (req, reply) => {
     const { currentPassword, newPassword } = req.body || {};
     try {
-      const result = await changeUserPassword(req.user.id, currentPassword, newPassword, req.ip);
+      const result = await changeUserPassword(req.user.id, currentPassword, newPassword, req.ip, req.sessionId);
 
       await logAuditEvent({
         actorId: req.user.id,
@@ -320,12 +328,14 @@ async function authRoutes(fastify, options) {
         action: 'PASSWORD_CHANGED',
         entity: 'User',
         entityId: req.user.id,
-        correlationId: req.id
+        correlationId: req.id,
+        metadata: { revokedOtherSessions: result.revokedOtherSessions }
       });
 
       return reply.send({
         success: true,
-        message: result.message
+        message: result.message,
+        revokedOtherSessions: result.revokedOtherSessions
       });
     } catch (err) {
       await logAuditEvent({

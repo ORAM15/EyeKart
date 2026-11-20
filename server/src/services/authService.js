@@ -140,6 +140,27 @@ async function invalidateSession(rawToken) {
 }
 
 /**
+ * Revoke every session belonging to a user, optionally keeping one alive.
+ *
+ * Used on password change: a stolen session must not survive the password
+ * being changed. Pass the session that performed the change as
+ * `exceptSessionId` to keep the user signed in on the device they changed
+ * the password from; every other session (including a stolen one) is revoked.
+ * Returns the number of sessions revoked.
+ */
+async function invalidateSessionsForUser(userId, exceptSessionId = null) {
+  if (!userId) return 0;
+  const params = [userId];
+  let sql = `UPDATE sessions SET is_revoked = TRUE WHERE user_id = $1 AND is_revoked = FALSE`;
+  if (exceptSessionId !== null && exceptSessionId !== undefined) {
+    params.push(exceptSessionId);
+    sql += ` AND id != $2`;
+  }
+  const res = await query(sql, params);
+  return res.rowCount;
+}
+
+/**
  * Sanitize user object for API responses (Guarantee password_hash is never present)
  */
 function sanitizeUser(userRow) {
@@ -278,9 +299,17 @@ async function updateUserProfile(userId, updates = {}, ipAddress = null) {
 }
 
 /**
- * Change authenticated user password
+ * Change authenticated user password.
+ *
+ * Security: after the password is updated, every OTHER session belonging to
+ * the user is revoked (see invalidateSessionsForUser). A session stolen
+ * before the change therefore stops working immediately. The session that
+ * performed the change (currentSessionId, when supplied) is deliberately
+ * kept alive so the user is not signed out of the device they are using to
+ * change the password — the standard "sign out other devices" behaviour.
+ * Pass null to revoke all sessions, including the current one.
  */
-async function changeUserPassword(userId, currentPassword, newPassword, ipAddress = null) {
+async function changeUserPassword(userId, currentPassword, newPassword, ipAddress = null, currentSessionId = null) {
   if (!userId) {
     const err = new Error('Authentication required.');
     err.statusCode = 401;
@@ -331,6 +360,16 @@ async function changeUserPassword(userId, currentPassword, newPassword, ipAddres
     [newHash, userId]
   );
 
+  // Revoke all other sessions: a stolen session must not survive a password
+  // change. This runs after the password update and fails closed — if the
+  // revocation errors, the caller sees the failure instead of being told
+  // the change succeeded while old sessions stayed alive.
+  const revokedOtherSessions = await invalidateSessionsForUser(userId, currentSessionId);
+
+  const message = revokedOtherSessions > 0
+    ? `Password changed successfully. ${revokedOtherSessions} other session${revokedOtherSessions === 1 ? '' : 's'} signed out.`
+    : 'Password changed successfully.';
+
   // Security notification: password changed
   try {
     const userRes = await query(`SELECT phone, email FROM users WHERE id = $1`, [userId]);
@@ -350,7 +389,7 @@ async function changeUserPassword(userId, currentPassword, newPassword, ipAddres
     }
   } catch {}
 
-  return { success: true, message: 'Password changed successfully.' };
+  return { success: true, message, revokedOtherSessions };
 }
 
 module.exports = {
@@ -359,6 +398,7 @@ module.exports = {
   createSession,
   resolveSession,
   invalidateSession,
+  invalidateSessionsForUser,
   sanitizeUser,
   updateUserProfile,
   changeUserPassword
