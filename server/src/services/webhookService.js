@@ -185,14 +185,24 @@ class WebhookService {
         }
       }
 
-      // 3. Replay attack inspection
+      // 3. Replay attack inspection: callbacks older than the threshold are
+      // rejected outright, never processed (a replayed success callback
+      // must not be able to mark an order paid).
       if (callback.transactionDate) {
         const txDate = WebhookService.parseTransactionDate(callback.transactionDate);
         if (txDate) {
           const ageSeconds = (Date.now() - txDate.getTime()) / 1000;
           if (ageSeconds > MAX_WEBHOOK_AGE_SECONDS) {
-            // Note in metadata but do not crash sandbox testing
-            console.warn(`[Webhook Ingress] Warning: Webhook transaction age is ${ageSeconds.toFixed(1)}s (exceeds ${MAX_WEBHOOK_AGE_SECONDS}s threshold).`);
+            console.error(`[Webhook Ingress] SECURITY ALERT: Stale webhook callback rejected. Transaction age is ${ageSeconds.toFixed(1)}s (exceeds ${MAX_WEBHOOK_AGE_SECONDS}s threshold). CheckoutRequestID: ${callback.checkoutRequestId}`);
+            await client.query('ROLLBACK');
+            return {
+              processed: false,
+              success: false,
+              status: 'STALE_CALLBACK',
+              reason: 'STALE_CALLBACK',
+              resultCode: 1,
+              httpStatus: 200
+            };
           }
         }
       }
@@ -201,11 +211,30 @@ class WebhookService {
       if (callback.resultCode === 0) {
         // SUCCESS PATH: Tamper Verification
         const orderTotal = Number(attempt.order_total);
-        const callbackAmount = callback.amount !== null ? Number(callback.amount) : orderTotal;
+        const parsedAmount = callback.amount !== null && callback.amount !== undefined ? Number(callback.amount) : NaN;
+        const callbackAmount = Number.isNaN(parsedAmount) ? null : parsedAmount;
 
-        // Anti-Tampering Check: Callback amount must strictly match authoritative order total
-        if (Math.abs(callbackAmount - orderTotal) > 0.01) {
-          console.error(`[Webhook Ingress] SECURITY ALERT: Amount mismatch! Callback amount KES ${callbackAmount}, Order total KES ${orderTotal}`);
+        // Anti-Tampering Check: a missing amount must never be replaced with
+        // the order total (that would make this check vacuous), and a missing
+        // receipt must never be replaced with a fabricated one. Any of these
+        // on a success callback is treated as tampering: the attempt is
+        // marked FAILED and the order is NOT marked SUCCESS.
+        let tamperReason = null;
+        if (callbackAmount === null) {
+          tamperReason = 'MISSING_AMOUNT';
+        } else if (Math.abs(callbackAmount - orderTotal) > 0.01) {
+          tamperReason = 'AMOUNT_MISMATCH';
+        } else if (!callback.mpesaReceiptNumber) {
+          tamperReason = 'MISSING_RECEIPT';
+        }
+
+        if (tamperReason) {
+          const tamperDetail = tamperReason === 'MISSING_AMOUNT'
+            ? `MISSING_AMOUNT: Success callback carried no Amount. Authoritative KES ${orderTotal}`
+            : tamperReason === 'MISSING_RECEIPT'
+              ? `MISSING_RECEIPT: Success callback carried no MpesaReceiptNumber. Authoritative KES ${orderTotal}, Received KES ${callbackAmount}`
+              : `AMOUNT_MISMATCH: Authoritative KES ${orderTotal}, Received KES ${callbackAmount}`;
+          console.error(`[Webhook Ingress] SECURITY ALERT: ${tamperDetail}`);
 
           await client.query(
             `UPDATE payment_attempts
@@ -216,8 +245,8 @@ class WebhookService {
                  updated_at = CURRENT_TIMESTAMP
              WHERE id = $3`,
             [
-              `AMOUNT_MISMATCH: Authoritative KES ${orderTotal}, Received KES ${callbackAmount}`,
-              JSON.stringify({ expected: orderTotal, received: callbackAmount, rawCallback: callback }),
+              tamperDetail,
+              JSON.stringify({ reason: tamperReason, expected: orderTotal, received: callbackAmount, rawCallback: callback }),
               attempt.id
             ]
           );
@@ -242,6 +271,7 @@ class WebhookService {
             entityId: attempt.authoritative_order_id,
             metadata: {
               attemptId: attempt.id,
+              reason: tamperReason,
               orderTotal,
               callbackAmount,
               checkoutRequestId: callback.checkoutRequestId
@@ -252,7 +282,8 @@ class WebhookService {
             processed: true,
             success: false,
             status: 'FAILED',
-            reason: 'AMOUNT_MISMATCH',
+            reason: tamperReason,
+            resultCode: 1,
             httpStatus: 200
           };
         }
@@ -269,7 +300,7 @@ class WebhookService {
                updated_at = CURRENT_TIMESTAMP
            WHERE id = $4`,
           [
-            callback.mpesaReceiptNumber || ('MOCK-' + Date.now()),
+            callback.mpesaReceiptNumber,
             callback.phoneNumber,
             JSON.stringify(callback.raw),
             attempt.id

@@ -145,6 +145,13 @@ function validateConfig(cfg) {
     if (hasLocalhost && !allowLocalCorsInProd) {
       throw new Error('[Security Fatal] CORS_ORIGIN cannot contain localhost/127.0.0.1 in production mode. Specify authentic production origins (e.g. https://eyekart.co.ke).');
     }
+
+    // 5. M-PESA webhook secret (fail closed: without it, webhook
+    // authentication silently accepts every callback)
+    const webhookSecret = targetConfig.integrations?.mpesa?.webhookSecret;
+    if (!webhookSecret || typeof webhookSecret !== 'string' || !webhookSecret.trim()) {
+      throw new Error('[Security Fatal] MPESA_WEBHOOK_SECRET must be defined when running in production mode.');
+    }
   }
   return true;
 }

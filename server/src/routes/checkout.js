@@ -3,10 +3,11 @@
  * Generates authoritative checkout quotes with locked totals.
  */
 const { generateCheckoutQuote } = require('../services/checkoutService');
+const { requireAuth } = require('../middleware/auth');
 
 async function checkoutRoutes(fastify, options) {
   // POST /api/checkout/quote
-  fastify.post('/api/checkout/quote', async (req, reply) => {
+  fastify.post('/api/checkout/quote', { preHandler: requireAuth }, async (req, reply) => {
     const userId = req.user ? req.user.id : null;
     const { cartId, items, deliveryOption } = req.body || {};
 
