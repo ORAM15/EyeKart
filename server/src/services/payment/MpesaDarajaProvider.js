@@ -60,8 +60,11 @@ class MpesaDarajaProvider extends PaymentProvider {
     // serializes concurrent initiations for the same order, so the
     // check-then-insert below cannot race. Ownership is verified BEFORE any
     // duplicate/active attempt is returned, and the idempotency lookup is
-    // scoped to this order: a key belonging to another order is a generic
-    // 409 conflict, never the other order's attempt row.
+    // scoped to this order and this provider: a key belonging to another
+    // order, or to another provider's attempt, is a generic 409 conflict,
+    // never the other attempt row. The lookup runs before the
+    // ORDER_ALREADY_PAID check so a client retrying its original request
+    // after the order was paid can still recover its attempt.
     const pool = getPool();
     const client = await pool.connect();
     let order;
@@ -108,36 +111,15 @@ class MpesaDarajaProvider extends PaymentProvider {
         throw err;
       }
 
-      if (order.payment_status === 'SUCCESS') {
-        const err = new Error('Order is already fully paid.');
-        err.code = 'ORDER_ALREADY_PAID';
-        err.statusCode = 400;
-        throw err;
-      }
-
-      // 4. Authoritative amount check: client cannot underpay or tamper with order total
-      authoritativeAmount = Number(order.total);
-      if (amount !== null && amount !== undefined) {
-        const requestedAmount = Number(amount);
-        if (Math.abs(requestedAmount - authoritativeAmount) > 0.01) {
-          const err = new Error(`Amount mismatch. Authoritative order total is KES ${authoritativeAmount.toFixed(2)}, but requested amount was KES ${requestedAmount.toFixed(2)}.`);
-          err.code = 'AMOUNT_MISMATCH';
-          err.statusCode = 400;
-          throw err;
-        }
-      }
-
-      formattedPhone = DarajaClient.formatPhoneNumber(phone || order.phone);
-      if (!formattedPhone || formattedPhone.length !== 12) {
-        const err = new Error(`A valid Kenyan phone number (254XXXXXXXXX) is required for M-PESA STK Push. Received: '${phone}'.`);
-        err.code = 'INVALID_PHONE_NUMBER';
-        err.statusCode = 400;
-        throw err;
-      }
-
-      // 5a. Idempotency verification, scoped to this order. A prior attempt
-      // is only a replay when it belongs to THIS order; a key already used
-      // for a different order is a conflict, and the row is never returned.
+      // 5a. Idempotency verification, scoped to this order AND this
+      // provider, resolved BEFORE the terminal payment-state check below:
+      // if a callback already marked the order paid, a client retrying its
+      // original request (e.g. because the first response was lost) must
+      // recover the existing attempt instead of hitting ORDER_ALREADY_PAID.
+      // A prior attempt is only a replay when it belongs to THIS order and
+      // was created through THIS provider; a key already used for a
+      // different order, or for a different provider's attempt (e.g. a DEMO
+      // attempt), is a conflict, and the row is never returned.
       if (idempotencyKey) {
         const existing = await client.query(
           `SELECT * FROM payment_attempts WHERE idempotency_key = $1`,
@@ -151,22 +133,63 @@ class MpesaDarajaProvider extends PaymentProvider {
             err.statusCode = 409;
             throw err;
           }
+          if (prior.provider !== this.name) {
+            const err = new Error(`This idempotency key has already been used for a ${prior.provider} payment attempt. Retry with a new key.`);
+            err.code = 'IDEMPOTENCY_KEY_CONFLICT';
+            err.statusCode = 409;
+            throw err;
+          }
           attempt = prior;
           isDuplicate = true;
         }
       }
 
+      // A replay (isDuplicate) skips the checks below: the original
+      // request was already validated when the attempt was created, and a
+      // retry must recover the attempt even though the order is now paid.
+      if (!isDuplicate) {
+        if (order.payment_status === 'SUCCESS') {
+          const err = new Error('Order is already fully paid.');
+          err.code = 'ORDER_ALREADY_PAID';
+          err.statusCode = 400;
+          throw err;
+        }
+
+        // 4. Authoritative amount check: client cannot underpay or tamper with order total
+        authoritativeAmount = Number(order.total);
+        if (amount !== null && amount !== undefined) {
+          const requestedAmount = Number(amount);
+          if (Math.abs(requestedAmount - authoritativeAmount) > 0.01) {
+            const err = new Error(`Amount mismatch. Authoritative order total is KES ${authoritativeAmount.toFixed(2)}, but requested amount was KES ${requestedAmount.toFixed(2)}.`);
+            err.code = 'AMOUNT_MISMATCH';
+            err.statusCode = 400;
+            throw err;
+          }
+        }
+
+        formattedPhone = DarajaClient.formatPhoneNumber(phone || order.phone);
+        if (!formattedPhone || formattedPhone.length !== 12) {
+          const err = new Error(`A valid Kenyan phone number (254XXXXXXXXX) is required for M-PESA STK Push. Received: '${phone}'.`);
+          err.code = 'INVALID_PHONE_NUMBER';
+          err.statusCode = 400;
+          throw err;
+        }
+      }
+
       // 5b. Active-attempt guard: a PENDING (push dispatched, awaiting PIN)
-      // or in-flight INITIATED attempt for this order is returned instead of
-      // dispatching a second STK push. This also covers keyless retries and
-      // concurrent requests using different keys, which the idempotency key
-      // alone cannot catch.
+      // or in-flight INITIATED attempt for this order, created through THIS
+      // provider, is returned instead of dispatching a second STK push.
+      // Attempts from another provider (e.g. a pending DEMO attempt) must
+      // NOT block a Daraja initiation: returning one would hand the client
+      // a demo checkout ID and no STK push would ever be dispatched. This
+      // also covers keyless retries and concurrent requests using different
+      // keys, which the idempotency key alone cannot catch.
       if (!isDuplicate) {
         const activeRes = await client.query(
           `SELECT * FROM payment_attempts
-           WHERE order_id = $1 AND status IN ('PENDING', 'INITIATED')
+           WHERE order_id = $1 AND provider = $2 AND status IN ('PENDING', 'INITIATED')
            ORDER BY created_at DESC LIMIT 1`,
-          [order.id]
+          [order.id, this.name]
         );
         if (activeRes.rows.length > 0) {
           const active = activeRes.rows[0];
@@ -223,9 +246,13 @@ class MpesaDarajaProvider extends PaymentProvider {
         } catch (insertErr) {
           if (insertErr.code === '23505' && idempotencyKey) {
             await client.query('ROLLBACK').catch(() => {});
+            // Same-provider winner only: a DEMO attempt sharing this key
+            // and order would also violate the (order_id, idempotency_key)
+            // unique constraint, but returning it would hand the Daraja
+            // client a demo checkout ID with no STK push dispatched.
             const winner = await query(
-              `SELECT * FROM payment_attempts WHERE idempotency_key = $1 AND order_id = $2`,
-              [idempotencyKey, order.id]
+              `SELECT * FROM payment_attempts WHERE idempotency_key = $1 AND order_id = $2 AND provider = $3`,
+              [idempotencyKey, order.id, this.name]
             );
             if (winner.rows.length > 0) {
               return {
@@ -236,6 +263,10 @@ class MpesaDarajaProvider extends PaymentProvider {
                 status: winner.rows[0].status
               };
             }
+            const conflictErr = new Error('This idempotency key has already been used for a different provider\'s payment attempt. Retry with a new key.');
+            conflictErr.code = 'IDEMPOTENCY_KEY_CONFLICT';
+            conflictErr.statusCode = 409;
+            throw conflictErr;
           }
           throw insertErr;
         }
