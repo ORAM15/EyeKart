@@ -50,6 +50,22 @@ async function appointmentRoutes(fastify, options) {
 
     const idempotencyKey = req.headers['x-idempotency-key'] || bodyIdempKey || null;
 
+    // A real patient phone is required: fall back to the authenticated
+    // user's stored phone, but NEVER invent one. The previous fallback
+    // recorded bookings against a fabricated placeholder number and sent
+    // downstream SMS notifications to it. With no real phone the booking
+    // fails here, and the service-level requirement (appointmentService
+    // bookAppointment: patient name + phone required) now actually fires
+    // instead of being masked.
+    const patientPhoneValue = patientPhone || req.user.phone;
+    if (!patientPhoneValue) {
+      return reply.status(400).send({
+        success: false,
+        error: 'A patient phone number is required to book an appointment.',
+        code: 'MISSING_PATIENT_PHONE'
+      });
+    }
+
     // Customer cannot alter ownership: user_id is strictly req.user.id
     const appointment = await bookAppointment({
       userId: req.user.id,
@@ -57,7 +73,7 @@ async function appointmentRoutes(fastify, options) {
       slotId,
       appointmentTypeId: appointmentTypeId || 'signature_28_point',
       patientName: patientName || req.user.full_name,
-      patientPhone: patientPhone || req.user.phone || '+254700000000',
+      patientPhone: patientPhoneValue,
       patientEmail: patientEmail || req.user.email,
       nationalId,
       notes,

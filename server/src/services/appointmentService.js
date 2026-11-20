@@ -36,6 +36,107 @@ function isValidAppointmentTransition(fromState, toState) {
   return allowed.includes(toState);
 }
 
+const OPERATIONAL_ROLES = ['ADMIN', 'OPTOMETRIST', 'STORE_STAFF'];
+
+// Explicit appointment column list for API reads. national_id and
+// idempotency_key are NEVER returned by read endpoints: no caller needs
+// them (national_id is collected at booking only and no reader — route or
+// UI — consumes it; the idempotency key is client-supplied and is echoed
+// nowhere), and bulk lists must not leak them. Keep this list in sync with
+// the appointments table when columns are added: anything sensitive must
+// be deliberately added here, never inherited via a star-select.
+const APPOINTMENT_READ_COLUMNS = `
+  a.id,
+  a.booking_reference,
+  a.user_id,
+  a.clinic_id,
+  a.slot_id,
+  a.appointment_type_id,
+  a.practitioner_id,
+  a.practitioner_name,
+  a.start_time,
+  a.end_time,
+  a.timezone,
+  a.status,
+  a.patient_name,
+  a.patient_phone,
+  a.patient_email,
+  a.notes,
+  a.cancellation_reason,
+  a.cancelled_at,
+  a.confirmed_at,
+  a.completed_at,
+  a.reminder_sent_at,
+  a.rescheduled_from_id,
+  a.created_at,
+  a.updated_at
+`;
+
+// Fields that must never leave this service in an API response. Applied at
+// the return boundary of the mutation paths, whose rows come from
+// `SELECT * ... FOR UPDATE` / `RETURNING *` (needed internally for state
+// checks and notifications). Read paths are controlled by
+// APPOINTMENT_READ_COLUMNS instead.
+const APPOINTMENT_INTERNAL_ONLY_FIELDS = ['national_id', 'idempotency_key'];
+
+function toAppointmentResponse(apt) {
+  if (!apt) return apt;
+  const view = { ...apt };
+  for (const field of APPOINTMENT_INTERNAL_ONLY_FIELDS) delete view[field];
+  return view;
+}
+
+/**
+ * Per-appointment authorization for staff actions (confirm / complete /
+ * no-show / cancel / reschedule / remind). Role alone is NOT access.
+ *
+ * Rule (Stage 2 Slice D):
+ * - ADMIN may act on any appointment, but only as an explicit override:
+ *   the caller records the returned basis ('ADMIN_OVERRIDE') in the
+ *   lifecycle audit event, so every override is audit-logged.
+ * - OPTOMETRIST / STORE_STAFF must be the appointment's assigned
+ *   practitioner (appointments.practitioner_id === staff user id).
+ *   There is no staff<->clinic mapping in the schema (users has no
+ *   clinic_id), so practitioner assignment is the only per-appointment
+ *   scope available; an appointment with no assigned practitioner
+ *   (practitioner_id NULL) is ADMIN-only for staff (fail closed).
+ * - Any other role (including a missing role) is denied.
+ *
+ * Returns the authorization basis ('ADMIN_OVERRIDE' |
+ * 'ASSIGNED_PRACTITIONER'). Throws 403 FORBIDDEN_APPOINTMENT_ACCESS on
+ * denial, after best-effort audit-logging the denied attempt.
+ */
+async function authorizeStaffAppointmentAccess({ apt, staffId, staffRole, action, ipAddress = null }) {
+  if (staffRole === 'ADMIN') return 'ADMIN_OVERRIDE';
+  if (
+    (staffRole === 'OPTOMETRIST' || staffRole === 'STORE_STAFF') &&
+    staffId &&
+    apt.practitioner_id &&
+    String(apt.practitioner_id) === String(staffId)
+  ) {
+    return 'ASSIGNED_PRACTITIONER';
+  }
+
+  await logAuditEvent({
+    actorId: staffId,
+    actorRole: staffRole,
+    ipAddress,
+    action: 'APPOINTMENT_ACCESS_DENIED',
+    entity: 'Appointment',
+    entityId: apt.id,
+    metadata: {
+      bookingReference: apt.booking_reference,
+      attemptedAction: action,
+      reason: 'Staff member is not the assigned practitioner and is not ADMIN.'
+    }
+  });
+
+  const err = new Error('Access denied. You do not have permission to act on this appointment.');
+  err.statusCode = 403;
+  err.code = 'FORBIDDEN_APPOINTMENT_ACCESS';
+  throw err;
+}
+
 /**
  * Generate unique booking reference (e.g. APT-2026-XXXXX)
  */
@@ -161,11 +262,13 @@ async function bookAppointment({
   const phoneResult = normalizeKenyanPhone(patientPhone);
   const normalizedPhone = phoneResult.e164; // E.164 +254XXXXXXXXX
 
-  // Check idempotency first if key is provided
+  // Check idempotency first if key is provided. Keys are client-chosen and
+  // scoped PER USER: the lookup must include user_id, otherwise replaying
+  // another user's key would return their appointment.
   if (idempotencyKey) {
     const existingRes = await query(
       `SELECT
-        a.*,
+        ${APPOINTMENT_READ_COLUMNS},
         c.name AS clinic_name,
         c.address AS clinic_address,
         t.name AS appointment_type_name,
@@ -174,14 +277,14 @@ async function bookAppointment({
       FROM appointments a
       LEFT JOIN clinics c ON a.clinic_id = c.id
       LEFT JOIN appointment_types t ON a.appointment_type_id = t.id
-      WHERE a.idempotency_key = $1`,
-      [idempotencyKey]
+      WHERE a.idempotency_key = $1 AND a.user_id = $2`,
+      [idempotencyKey, userId]
     );
 
     if (existingRes.rows.length > 0) {
       const apt = existingRes.rows[0];
       return {
-        ...apt,
+        ...toAppointmentResponse(apt),
         idempotentHit: true
       };
     }
@@ -338,7 +441,7 @@ async function bookAppointment({
     } catch {}
 
     return {
-      ...appointment,
+      ...toAppointmentResponse(appointment),
       idempotentHit: false
     };
   } catch (err) {
@@ -353,13 +456,15 @@ async function bookAppointment({
         throw conflictErr;
       }
       if (err.constraint === 'uq_appointments_idemp' && idempotencyKey) {
+        // Scoped by user_id, matching the (user_id, idempotency_key) unique
+        // index: a key belonging to another user can never resolve here.
         const existing = await query(
-          `SELECT * FROM appointments WHERE idempotency_key = $1`,
-          [idempotencyKey]
+          `SELECT ${APPOINTMENT_READ_COLUMNS} FROM appointments a WHERE a.idempotency_key = $1 AND a.user_id = $2`,
+          [idempotencyKey, userId]
         );
         if (existing.rows.length > 0) {
           return {
-            ...existing.rows[0],
+            ...toAppointmentResponse(existing.rows[0]),
             idempotentHit: true
           };
         }
@@ -378,7 +483,7 @@ async function bookAppointment({
 async function confirmAppointment({
   appointmentId,
   staffId = null,
-  staffRole = 'ADMIN',
+  staffRole = null,
   notes = null,
   ipAddress = null
 }) {
@@ -402,9 +507,20 @@ async function confirmAppointment({
 
     const apt = aptRes.rows[0];
 
+    // Per-appointment authorization BEFORE any state is revealed: assigned
+    // practitioner, or an audit-logged ADMIN override. A missing role is
+    // denied (the previous 'ADMIN' default was fail-open).
+    const authorization = await authorizeStaffAppointmentAccess({
+      apt,
+      staffId,
+      staffRole,
+      action: 'APPOINTMENT_CONFIRMED',
+      ipAddress
+    });
+
     if (apt.status === APPOINTMENT_STATES.CONFIRMED) {
       await client.query('COMMIT');
-      return apt;
+      return toAppointmentResponse(apt);
     }
 
     if (!isValidAppointmentTransition(apt.status, APPOINTMENT_STATES.CONFIRMED)) {
@@ -438,7 +554,8 @@ async function confirmAppointment({
       metadata: {
         bookingReference: apt.booking_reference,
         confirmedBy: staffId,
-        role: staffRole
+        role: staffRole,
+        authorization
       }
     });
 
@@ -466,7 +583,7 @@ async function confirmAppointment({
       }
     } catch {}
 
-    return updatedApt;
+    return toAppointmentResponse(updatedApt);
   } catch (err) {
     await client.query('ROLLBACK');
     throw err;
@@ -482,7 +599,7 @@ async function confirmAppointment({
 async function completeAppointment({
   appointmentId,
   staffId = null,
-  staffRole = 'ADMIN',
+  staffRole = null,
   notes = null,
   ipAddress = null
 }) {
@@ -506,9 +623,19 @@ async function completeAppointment({
 
     const apt = aptRes.rows[0];
 
+    // Per-appointment authorization BEFORE any state is revealed: assigned
+    // practitioner, or an audit-logged ADMIN override.
+    const authorization = await authorizeStaffAppointmentAccess({
+      apt,
+      staffId,
+      staffRole,
+      action: 'APPOINTMENT_COMPLETED',
+      ipAddress
+    });
+
     if (apt.status === APPOINTMENT_STATES.COMPLETED) {
       await client.query('COMMIT');
-      return apt;
+      return toAppointmentResponse(apt);
     }
 
     if (!isValidAppointmentTransition(apt.status, APPOINTMENT_STATES.COMPLETED)) {
@@ -542,11 +669,12 @@ async function completeAppointment({
       metadata: {
         bookingReference: apt.booking_reference,
         completedBy: staffId,
-        role: staffRole
+        role: staffRole,
+        authorization
       }
     });
 
-    return updatedApt;
+    return toAppointmentResponse(updatedApt);
   } catch (err) {
     await client.query('ROLLBACK');
     throw err;
@@ -563,7 +691,7 @@ async function completeAppointment({
 async function markNoShow({
   appointmentId,
   staffId = null,
-  staffRole = 'ADMIN',
+  staffRole = null,
   notes = null,
   ipAddress = null
 }) {
@@ -587,9 +715,19 @@ async function markNoShow({
 
     const apt = aptRes.rows[0];
 
+    // Per-appointment authorization BEFORE any state is revealed: assigned
+    // practitioner, or an audit-logged ADMIN override.
+    const authorization = await authorizeStaffAppointmentAccess({
+      apt,
+      staffId,
+      staffRole,
+      action: 'APPOINTMENT_NO_SHOW',
+      ipAddress
+    });
+
     if (apt.status === APPOINTMENT_STATES.NO_SHOW) {
       await client.query('COMMIT');
-      return apt;
+      return toAppointmentResponse(apt);
     }
 
     if (!isValidAppointmentTransition(apt.status, APPOINTMENT_STATES.NO_SHOW)) {
@@ -630,11 +768,12 @@ async function markNoShow({
       metadata: {
         bookingReference: apt.booking_reference,
         markedBy: staffId,
-        role: staffRole
+        role: staffRole,
+        authorization
       }
     });
 
-    return updatedApt;
+    return toAppointmentResponse(updatedApt);
   } catch (err) {
     await client.query('ROLLBACK');
     throw err;
@@ -650,13 +789,13 @@ async function markNoShow({
 async function sendAppointmentReminder({
   appointmentId,
   staffId = null,
-  staffRole = 'SYSTEM',
+  staffRole = null,
   force = false,
   ipAddress = null
 }) {
   const aptRes = await query(
     `SELECT
-      a.*,
+      ${APPOINTMENT_READ_COLUMNS},
       c.name AS clinic_name,
       c.address AS clinic_address,
       to_char(a.start_time AT TIME ZONE 'Africa/Nairobi', 'YYYY-MM-DD') AS date_eat,
@@ -676,6 +815,17 @@ async function sendAppointmentReminder({
 
   const apt = aptRes.rows[0];
 
+  // Same per-appointment authorization as confirm / complete / no-show:
+  // assigned practitioner, or an audit-logged ADMIN override. (The previous
+  // 'SYSTEM' default role matched no authorization rule and is gone.)
+  const authorization = await authorizeStaffAppointmentAccess({
+    apt,
+    staffId,
+    staffRole,
+    action: 'APPOINTMENT_REMINDER_SENT',
+    ipAddress
+  });
+
   if (!['BOOKED', 'CONFIRMED'].includes(apt.status)) {
     const err = new Error(`Cannot send reminder for appointment in status '${apt.status}'. Only BOOKED or CONFIRMED appointments receive reminders.`);
     err.statusCode = 400;
@@ -689,7 +839,7 @@ async function sendAppointmentReminder({
       success: true,
       idempotentHit: true,
       message: 'Reminder already sent for this appointment.',
-      appointment: apt
+      appointment: toAppointmentResponse(apt)
     };
   }
 
@@ -749,7 +899,8 @@ async function sendAppointmentReminder({
     entityId: apt.id,
     metadata: {
       bookingReference: apt.booking_reference,
-      dispatched
+      dispatched,
+      authorization
     }
   });
 
@@ -757,7 +908,7 @@ async function sendAppointmentReminder({
     success: true,
     idempotentHit: false,
     dispatched,
-    appointment: updatedRes.rows[0]
+    appointment: toAppointmentResponse(updatedRes.rows[0])
   };
 }
 
@@ -793,9 +944,22 @@ async function cancelAppointment({
 
     const apt = aptRes.rows[0];
 
-    // IDOR Protection: Customers may only cancel their own appointments
-    const isPrivileged = (role === 'ADMIN' || role === 'STORE_STAFF' || role === 'OPTOMETRIST');
-    if (!isPrivileged && apt.user_id !== userId) {
+    // Authorization: customers may only cancel their own appointments, and
+    // a missing caller identity never skips the ownership check
+    // (fail closed). Staff are NOT privileged by role alone: they must be
+    // the assigned practitioner, or ADMIN acting under an audit-logged
+    // override (recorded in the lifecycle audit event below).
+    const isPrivileged = OPERATIONAL_ROLES.includes(role);
+    let authorization = 'OWNER';
+    if (isPrivileged) {
+      authorization = await authorizeStaffAppointmentAccess({
+        apt,
+        staffId: userId,
+        staffRole: role,
+        action: 'APPOINTMENT_CANCELLED',
+        ipAddress
+      });
+    } else if (!userId || apt.user_id !== userId) {
       const err = new Error('Access denied. You do not have permission to cancel this appointment.');
       err.statusCode = 403;
       err.code = 'FORBIDDEN_APPOINTMENT_ACCESS';
@@ -841,7 +1005,8 @@ async function cancelAppointment({
       entityId: apt.id,
       metadata: {
         bookingReference: apt.booking_reference,
-        reason
+        reason,
+        authorization
       }
     });
 
@@ -865,7 +1030,7 @@ async function cancelAppointment({
       }
     } catch {}
 
-    return updatedApt;
+    return toAppointmentResponse(updatedApt);
   } catch (err) {
     await client.query('ROLLBACK');
     throw err;
@@ -907,9 +1072,21 @@ async function rescheduleAppointment({
 
     const apt = aptRes.rows[0];
 
-    // IDOR Protection
-    const isPrivileged = (role === 'ADMIN' || role === 'STORE_STAFF' || role === 'OPTOMETRIST');
-    if (!isPrivileged && apt.user_id !== userId) {
+    // Authorization: same rule as cancel — customers only their own
+    // appointments (fail closed on a missing caller identity); staff only
+    // as the assigned practitioner, or ADMIN under an audit-logged
+    // override (recorded in the lifecycle audit event below).
+    const isPrivileged = OPERATIONAL_ROLES.includes(role);
+    let authorization = 'OWNER';
+    if (isPrivileged) {
+      authorization = await authorizeStaffAppointmentAccess({
+        apt,
+        staffId: userId,
+        staffRole: role,
+        action: 'APPOINTMENT_RESCHEDULED',
+        ipAddress
+      });
+    } else if (!userId || apt.user_id !== userId) {
       const err = new Error('Access denied. You do not have permission to reschedule this appointment.');
       err.statusCode = 403;
       err.code = 'FORBIDDEN_APPOINTMENT_ACCESS';
@@ -1020,7 +1197,8 @@ async function rescheduleAppointment({
         bookingReference: apt.booking_reference,
         previousSlotId: apt.slot_id,
         newSlotId: newSlot.id,
-        newStartTime: newSlot.start_time
+        newStartTime: newSlot.start_time,
+        authorization
       }
     });
 
@@ -1048,7 +1226,7 @@ async function rescheduleAppointment({
       }
     } catch {}
 
-    return updatedApt;
+    return toAppointmentResponse(updatedApt);
   } catch (err) {
     await client.query('ROLLBACK');
     throw err;
@@ -1063,7 +1241,7 @@ async function rescheduleAppointment({
 async function getAppointmentById(id, userId = null, userRole = 'CUSTOMER') {
   const sql = `
     SELECT
-      a.*,
+      ${APPOINTMENT_READ_COLUMNS},
       c.name AS clinic_name,
       c.address AS clinic_address,
       t.name AS appointment_type_name,
@@ -1087,8 +1265,26 @@ async function getAppointmentById(id, userId = null, userRole = 'CUSTOMER') {
 
   const apt = res.rows[0];
 
-  const isPrivileged = (userRole === 'ADMIN' || userRole === 'STORE_STAFF' || userRole === 'OPTOMETRIST');
-  if (!isPrivileged && userId && apt.user_id !== userId) {
+  // Authorization (Stage 2 Slice D): role alone is NOT access.
+  // - ADMIN may read any appointment.
+  // - OPTOMETRIST / STORE_STAFF must be the assigned practitioner.
+  // - Everyone else (CUSTOMER) must own the appointment, and a missing
+  //   caller identity NEVER skips the ownership check (fail closed: the
+  //   previous `userId && ...` condition returned the appointment
+  //   whenever userId was null).
+  if (userRole === 'ADMIN') {
+    return apt;
+  }
+  if (userRole === 'OPTOMETRIST' || userRole === 'STORE_STAFF') {
+    if (!userId || !apt.practitioner_id || String(apt.practitioner_id) !== String(userId)) {
+      const err = new Error('Access denied. You do not have permission to view this appointment.');
+      err.statusCode = 403;
+      err.code = 'FORBIDDEN_APPOINTMENT_ACCESS';
+      throw err;
+    }
+    return apt;
+  }
+  if (!userId || apt.user_id !== userId) {
     const err = new Error('Access denied. You do not have permission to view this appointment.');
     err.statusCode = 403;
     err.code = 'FORBIDDEN_APPOINTMENT_ACCESS';
@@ -1104,7 +1300,7 @@ async function getAppointmentById(id, userId = null, userRole = 'CUSTOMER') {
 async function listCustomerAppointments(userId) {
   const sql = `
     SELECT
-      a.*,
+      ${APPOINTMENT_READ_COLUMNS},
       c.name AS clinic_name,
       c.address AS clinic_address,
       t.name AS appointment_type_name,
@@ -1176,7 +1372,7 @@ async function listOperationalAppointments({
 
   const dataSql = `
     SELECT
-      a.*,
+      ${APPOINTMENT_READ_COLUMNS},
       c.name AS clinic_name,
       c.address AS clinic_address,
       t.name AS appointment_type_name,
