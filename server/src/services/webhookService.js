@@ -320,24 +320,47 @@ class WebhookService {
         daraja = await this.verifyWithDaraja(callback.checkoutRequestId, darajaVerifier);
       }
 
-      // 4. Replay attack inspection: callbacks older than the threshold are
-      // rejected outright, never processed (a replayed success callback
-      // must not be able to mark an order paid).
+      // 4. Replay / staleness inspection. A callback whose TransactionDate
+      // is older than the threshold is stale, but it is no longer rejected
+      // outright: a late SUCCESS callback that Daraja confirms is processed
+      // as a catch-up (a customer who paid must not lose the order — and its
+      // reserved stock — to a slow callback), while a late success Daraja
+      // does not confirm is recorded and flagged without changing payment
+      // state. Kept as outright rejections: a secret-authenticated stale
+      // callback (replays stay refused even for a trusted sender) and a
+      // stale failure claim (no money moves on it; pending-payment expiry
+      // handles the order). A replayed success for an already-paid attempt
+      // is still caught by the idempotency check in step 2.
       if (callback.transactionDate) {
         const txDate = WebhookService.parseTransactionDate(callback.transactionDate);
         if (txDate) {
           const ageSeconds = (Date.now() - txDate.getTime()) / 1000;
           if (ageSeconds > MAX_WEBHOOK_AGE_SECONDS) {
-            console.error(`[Webhook Ingress] SECURITY ALERT: Stale webhook callback rejected. Transaction age is ${ageSeconds.toFixed(1)}s (exceeds ${MAX_WEBHOOK_AGE_SECONDS}s threshold). CheckoutRequestID: ${callback.checkoutRequestId}`);
-            await client.query('ROLLBACK');
-            return {
-              processed: false,
-              success: false,
-              status: 'STALE_CALLBACK',
-              reason: 'STALE_CALLBACK',
-              resultCode: 1,
-              httpStatus: 200
-            };
+            if (webhookAuth === 'secret' || callback.resultCode !== 0) {
+              console.error(`[Webhook Ingress] SECURITY ALERT: Stale webhook callback rejected. Transaction age is ${ageSeconds.toFixed(1)}s (exceeds ${MAX_WEBHOOK_AGE_SECONDS}s threshold). CheckoutRequestID: ${callback.checkoutRequestId}`);
+              await client.query('ROLLBACK');
+              return {
+                processed: false,
+                success: false,
+                status: 'STALE_CALLBACK',
+                reason: 'STALE_CALLBACK',
+                resultCode: 1,
+                httpStatus: 200
+              };
+            }
+            if (daraja && daraja.outcome === 'paid') {
+              console.warn(`[Webhook Ingress] Late success callback verified with Daraja (age ${ageSeconds.toFixed(1)}s); processing as catch-up. CheckoutRequestID: ${callback.checkoutRequestId}`);
+              // Fall through to the success path below.
+            } else {
+              console.error(`[Webhook Ingress] SECURITY ALERT: Stale success callback NOT confirmed by Daraja (age ${ageSeconds.toFixed(1)}s, Daraja: ${daraja ? daraja.outcome : 'not queried'}). Recording without marking paid. CheckoutRequestID: ${callback.checkoutRequestId}`);
+              return await this.recordUnverifiedCallback(client, {
+                attempt,
+                callback,
+                ip,
+                status: 'STALE_CALLBACK_UNVERIFIED',
+                flagReason: daraja && daraja.outcome === 'not-paid' ? 'DARAJA_CONTRADICTS_SUCCESS' : 'DARAJA_QUERY_FAILED'
+              });
+            }
           }
         }
       }
